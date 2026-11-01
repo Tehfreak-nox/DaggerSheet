@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Character sheet — main</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cinzel:wght@600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="dh" data-theme="{{theme}}" style="width: 390px; height: 1480px; display: flex; flex-direction: column; overflow: hidden">
+
+  <header class="topbar">
+    <button class="iconbtn press" aria-label="All characters"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <div class="lbl lbl-ink" style="font-size: 15px">Character</div>
+    <button class="iconbtn press" aria-label="Sheet options"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></button>
+  </header>
+
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 4px 16px 20px">
+
+    <!-- Identity -->
+    <section class="card" style="padding: 14px; display: flex; gap: 14px; align-items: stretch">
+      <div class="card-inset" style="width: 96px; height: 120px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: var(--border-w) dashed var(--line)">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" style="color: var(--ink-2)"><circle cx="12" cy="9" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+        <span class="lbl" style="font-size: 11px">Portrait</span>
+      </div>
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px">
+          <h1 class="h1" style="margin: 0">Seren Vale</h1>
+          <div style="flex: none; display: flex; flex-direction: column; align-items: center; padding: 4px 8px; border: var(--border-w) solid var(--line-strong); border-radius: 8px">
+            <span class="lbl" style="font-size: 10px">Level</span>
+            <span class="num" style="font-size: 24px">3</span>
+          </div>
+        </div>
+        <div style="font-size: 15px; font-weight: 600">Bard · Troubadour</div>
+        <div class="muted" style="font-size: 14px">Elf · Loreborne</div>
+        <div style="display: flex; gap: 6px; margin-top: auto">
+          <span class="tag dom-grace" style="color: var(--dc)">Grace</span>
+          <span class="tag dom-codex" style="color: var(--dc)">Codex</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Traits -->
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <h2 class="lbl" style="margin: 0">Traits</h2>
+        <span class="hint">Tap a trait to roll it</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{traits}}" as="t" hint-placeholder-count="6">
+          <a href="Dice.dc.html" class="trait press {{t.cls}}" aria-label="Roll {{t.name}} {{t.mod}}">
+            <span class="num">{{t.mod}}</span>
+            <span class="lbl lbl-ink" style="font-size: 13px">{{t.name}}</span>
+            <span class="muted" style="font-size: 10.5px; text-align: center; line-height: 1.2">{{t.verbs}}</span>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- Defense -->
+    <section style="display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px">
+      <div class="card" style="padding: 12px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.2 8.3-7 10-3.8-1.7-7-5-7-10V6l7-3z"/></svg>
+        <span class="num" style="font-size: 44px">10</span>
+        <span class="lbl">Evasion</span>
+      </div>
+      <div class="card" style="padding: 12px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <div style="display: flex; align-items: baseline; gap: 8px">
+            <span class="num" style="font-size: 34px">{{armorMax}}</span>
+            <span class="lbl">Armor score</span>
+          </div>
+          <span class="muted" style="font-size: 12px">{{armor}}/{{armorMax}} used</span>
+        </div>
+        <button class="track" onPointerDown="{{armorT.down}}" onPointerUp="{{armorT.up}}" onPointerLeave="{{armorT.cancel}}" onKeyDown="{{armorT.key}}" onContextMenu="{{noMenu}}" aria-label="Armor slots, {{armor}} of {{armorMax}} marked. Tap to mark, hold to clear.">
+          <sc-for list="{{armorSlots}}" as="s" hint-placeholder-count="4"><span class="slot armor {{s.cls}}"></span></sc-for>
+        </button>
+        <span class="muted" style="font-size: 12px">Improved Leather Armor</span>
+      </div>
+    </section>
+
+    <!-- Damage & health -->
+    <section class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <h2 class="h2" style="margin: 0">Damage &amp; Health</h2>
+        <span class="hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/></svg>Tap mark · Hold clear</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 2px">
+        <div class="thr"><div class="lbl lbl-ink" style="font-size: 12px">Minor</div><div class="muted" style="font-size: 11px; margin-top: 2px">Mark 1 HP</div></div>
+        <div class="num thr-n">10</div>
+        <div class="thr"><div class="lbl lbl-ink" style="font-size: 12px">Major</div><div class="muted" style="font-size: 11px; margin-top: 2px">Mark 2 HP</div></div>
+        <div class="num thr-n">19</div>
+        <div class="thr"><div class="lbl lbl-ink" style="font-size: 12px">Severe</div><div class="muted" style="font-size: 11px; margin-top: 2px">Mark 3 HP</div></div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span class="lbl lbl-ink">HP</span>
+          <span class="num muted" style="font-size: 16px">{{hp}} / {{hpMax}}</span>
+        </div>
+        <button class="track" onPointerDown="{{hpT.down}}" onPointerUp="{{hpT.up}}" onPointerLeave="{{hpT.cancel}}" onKeyDown="{{hpT.key}}" onContextMenu="{{noMenu}}" aria-label="Hit Points, {{hp}} of {{hpMax}} marked. Tap to mark, hold to clear.">
+          <sc-for list="{{hpSlots}}" as="s" hint-placeholder-count="6"><span class="slot hp {{s.cls}}"></span></sc-for>
+        </button>
+      </div>
+
+      <div style="height: 1px; background: var(--line)"></div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span class="lbl lbl-ink">Stress</span>
+          <span class="num muted" style="font-size: 16px">{{stress}} / {{stressMax}}</span>
+        </div>
+        <button class="track" onPointerDown="{{stressT.down}}" onPointerUp="{{stressT.up}}" onPointerLeave="{{stressT.cancel}}" onKeyDown="{{stressT.key}}" onContextMenu="{{noMenu}}" aria-label="Stress, {{stress}} of {{stressMax}} marked. Tap to mark, hold to clear.">
+          <sc-for list="{{stressSlots}}" as="s" hint-placeholder-count="6"><span class="slot stress {{s.cls}}"></span></sc-for>
+        </button>
+      </div>
+    </section>
+
+    <!-- Hope -->
+    <section class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <h2 class="h2" style="margin: 0; color: var(--hope-ink)">Hope</h2>
+        <span class="num" style="font-size: 18px; color: var(--hope-ink)">{{hope}} / 6</span>
+      </div>
+      <button class="track" style="gap: 6px" onPointerDown="{{hopeT.down}}" onPointerUp="{{hopeT.up}}" onPointerLeave="{{hopeT.cancel}}" onKeyDown="{{hopeT.key}}" onContextMenu="{{noMenu}}" aria-label="Hope, {{hope}} of 6. Tap to gain, hold to spend.">
+        <sc-for list="{{hopeSlots}}" as="s" hint-placeholder-count="6"><span class="hope {{s.cls}}"></span></sc-for>
+      </button>
+      <div class="card-inset" style="padding: 10px 12px; display: flex; gap: 10px; align-items: center">
+        <span class="tag" style="background: var(--hope); color: #1B1205; flex: none">3 Hope</span>
+        <div style="font-size: 13px; line-height: 1.35"><strong>Make a Scene</strong> <span class="muted">— Hope feature</span></div>
+      </div>
+    </section>
+
+    <!-- Proficiency + Experiences -->
+    <section class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <span class="lbl lbl-ink">Proficiency</span>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <div style="display: flex; gap: 6px" aria-hidden="true">
+            <span class="pip on"></span><span class="pip on"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span>
+          </div>
+          <span class="num" style="font-size: 26px">2</span>
+        </div>
+      </div>
+      <div style="height: 1px; background: var(--line)"></div>
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <span class="lbl lbl-ink">Experiences</span>
+        <button class="lbl press" style="border: 0; background: transparent; min-height: 44px; padding: 0 4px">+ Add</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: -8px">
+        <a href="Dice.dc.html" class="card-inset press" style="min-height: 52px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between">
+          <span style="font-size: 15px; font-weight: 500">Travelling Troupe Player</span>
+          <span class="num" style="font-size: 24px">+2</span>
+        </a>
+        <a href="Dice.dc.html" class="card-inset press" style="min-height: 52px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between">
+          <span style="font-size: 15px; font-weight: 500">Reads a Room</span>
+          <span class="num" style="font-size: 24px">+2</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Sections">
+    <a href="Main.dc.html" class="tab on" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Sheet</a>
+    <a href="Combat.dc.html" class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M14 4l6 0 0 6-9 9-3 0 0-3z"/><path d="M5 16l3 3M4 20l2-2"/></svg>Combat</a>
+    <a href="Dice.dc.html" class="tab-roll press" aria-label="Roll dice"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8.5 5v10L12 22l-8.5-5V7z"/><path d="M12 2v6M3.5 7L12 8l8.5-1M12 8l-5 9h10z"/></svg></a>
+    <a href="Equipment.dc.html" class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l1 12H5z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg>Gear</a>
+    <a href="Resources.dc.html" class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="8" cy="9" r="4"/><circle cx="16" cy="15" r="4"/></svg>Class</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["neutral","parchment","midnight"],"default":"neutral","section":"Theme"},"$preview":{"width":390,"height":1480}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { hp: 2, stress: 1, armor: 1, hope: 3 };
+    this.max = { hp: 6, stress: 6, armor: 4, hope: 6 };
+  }
+  bump(key, d) {
+    const v = Math.max(0, Math.min(this.max[key], (this.state[key] || 0) + d));
+    this.setState({ [key]: v });
+  }
+  track(key) {
+    return {
+      down: () => {
+        this._lp = false;
+        clearTimeout(this._t);
+        this._t = setTimeout(() => { this._lp = true; this.bump(key, -1); }, 450);
+      },
+      up: () => {
+        clearTimeout(this._t);
+        if (this._lp === false) this.bump(key, 1);
+        this._lp = true;
+      },
+      cancel: () => { clearTimeout(this._t); this._lp = true; },
+      key: (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.bump(key, 1); }
+        if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); this.bump(key, -1); }
+      }
+    };
+  }
+  slots(key) {
+    const n = this.state[key] || 0;
+    return Array.from({ length: this.max[key] }, (_, i) => ({ cls: i < n ? 'on' : '' }));
+  }
+  renderVals() {
+    return {
+      theme: this.props.theme ?? 'neutral',
+      traits: [
+        { name: 'Agility', mod: '+0', verbs: 'Sprint · Leap · Maneuver', cls: '' },
+        { name: 'Strength', mod: '−1', verbs: 'Lift · Smash · Grapple', cls: '' },
+        { name: 'Finesse', mod: '+1', verbs: 'Control · Hide · Tinker', cls: '' },
+        { name: 'Instinct', mod: '+0', verbs: 'Perceive · Sense · Navigate', cls: '' },
+        { name: 'Presence', mod: '+2', verbs: 'Charm · Perform · Deceive', cls: 'hi' },
+        { name: 'Knowledge', mod: '+1', verbs: 'Recall · Analyze · Comprehend', cls: '' }
+      ],
+      hp: this.state.hp, hpMax: this.max.hp, hpSlots: this.slots('hp'), hpT: this.track('hp'),
+      stress: this.state.stress, stressMax: this.max.stress, stressSlots: this.slots('stress'), stressT: this.track('stress'),
+      armor: this.state.armor, armorMax: this.max.armor, armorSlots: this.slots('armor'), armorT: this.track('armor'),
+      hope: this.state.hope, hopeSlots: this.slots('hope'), hopeT: this.track('hope'),
+      noMenu: (e) => e.preventDefault()
+    };
+  }
+}
+</script>
+</body>
+</html>

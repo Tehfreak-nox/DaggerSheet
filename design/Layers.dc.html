@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ancestry frames and community widgets</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+<link rel="stylesheet" href="./layers.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cinzel:wght@600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="dh" data-theme="neutral" style="width: 1240px; height: 1100px; padding: 40px; display: flex; flex-direction: column; gap: 26px">
+
+  <!-- Ancestry -->
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span class="lbl">Layer 3 · .anc-&lt;name&gt; on the sheet frame</span>
+      <h1 class="h1" style="margin: 0; font-size: 34px">Ancestry frames</h1>
+      <p class="muted" style="margin: 0; font-size: 14px; max-width: 760px; line-height: 1.5">The texture covers only the outer frame. For mixed ancestry, the top half of the frame uses the first ancestry and the bottom half uses the second, with a small label where they meet.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 16px">
+      <sc-for list="{{anc}}" as="a" hint-placeholder-count="7">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div class="framed" data-class="guardian" style="height: 200px; border-radius: 26px">
+            <div class="anc-half anc-top {{a.top}}"></div>
+            <div class="anc-half anc-bot {{a.bot}}"></div>
+            <div class="sheet-inner" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center">
+              <div class="card" style="width: 70px; height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><span class="num" style="font-size: 30px">+2</span><span class="lbl" style="font-size: 10px">Plate</span></div>
+            </div>
+          </div>
+          <span style="font-size: 14px; font-weight: 700">{{a.name}}</span>
+          <span class="muted" style="font-size: 12px; line-height: 1.35; margin-top: -4px">{{a.note}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="height: 1px; background: var(--line)"></div>
+
+  <!-- Community -->
+  <section style="display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span class="lbl">Layer 4 · data-community on the sheet root</span>
+      <h1 class="h1" style="margin: 0; font-size: 34px">Community widgets</h1>
+      <p class="muted" style="margin: 0; font-size: 14px; max-width: 760px; line-height: 1.5">The same markup is used in all four columns, all with the Ranger palette. Only the community changes, and it restyles trait chips, stat widgets and slot shapes.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px">
+      <sc-for list="{{coms}}" as="m" hint-placeholder-count="4">
+        <div class="card" data-class="ranger" data-sub="a" data-community="{{m.id}}" style="padding: 18px; display: flex; flex-direction: column; gap: 16px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><span class="h2" style="font-size: 20px">{{m.name}}</span><span class="muted" style="font-size: 11px">{{m.note}}</span></div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+            <div class="w"><svg class="w-ins" width="22" height="12" viewBox="0 0 22 12" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M2 2l9 4 9-4M2 7l9 4 9-4"/></svg><span class="w-num">+2</span><span class="w-lbl">Agility</span></div>
+            <div class="w"><svg class="w-ins" width="22" height="12" viewBox="0 0 22 12" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M2 4l9 4 9-4"/></svg><span class="w-num">+1</span><span class="w-lbl">Instinct</span></div>
+            <div class="w"><svg class="w-ins" width="22" height="12" viewBox="0 0 22 12" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M2 4l9 4 9-4"/></svg><span class="w-num">0</span><span class="w-lbl">Presence</span></div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+            <div class="w" style="min-height: 96px"><svg class="w-ins" width="22" height="12" viewBox="0 0 22 12" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M2 2l9 4 9-4M2 7l9 4 9-4"/></svg><span class="w-num" style="font-size: 40px">12</span><span class="w-lbl">Evasion</span></div>
+            <div class="w" style="min-height: 96px"><svg class="w-ins" width="22" height="12" viewBox="0 0 22 12" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M2 4l9 4 9-4"/></svg><span class="w-num" style="font-size: 40px">2</span><span class="w-lbl">Proficiency</span></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <span class="lbl lbl-ink" style="font-size: 12px">HP slots</span>
+            <div style="display: flex; gap: 8px"><span class="slot hp on"></span><span class="slot hp on"></span><span class="slot hp"></span><span class="slot hp"></span><span class="slot hp"></span><span class="slot hp"></span></div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div class="card" style="margin-top: auto; padding: 14px 18px; display: flex; align-items: center; gap: 14px">
+    <span class="tag" style="background: var(--ink); color: var(--card)">Rule</span>
+    <span style="font-size: 14px; line-height: 1.45">Textures go on frames and backgrounds only. Number plates (.w-num), cards, slots and resource tokens are always solid fills, so a 40px "12" reads the same on fur, stone or scales.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1240,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const one = (id, name, note) => ({ top: 'anc-' + id, bot: 'anc-' + id, name, note });
+    return {
+      anc: [
+        one('firbolg', 'Firbolg', 'Fur edge: layered strands'),
+        one('earthkin', 'Earthkin', 'Cracked stone'),
+        one('simiah', 'Simiah', 'Climbing vines + leaves'),
+        one('galapa', 'Galapa', 'Shell plates'),
+        one('drakona', 'Drakona', 'Overlapping scales'),
+        one('elf', 'Elf', 'Fine gilt filigree'),
+        { top: 'anc-earthkin', bot: 'anc-simiah', name: 'Mixed', note: 'Earthkin top · Simiah bottom' }
+      ],
+      coms: [
+        { id: 'loreborne', name: 'Loreborne', note: 'Scroll rolls' },
+        { id: 'orderborne', name: 'Orderborne', note: 'Banners · insignia' },
+        { id: 'seaborne', name: 'Seaborne', note: 'Rope · brass' },
+        { id: 'wildborne', name: 'Wildborne', note: 'Leaves' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

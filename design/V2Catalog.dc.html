@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add to equipment</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./sheet.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700;800&amp;family=Barlow:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 1500px; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="padding: 22px 12px 0 20px; display: flex; align-items: center; justify-content: space-between">
+    <h1 style="margin: 0; font: 800 26px/1 var(--head); letter-spacing: .03em; text-transform: uppercase">{{title}}</h1>
+    <a href="V2Equip.dc.html" class="s-icon s-press" aria-label="Close"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+  </header>
+
+  <div style="padding: 16px 20px 0; display: flex; gap: 4px" role="tablist" aria-label="Source">
+    <button role="tab" class="s-pill {{catCls}}" aria-selected="{{catSel}}" onClick="{{showCat}}">From the book</button>
+    <button role="tab" class="s-pill {{cusCls}}" aria-selected="{{cusSel}}" onClick="{{showCus}}">Custom {{kindWord}}</button>
+  </div>
+
+  <!-- ===== CATALOG ===== -->
+  <sc-if value="{{isCat}}" hint-placeholder-val="{{ true }}">
+    <main style="flex: 1; display: flex; flex-direction: column; padding: 18px 0 30px">
+      <div style="padding: 0 20px 18px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--line)">
+        <sc-if value="{{hasTiers}}" hint-placeholder-val="{{ true }}">
+          <span class="s-label">Tier</span>
+          <div class="s-seg" role="tablist" aria-label="Tier" style="align-self: flex-start">
+            <sc-for list="{{tiers}}" as="t" hint-placeholder-count="4">
+              <button role="tab" class="{{t.cls}}" aria-selected="{{t.sel}}" aria-label="Tier {{t.n}}, {{t.lv}}" onClick="{{t.pick}}">{{t.n}}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="display: flex; gap: 4px; flex-wrap: wrap">
+          <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+            <button class="s-pill {{g.cls}}" style="border: 2px solid var(--ink)" aria-pressed="{{g.sel}}" onClick="{{g.pick}}">{{g.label}}</button>
+          </sc-for>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#141414" aria-hidden="true"><path d="M12 1l2.4 7.6H22l-6.2 4.6 2.4 7.8L12 16.2 5.8 21l2.4-7.8L2 8.6h7.6z"/></svg>
+          {{recWhy}}
+        </div>
+      </div>
+
+      <sc-for list="{{rows}}" as="i" hint-placeholder-count="8">
+        <div style="padding: 16px 20px; display: flex; gap: 12px; align-items: flex-start; border-bottom: 1px solid var(--line)">
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+            <span class="s-feat-name" style="font-size: 22px">{{i.name}}</span>
+            <div class="s-row" style="font-size: 17px">
+              <span style="display: flex; align-items: center; gap: 4px">
+                <sc-if value="{{i.isRec}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="#141414" role="img" aria-label="Recommended"><path d="M12 1l2.4 7.6H22l-6.2 4.6 2.4 7.8L12 16.2 5.8 21l2.4-7.8L2 8.6h7.6z"/></svg></sc-if>
+                <sc-if value="{{i.hand1}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="One-handed"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-2a2 2 0 0 0-4 0"/></svg></sc-if>
+                <sc-if value="{{i.hand2}}" hint-placeholder-val="{{ false }}"><span style="display: flex" role="img" aria-label="Two-handed"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: scaleX(-1)"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-2a2 2 0 0 0-4 0"/></svg><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-2a2 2 0 0 0-4 0"/></svg></span></sc-if>
+                <span style="margin-left: 2px">{{i.line}}</span>
+              </span>
+              <span>{{i.stat}}</span>
+            </div>
+            <sc-if value="{{i.hasFeat}}" hint-placeholder-val="{{ false }}"><span class="s-feat-text"><b>{{i.featName}}</b> {{i.featText}}</span></sc-if>
+          </div>
+          <button class="s-btn s-press {{i.addCls}}" style="flex: none; min-height: 40px; padding: 0 12px; font-size: 13px; margin-top: 2px" onClick="{{i.add}}" aria-label="Add {{i.name}}">{{i.addLabel}}</button>
+        </div>
+      </sc-for>
+    </main>
+  </sc-if>
+
+  <!-- ===== CUSTOM ===== -->
+  <sc-if value="{{isCus}}" hint-placeholder-val="{{ false }}">
+    <main style="flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 22px 20px 30px">
+      <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-name">Name</label><input id="c-name" class="s-field" type="text" placeholder="{{namePh}}"></div>
+
+      <sc-if value="{{cusWeapon}}" hint-placeholder-val="{{ true }}">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-slot">Slot</label><select id="c-slot" class="s-field"><option>Primary</option><option>Secondary</option></select></div>
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-hands">Burden</label><select id="c-hands" class="s-field"><option>One-handed</option><option>Two-handed</option></select></div>
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-trait">Trait</label><select id="c-trait" class="s-field"><option>Instinct</option><option>Agility</option><option>Strength</option><option>Finesse</option><option>Presence</option><option>Knowledge</option></select></div>
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-range">Range</label><select id="c-range" class="s-field"><option>Melee</option><option>Very Close</option><option selected>Close</option><option>Far</option><option>Very Far</option></select></div>
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-die">Damage</label><input id="c-die" class="s-field" type="text" placeholder="d6+1"></div>
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-type">Type</label><select id="c-type" class="s-field"><option>Magic</option><option>Physical</option></select></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{cusArmor}}" hint-placeholder-val="{{ false }}">
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-maj">Major</label><input id="c-maj" class="s-field" type="number" placeholder="6"></div>
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-sev">Severe</label><input id="c-sev" class="s-field" type="number" placeholder="13"></div>
+          <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-sc">Score</label><input id="c-sc" class="s-field" type="number" placeholder="3"></div>
+        </div>
+        <span class="s-muted" style="font-size: 14px; margin-top: -6px">Base thresholds — your level is added on the sheet.</span>
+      </sc-if>
+
+      <sc-if value="{{cusItem}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-kind">Kind</label><select id="c-kind" class="s-field"><option>Gear</option><option>Consumable</option><option>Loot</option></select></div>
+      </sc-if>
+
+      <div style="display: flex; flex-direction: column; gap: 8px"><label class="s-label s-muted" style="font-size: 17px" for="c-notes">{{notesLabel}}</label><textarea id="c-notes" class="s-field" rows="4" style="padding: 12px 14px; resize: none"></textarea></div>
+      <button class="s-btn solid s-press" style="align-self: flex-end">Add</button>
+    </main>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"kind":{"editor":"enum","options":["weapon","armor","item"],"default":"weapon","section":"Screen"},"$preview":{"width":390,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mode: 'catalog', tier: 1, group: null, added: {} };
+  }
+  renderVals() {
+    const s = this.state;
+    const kind = this.props.kind || 'weapon';
+    const tier = s.tier;
+    const PRE = ['', '', 'Improved ', 'Advanced ', 'Legendary '];
+    // [name, trait, range, die, mod, type, hands, featName, featText]
+    const PRIMARY = [
+      ['Quarterstaff', 'Instinct', 'Melee', 'd10', 3, 'phy', 2],
+      ['Hand Runes', 'Instinct', 'Very Close', 'd10', 0, 'mag', 1],
+      ['Shortstaff', 'Instinct', 'Close', 'd8', 1, 'mag', 1],
+      ['Dualstaff', 'Instinct', 'Far', 'd6', 3, 'mag', 2],
+      ['Rope Dart', 'Instinct', 'Close', 'd6', 1, 'phy', 2],
+      ['Casting Dagger', 'Instinct', 'Close', 'd6', 0, 'mag', 1, 'Versatile:', 'This weapon can also be used with these statistics — Instinct, Melee, d8.'],
+      ['Broadsword', 'Agility', 'Melee', 'd8', 0, 'phy', 1, 'Reliable:', '+1 to attack rolls.'],
+      ['Longsword', 'Agility', 'Melee', 'd10', 3, 'phy', 2],
+      ['Dagger', 'Finesse', 'Melee', 'd8', 1, 'phy', 1],
+      ['Rapier', 'Presence', 'Melee', 'd8', 0, 'phy', 1, 'Quick:', 'When you make an attack, you can mark a Stress to target another creature within range.'],
+      ['Shortbow', 'Agility', 'Far', 'd6', 3, 'phy', 2],
+      ['Arcane Gauntlets', 'Strength', 'Melee', 'd10', 3, 'mag', 2],
+      ['Scepter', 'Presence', 'Far', 'd6', 0, 'mag', 2, 'Versatile:', 'This weapon can also be used with these statistics — Presence, Melee, d8.'],
+      ['Wand', 'Knowledge', 'Far', 'd6', 1, 'mag', 1],
+      ['Greatstaff', 'Knowledge', 'Very Far', 'd6', 0, 'mag', 2, 'Powerful:', 'On a successful attack, roll an additional damage die and discard the lowest result.']
+    ];
+    const SECONDARY = [
+      ['Focus Runes', 'Instinct', 'Very Close', 'd6', 0, 'mag', 1, 'Focused:', '+1 to primary weapon damage to targets within Very Close range.'],
+      ['Shortsword', 'Agility', 'Melee', 'd8', 0, 'phy', 1, 'Paired:', '+2 to primary weapon damage to targets within Melee range.'],
+      ['Small Dagger', 'Finesse', 'Melee', 'd8', 0, 'phy', 1, 'Paired:', '+2 to primary weapon damage to targets within Melee range.'],
+      ['Round Shield', 'Strength', 'Melee', 'd4', 0, 'phy', 1, 'Protective:', '+' + tier + ' to Armor Score.'],
+      ['Rune Shield', 'Knowledge', 'Melee', 'd4', 0, 'mag', 1, 'Protective:', '+1 to Armor Score.'],
+      ['Whip', 'Presence', 'Very Close', 'd6', 0, 'phy', 1, 'Startling:', 'Mark a Stress to crack the whip and force all adversaries within Melee range back to Close range.'],
+      ['Grappler', 'Finesse', 'Close', 'd6', 0, 'phy', 1, 'Hooked:', 'On a successful attack, you can pull the target into Melee range.'],
+      ['Hand Crossbow', 'Finesse', 'Far', 'd6', 1, 'phy', 1]
+    ];
+    const ARMOR = {
+      1: [['Mage Robes', 4, 10, 2], ['Gambeson Armor', 5, 11, 3], ['Brigandine Armor', 6, 12, 3], ['Leather Armor', 6, 13, 3], ['Scale Mail Armor', 7, 14, 3], ['Chainmail Armor', 7, 15, 4], ['Banded Armor', 8, 16, 4], ['Full Plate Armor', 8, 17, 4]],
+      2: [['Mage Robes', 6, 15, 3], ['Gambeson Armor', 7, 16, 4], ['Brigandine Armor', 9, 19, 4], ['Leather Armor', 9, 20, 4], ['Scale Mail Armor', 11, 23, 4], ['Chainmail Armor', 11, 24, 5], ['Banded Armor', 13, 27, 5], ['Full Plate Armor', 13, 28, 5]],
+      3: [['Mage Robes', 8, 22, 4], ['Gambeson Armor', 9, 23, 5], ['Brigandine Armor', 11, 26, 5], ['Leather Armor', 11, 27, 5], ['Scale Mail Armor', 13, 30, 5], ['Chainmail Armor', 13, 31, 6], ['Banded Armor', 15, 34, 6], ['Full Plate Armor', 15, 35, 6]],
+      4: [['Mage Robes', 10, 31, 5], ['Gambeson Armor', 11, 32, 6], ['Brigandine Armor', 13, 35, 6], ['Leather Armor', 13, 36, 6], ['Scale Mail Armor', 15, 39, 6], ['Chainmail Armor', 15, 40, 7], ['Banded Armor', 17, 43, 7], ['Full Plate Armor', 17, 44, 7]]
+    };
+    const AFEAT = {
+      'Mage Robes': ['Enchanted:', 'Gain a bonus to your damage thresholds equal to your Spellcast trait.'], 'Gambeson Armor': ['Flexible:', '+1 to Evasion.'],
+      'Brigandine Armor': ['Lined:', 'Mark a Stress to negate Minor damage.'], 'Leather Armor': ['', ''], 'Scale Mail Armor': ['Cumbersome:', '−1 to Finesse.'],
+      'Chainmail Armor': ['Heavy:', '−1 to Evasion.'], 'Banded Armor': ['Bulky:', '−1 to Evasion; when you take Severe damage, you must mark a Stress.'], 'Full Plate Armor': ['Very Heavy:', '−2 to Evasion; −1 to Agility.']
+    };
+    const ITEMS = {
+      Consumables: [['Attune Potion', 'You gain a +1 bonus to your next Instinct Roll.', true], ['Minor Health Potion', 'Clear 1d4 HP.'], ['Minor Stamina Potion', 'Clear 1d4 Stress.'], ['Health Potion', 'Clear 1d4+1 HP.'], ['Stamina Potion', 'Clear 1d4+1 Stress.'], ['Snap Powder', 'Mark a Stress and clear a HP.'], ['Jumping Root', 'Eat this root to leap up to Far range once without needing to roll.']],
+      Loot: [['Arcane Cloak', 'A creature with a Spellcast trait wearing this cloak can adjust its color, texture, and size at will.', true], ['Arcane Prism', 'Allies within Close range of the activated prism gain a bonus to their Spellcast Rolls.', true], ['Premium Bedroll', 'During downtime, you automatically clear a Stress.'], ['Piper Whistle', 'Its piercing tone can be heard within a 1-mile radius.'], ['Speaking Orbs', 'Lets anyone holding them communicate across any distance.'], ['Skeleton Key', 'Advantage on the Finesse Roll to open a locked door.']],
+      Gear: [['Whispering Orb', 'Sorcerer class item.', true], ['Family heirloom', 'Sorcerer class item.', true], ['Torch', ''], ['50 ft of rope', ''], ['Basic supplies', '']]
+    };
+    const added = s.added;
+    const mk = (o) => {
+      const done = !!added[o.name];
+      return Object.assign({ hand1: false, hand2: false, featName: '', featText: '', line: '', stat: '' }, o, {
+        hasFeat: !!(o.featName || o.featText),
+        addLabel: done ? 'Added' : 'Add', addCls: done ? 'solid' : '',
+        add: () => this.setState({ added: Object.assign({}, added, { [o.name]: !done }) })
+      });
+    };
+    let groups = [], group = '', rows = [], recWhy = '', title, namePh, notesLabel, kindWord;
+    if (kind === 'weapon') {
+      groups = ['Primary', 'Secondary']; group = s.group && groups.includes(s.group) ? s.group : 'Primary';
+      const src = group === 'Primary' ? PRIMARY : SECONDARY;
+      const step = group === 'Primary' ? 3 : 2;
+      rows = src.map(([n, tr, rg, die, mod, ty, h, fn, ft]) => {
+        const m = mod + step * (tier - 1);
+        return mk({ name: PRE[tier] + n, isRec: tr === 'Instinct', hand1: h === 1, hand2: h === 2, line: tr + ' ' + rg, stat: die + (m ? '+' + m : '') + ' (' + ty + ')', featName: fn || '', featText: ft || '' });
+      });
+      recWhy = 'Recommended for Sorcerer: Instinct weapons';
+      title = 'Add weapon'; namePh = 'Ember-etched dagger'; notesLabel = 'Feature'; kindWord = 'weapon';
+    } else if (kind === 'armor') {
+      rows = ARMOR[tier].map(([n, a, b, sc]) => mk({ name: PRE[tier] + n, isRec: n === 'Mage Robes' || n === 'Gambeson Armor', line: 'Base ' + a + ' / ' + b, stat: 'Score ' + sc, featName: AFEAT[n][0], featText: AFEAT[n][1] }));
+      recWhy = 'Recommended for Sorcerer: no Evasion penalty';
+      title = 'Add armor'; namePh = 'Stormweave coat'; notesLabel = 'Feature'; kindWord = 'armor';
+    } else {
+      groups = ['Consumables', 'Loot', 'Gear']; group = s.group && groups.includes(s.group) ? s.group : 'Consumables';
+      rows = ITEMS[group].map(([n, d, r]) => mk({ name: n, isRec: !!r, line: group === 'Consumables' ? 'Hold up to 5' : '', featText: d }));
+      recWhy = 'Recommended for Sorcerer: spellcasting & class items';
+      title = 'Add item'; namePh = 'Grandmother’s compass'; notesLabel = 'Notes'; kindWord = 'item';
+    }
+    rows.sort((a, b) => (b.isRec ? 1 : 0) - (a.isRec ? 1 : 0));
+    return {
+      title, namePh, notesLabel, kindWord, recWhy, rows,
+      isCat: s.mode === 'catalog', isCus: s.mode === 'custom',
+      catCls: s.mode === 'catalog' ? 'on' : '', cusCls: s.mode === 'custom' ? 'on' : '',
+      catSel: s.mode === 'catalog' ? 'true' : 'false', cusSel: s.mode === 'custom' ? 'true' : 'false',
+      showCat: () => this.setState({ mode: 'catalog' }), showCus: () => this.setState({ mode: 'custom' }),
+      hasTiers: kind !== 'item',
+      tiers: [[1, 'level 1'], [2, 'levels 2–4'], [3, 'levels 5–7'], [4, 'levels 8–10']].map(([n, lv]) => ({
+        n, lv, cls: tier === n ? 'on' : '', sel: tier === n ? 'true' : 'false', pick: () => this.setState({ tier: n })
+      })),
+      groups: groups.map((g) => ({ label: g, cls: g === group ? 'on' : '', sel: g === group ? 'true' : 'false', pick: () => this.setState({ group: g }) })),
+      cusWeapon: kind === 'weapon', cusArmor: kind === 'armor', cusItem: kind === 'item'
+    };
+  }
+}
+</script>
+</body>
+</html>

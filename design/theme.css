@@ -1,0 +1,175 @@
+/* ==========================================================
+   Daggerheart sheet — THEME LAYER
+   Every screen reads only these tokens + component classes.
+   Swap a theme by changing data-theme on the root (.dh).
+   ========================================================== */
+
+/* ---------- Neutral (default) ---------- */
+.dh {
+  --table: #E8E6E1;
+  --table-texture: radial-gradient(rgba(27,26,23,.06) 1px, transparent 1.3px) 0 0 / 14px 14px;
+  --card: #FBFAF7;
+  --card-2: #F1EFEA;
+  --ink: #1B1A17;
+  --ink-2: #56524A;
+  --line: #D7D3CA;
+  --line-strong: #1B1A17;
+  --accent: #1B1A17;
+  --on-accent: #FBFAF7;
+  --hope: #C9831A;
+  --hope-ink: #7A4A05;
+  --fear: #3E3A8C;
+  --fear-ink: #3E3A8C;
+  --hp: #B23A2B;
+  --stress: #3B5C86;
+  --armor: #5A636D;
+  --gold: #B38A2E;
+  --radius-card: 14px;
+  --radius-chip: 12px;
+  --radius-btn: 12px;
+  --slot-radius: 6px;
+  --border-w: 1.5px;
+  --shadow-card: 0 1px 0 rgba(27,26,23,.06), 0 10px 18px -12px rgba(27,26,23,.45);
+  --shadow-lift: 0 2px 0 rgba(27,26,23,.10), 0 16px 26px -14px rgba(27,26,23,.55);
+  --font-ui: "Inter", system-ui, sans-serif;
+  --font-num: "Barlow Condensed", "Inter", sans-serif;
+  --num-weight: 700;
+  --label-case: uppercase;
+  --label-tracking: .09em;
+}
+
+/* ---------- Parchment (example swap) ---------- */
+.dh[data-theme="parchment"] {
+  --table: #3A2C21;
+  --table-texture: repeating-linear-gradient(92deg, rgba(255,255,255,.035) 0 2px, transparent 2px 11px);
+  --card: #F3E9D6;
+  --card-2: #E8DAC0;
+  --ink: #2A1D13;
+  --ink-2: #5A4532;
+  --line: #CDB792;
+  --line-strong: #2A1D13;
+  --accent: #6B2A1C;
+  --on-accent: #F3E9D6;
+  --hope: #B97A17;
+  --hope-ink: #6E4508;
+  --fear: #4A3373;
+  --fear-ink: #4A3373;
+  --hp: #9B2D20;
+  --stress: #2F4E6E;
+  --armor: #5B5146;
+  --radius-card: 6px;
+  --radius-chip: 4px;
+  --radius-btn: 4px;
+  --slot-radius: 50%;
+  --border-w: 2px;
+  --font-num: "Cinzel", Georgia, serif;
+  --num-weight: 700;
+  --label-tracking: .12em;
+}
+
+/* ---------- Midnight (example swap) ---------- */
+.dh[data-theme="midnight"] {
+  --table: #111217;
+  --table-texture: radial-gradient(rgba(255,255,255,.04) 1px, transparent 1.3px) 0 0 / 14px 14px;
+  --card: #1C1E26;
+  --card-2: #252833;
+  --ink: #ECEAE3;
+  --ink-2: #A8A59B;
+  --line: #353846;
+  --line-strong: #ECEAE3;
+  --accent: #E6B455;
+  --on-accent: #16120A;
+  --hope: #E6B455;
+  --hope-ink: #F1CB7E;
+  --fear: #9B94F2;
+  --fear-ink: #B7B2F7;
+  --hp: #E2705D;
+  --stress: #7FA4D8;
+  --armor: #9AA4AF;
+  --shadow-card: 0 1px 0 rgba(255,255,255,.04) inset, 0 12px 22px -12px rgba(0,0,0,.8);
+  --shadow-lift: 0 1px 0 rgba(255,255,255,.06) inset, 0 18px 28px -12px rgba(0,0,0,.9);
+}
+
+/* ---------- Base ---------- */
+.dh { background: var(--table-texture), var(--table); color: var(--ink); font-family: var(--font-ui); -webkit-font-smoothing: antialiased; box-sizing: border-box; }
+.dh *, .dh *::before, .dh *::after { box-sizing: border-box; }
+.dh button, .dh input, .dh select, .dh textarea { font: inherit; color: inherit; }
+.dh button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
+.dh a { text-decoration: none; color: inherit; }
+
+/* ---------- Surfaces ---------- */
+.card { background: var(--card); border: var(--border-w) solid var(--line); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
+.card-inset { background: var(--card-2); border-radius: calc(var(--radius-card) - 4px); }
+.lift { box-shadow: var(--shadow-lift); }
+
+/* ---------- Type ---------- */
+.lbl { font-family: var(--font-num); font-weight: 600; font-size: 13px; letter-spacing: var(--label-tracking); text-transform: var(--label-case); color: var(--ink-2); line-height: 1.1; }
+.lbl-ink { color: var(--ink); }
+.num { font-family: var(--font-num); font-weight: var(--num-weight); font-variant-numeric: tabular-nums lining-nums; line-height: 1; }
+.muted { color: var(--ink-2); }
+.h1 { font-family: var(--font-num); font-weight: 700; font-size: 28px; line-height: 1.05; letter-spacing: .01em; }
+.h2 { font-family: var(--font-num); font-weight: 700; font-size: 20px; letter-spacing: .02em; text-transform: var(--label-case); }
+
+/* ---------- Buttons ---------- */
+.press { transition: transform .08s ease, box-shadow .08s ease; }
+.press:active { transform: translateY(2px) scale(.99); box-shadow: none; }
+.iconbtn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-btn); background: transparent; border: 0; padding: 0; }
+.btn { min-height: 48px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: var(--radius-btn); border: var(--border-w) solid var(--line); background: var(--card); font-weight: 600; font-size: 15px; }
+.btn-primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn-hope { background: var(--hope); color: #1B1205; border-color: var(--hope); }
+.pill { min-height: 36px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; border: var(--border-w) solid var(--line); background: var(--card); font-size: 14px; font-weight: 500; }
+.pill.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.tag { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 6px; background: var(--card-2); font-size: 12px; font-weight: 600; color: var(--ink-2); }
+
+/* ---------- Trait chips ---------- */
+.trait { min-height: 88px; padding: 10px 8px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: var(--card); border: var(--border-w) solid var(--line); border-radius: var(--radius-chip); box-shadow: var(--shadow-card); }
+.trait .num { font-size: 34px; }
+.trait.hi { border-color: var(--line-strong); }
+
+/* ---------- Slots / tokens ---------- */
+.track { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px; margin: -6px; background: transparent; border: 0; border-radius: 10px; text-align: left; }
+.slot { width: 30px; height: 30px; border-radius: var(--slot-radius); border: 2.5px solid var(--c, var(--ink)); background: var(--card); flex: none; }
+.slot.on { background: var(--c, var(--ink)); box-shadow: inset 0 0 0 3px var(--card); }
+.slot.hp { --c: var(--hp); }
+.slot.stress { --c: var(--stress); }
+.slot.armor { --c: var(--armor); }
+.slot.sm { width: 22px; height: 22px; border-width: 2px; }
+.hope { width: 26px; height: 26px; margin: 5px; transform: rotate(45deg); border: 2.5px solid var(--hope); border-radius: 5px; background: var(--card); flex: none; }
+.hope.on { background: var(--hope); box-shadow: inset 0 0 0 3px var(--card); }
+.pip { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ink); }
+.pip.on { background: var(--ink); }
+.token { width: 40px; height: 40px; border-radius: 50%; border: 2.5px solid var(--c, var(--ink)); background: var(--card); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.token.on { background: var(--c, var(--ink)); color: var(--card); box-shadow: inset 0 0 0 3px var(--card), var(--shadow-card); }
+
+/* ---------- Thresholds ---------- */
+.thr { flex: 1; min-width: 0; padding: 7px 4px; border: var(--border-w) solid var(--line); border-radius: 8px; background: var(--card-2); text-align: center; }
+.thr-n { width: 38px; flex: none; text-align: center; font-size: 26px; }
+
+/* ---------- Dice ---------- */
+.die { width: 92px; height: 92px; display: flex; align-items: center; justify-content: center; clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%); }
+.die-hope { background: var(--hope); color: #1B1205; }
+.die-fear { background: var(--fear); color: #FFFFFF; }
+.die-plain { background: var(--ink); color: var(--card); }
+
+/* ---------- Domain cards ---------- */
+.dcard { width: 132px; flex: none; min-height: 184px; border-radius: 10px; border: var(--border-w) solid var(--line); background: var(--card); box-shadow: var(--shadow-card); display: flex; flex-direction: column; overflow: hidden; }
+.dcard-band { height: 8px; background: var(--dc, var(--ink)); }
+.dcard-empty { border-style: dashed; background: transparent; box-shadow: none; align-items: center; justify-content: center; }
+.dom-grace { --dc: #A3407A; }
+.dom-codex { --dc: #2F5F9E; }
+
+/* ---------- Forms ---------- */
+.field { width: 100%; min-height: 48px; padding: 0 14px; border-radius: var(--radius-btn); border: var(--border-w) solid var(--line); background: var(--card); font-size: 16px; }
+.field:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.seg { display: flex; padding: 4px; gap: 4px; border-radius: calc(var(--radius-btn) + 2px); background: var(--card-2); }
+.seg-i { flex: 1; min-height: 40px; border: 0; border-radius: var(--radius-btn); background: transparent; font-weight: 600; font-size: 14px; color: var(--ink-2); }
+.seg-i.on { background: var(--card); color: var(--ink); box-shadow: var(--shadow-card); }
+
+/* ---------- App chrome ---------- */
+.topbar { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 6px; }
+.tabbar { display: flex; align-items: flex-end; justify-content: space-around; padding: 8px 8px 18px; background: var(--card); border-top: var(--border-w) solid var(--line); }
+.tab { width: 64px; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--ink-2); border-radius: 10px; }
+.tab.on { color: var(--ink); }
+.tab.on svg { stroke: var(--ink); }
+.tab-roll { width: 64px; height: 64px; margin-top: -26px; border-radius: 18px; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lift); }
+.hint { font-size: 12px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }

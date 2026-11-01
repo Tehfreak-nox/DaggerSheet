@@ -1,0 +1,97 @@
+/* ==========================================================
+   PERSONA THEME  (loads after sheet.css)
+   data-cls + data-sub → colour      (header band + accents)
+   .fx-<community>      → Features panel material
+   Ancestry ornaments are inline SVG (see the sheet script).
+   Rule: textures live on the frame ring only — text sits on
+   a solid light surface.
+   ========================================================== */
+
+/* ---------- class palettes: deep (band) · a / b (subclass accents) ---------- */
+[data-cls="assassin"] { --c-deep:#1E1416; --c-a:#6A2232; --c-b:#3F5A22; }
+[data-cls="bard"]     { --c-deep:#4A1634; --c-a:#8C2F6E; --c-b:#9A2E4E; }
+[data-cls="brawler"]  { --c-deep:#3D2210; --c-a:#8A3E14; --c-b:#7A4A1E; }
+[data-cls="druid"]    { --c-deep:#1D3622; --c-a:#1F6658; --c-b:#4F6B17; }
+[data-cls="guardian"] { --c-deep:#1C2A3E; --c-a:#2E5F7F; --c-b:#4A4A8C; }
+[data-cls="ranger"]   { --c-deep:#1F3833; --c-a:#2D6A4F; --c-b:#4A6A2F; }
+[data-cls="rogue"]    { --c-deep:#221B2E; --c-a:#2E2A55; --c-b:#5A3352; }
+[data-cls="seraph"]   { --c-deep:#4A3810; --c-a:#7A4E0E; --c-b:#5E5A14; }
+[data-cls="sorcerer"] { --c-deep:#331247; --c-a:#8A2F7A; --c-b:#5A3FB0; }
+[data-cls="warlock"]  { --c-deep:#20240F; --c-a:#4F5A10; --c-b:#6A2A1A; }
+[data-cls="warrior"]  { --c-deep:#3A1510; --c-a:#8A4A12; --c-b:#8C2424; }
+[data-cls="witch"]    { --c-deep:#123B44; --c-a:#1F5F78; --c-b:#3E2A5E; }
+[data-cls="wizard"]   { --c-deep:#191D48; --c-a:#2A5A9C; --c-b:#5A3A9C; }
+[data-cls][data-sub="a"] { --accent: var(--c-a); }
+[data-cls][data-sub="b"] { --accent: var(--c-b); }
+[data-cls] .s-band { background: var(--c-deep); }
+[data-cls] .s-band::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--accent); }
+
+/* ---------- ancestry ornament slots ---------- */
+.orn { width: 54px; flex: none; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; color: #FFFFFF; opacity: .9; }
+.orn.r svg { transform: scaleX(-1); }
+
+/* ---------- community frames ---------- */
+.fx { position: relative; padding: 12px; border-radius: 14px; }
+.fx-in { position: relative; background: #FFFFFF; border-radius: 8px; padding: 18px 16px; }
+
+/* Loreborne — scroll */
+.fx-loreborne { padding: 22px 10px; background: transparent; }
+.fx-loreborne::before, .fx-loreborne::after { content: ""; position: absolute; left: 0; right: 0; height: 22px; border-radius: 11px; background: linear-gradient(180deg, #8A6A3A, #E9D6A8 40%, #F6E9C8 55%, #7E5E30); box-shadow: 0 3px 6px rgba(0,0,0,.25); z-index: 1; }
+.fx-loreborne::before { top: 0; } .fx-loreborne::after { bottom: 0; }
+.fx-loreborne .fx-in { background: #FBF4E2; border-radius: 0; border-left: 1px solid #D8C49A; border-right: 1px solid #D8C49A; margin: 0 8px; }
+
+/* Orderborne — stone tablet */
+.fx-orderborne { background: linear-gradient(135deg, #A9A49B, #8B867D); clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px); padding: 14px; }
+.fx-orderborne .fx-in { background: #EDEBE6; border-radius: 0; box-shadow: inset 0 0 0 2px #B9B4AA, inset 0 0 0 5px #EDEBE6, inset 0 0 0 6px #C9C4BA; padding: 22px 18px; }
+
+/* Wildborne — tree bark */
+.fx-wildborne { background: repeating-linear-gradient(90deg, #5B3F26 0 3px, #7A5634 3px 7px, #4E361F 7px 9px, #6B4A2C 9px 14px); }
+.fx-wildborne .fx-in { background: #F6F3EA; border-radius: 6px 22px 6px 22px; }
+
+/* Underborne — cave rock */
+.fx-underborne { background: radial-gradient(circle at 20% 30%, rgba(255,255,255,.08) 2px, transparent 3px) 0 0 / 18px 18px, radial-gradient(circle at 70% 60%, rgba(0,0,0,.25) 3px, transparent 4px) 0 0 / 26px 26px, linear-gradient(#3B3733, #24211E); clip-path: polygon(0 10px, 8% 0, 18% 8px, 30% 2px, 44% 10px, 58% 0, 70% 8px, 84% 2px, 100% 10px, 100% 100%, 0 100%); padding-top: 22px; }
+.fx-underborne .fx-in { background: #F2F0EC; }
+
+/* Seaborne — rope + sailcloth */
+.fx-seaborne { background: repeating-linear-gradient(60deg, #D4B27C 0 4px, #96723F 4px 8px); }
+.fx-seaborne .fx-in { background: #F7F5EF; box-shadow: inset 0 0 0 1px #D9D2C2; }
+
+/* Highborne — gilded frame */
+.fx-highborne { background: linear-gradient(135deg, #8C6A1E, #E8C96A 30%, #9C7826 55%, #F1D987 80%, #8C6A1E); padding: 8px; }
+.fx-highborne .fx-in { background: #FFFDF7; box-shadow: inset 0 0 0 2px #C9A64A, inset 0 0 0 6px #FFFDF7, inset 0 0 0 7px #E2CB8A; padding: 22px 18px; }
+
+/* Ridgeborne — mountain stone */
+.fx-ridgeborne { background: linear-gradient(160deg, #7C8088, #4F535A); clip-path: polygon(0 18px, 10% 4px, 18% 14px, 30% 0, 42% 16px, 54% 6px, 66% 18px, 78% 2px, 90% 14px, 100% 6px, 100% 100%, 0 100%); padding-top: 26px; }
+.fx-ridgeborne .fx-in { background: #F1F2F4; }
+
+/* Slyborne — dark cloak, stitched */
+.fx-slyborne { background: linear-gradient(135deg, #2A2230, #18131C); }
+.fx-slyborne .fx-in { background: #F5F3F7; box-shadow: inset 0 0 0 4px #F5F3F7, inset 0 0 0 5px #6E6278; outline: 2px dashed #6E6278; outline-offset: -9px; }
+
+/* Wanderborne — leather + map */
+.fx-wanderborne { background: linear-gradient(135deg, #8A5A34, #6B4226); }
+.fx-wanderborne .fx-in { background: linear-gradient(#FAF5EA, #FAF5EA) padding-box; outline: 2px dashed #C9A37A; outline-offset: -7px; }
+
+/* Hearthborne — wooden planks */
+.fx-hearthborne { background: repeating-linear-gradient(180deg, #9A6B3F 0 14px, #84592F 14px 16px, #A87A4A 16px 30px, #8A5E33 30px 32px); }
+.fx-hearthborne .fx-in { background: #FBF7F0; }
+
+/* Duneborne — sand dunes */
+.fx-duneborne { background: radial-gradient(ellipse 40px 10px at 50% 100%, #C99A55 98%, transparent) 0 0 / 60px 14px, linear-gradient(#E3BF84, #C79A5B); }
+.fx-duneborne .fx-in { background: #FCF8EE; }
+
+/* Freeborne — open sky + wind */
+.fx-freeborne { background: repeating-linear-gradient(170deg, #9EC3DA 0 6px, #B9D5E6 6px 14px), #9EC3DA; }
+.fx-freeborne .fx-in { background: #FAFCFD; border-radius: 18px; }
+
+/* Frostborne — ice */
+.fx-frostborne { background: linear-gradient(120deg, transparent 45%, rgba(255,255,255,.6) 46% 48%, transparent 49%) 0 0 / 34px 34px, linear-gradient(60deg, transparent 45%, rgba(255,255,255,.4) 46% 47%, transparent 48%) 0 0 / 26px 26px, linear-gradient(#A9CFE0, #7FB2CA); }
+.fx-frostborne .fx-in { background: #F6FAFC; }
+
+/* Reborne — patchwork */
+.fx-reborne { background: conic-gradient(#8E7A6A 0 25%, #6E7D6A 0 50%, #8A6F7E 0 75%, #7A8796 0) 0 0 / 28px 28px; }
+.fx-reborne .fx-in { background: #FAF8F5; outline: 2px dashed #8E7A6A; outline-offset: -7px; }
+
+/* Warborne — iron plates + rivets */
+.fx-warborne { background: radial-gradient(circle, #C9CCD1 2px, #5A5F66 2.5px, transparent 3.5px) 6px 6px / 24px 24px, linear-gradient(#6C7178, #4A4E54); }
+.fx-warborne .fx-in { background: #F3F4F5; border-radius: 2px; }

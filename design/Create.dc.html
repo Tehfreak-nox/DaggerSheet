@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Create a character</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./sheet.css">
+<link rel="stylesheet" href="./persona.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700;800&amp;family=Barlow:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="s" data-cls="{{cls}}" data-sub="{{sub}}" style="width: 390px; height: 2200px; display: flex; flex-direction: column; overflow: hidden">
+
+  <!-- Live preview of the personalised header -->
+  <header class="s-band" style="padding-top: 16px">
+    <sc-if value="{{hasCls}}" hint-placeholder-val="{{ false }}">
+      <svg width="190" height="190" viewBox="-5 -5 34 34" fill="none" stroke="#FFFFFF" stroke-width=".6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; right: -40px; top: -24px; opacity: .17"><path d="{{emblem}}"/><path d="{{emFrame}}"/></svg>
+    </sc-if>
+    <div style="position: relative; display: flex; flex-direction: column; gap: 4px; padding-right: 36px">
+      <span class="s-label" style="font-size: 11px; color: rgba(255,255,255,.6)">Live preview</span>
+      <span class="s-name" style="font-size: 26px">{{previewName}}</span>
+      <span class="s-sub" style="font-size: 15px">{{sentence}}</span>
+    </div>
+    <div style="position: relative; display: flex; margin: 10px -20px 0">
+      <span class="orn" aria-hidden="true"><svg width="44" height="32" viewBox="0 0 60 44" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="{{ornL.f}}" fill="currentColor" fill-opacity=".85" stroke="none"/><path d="{{ornL.s}}"/></svg></span>
+      <span class="s-navtab on" style="min-height: 46px">Character</span>
+      <span class="s-navtab" style="min-height: 46px">Equipment</span>
+      <span class="orn r" aria-hidden="true"><svg width="44" height="32" viewBox="0 0 60 44" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="{{ornR.f}}" fill="currentColor" fill-opacity=".85" stroke="none"/><path d="{{ornR.s}}"/></svg></span>
+    </div>
+  </header>
+  <sc-if value="{{hasCom}}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 10px 20px 0">
+      <div class="fx fx-{{community}}" style="padding: 8px"><div class="fx-in" style="padding: 8px 12px; display: flex; justify-content: space-between; align-items: center"><span class="s-label">Features panel</span><span class="s-muted" style="font-size: 13px">{{comName}}</span></div></div>
+    </div>
+  </sc-if>
+
+  <!-- Progress -->
+  <div style="padding: 14px 20px 0; display: flex; flex-direction: column; gap: 8px">
+    <div style="display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 3px" aria-hidden="true">
+      <sc-for list="{{bar}}" as="b" hint-placeholder-count="11"><span style="height: 5px; border-radius: 3px; {{b.style}}"></span></sc-for>
+    </div>
+    <div class="s-row"><span class="s-label s-muted" style="font-size: 12px">Step {{stepNo}} of 11</span><span class="s-label s-muted" style="font-size: 12px">{{stepHint}}</span></div>
+    <h1 style="margin: 0; font: 800 26px/1.05 var(--head); text-transform: uppercase; letter-spacing: .02em">{{stepTitle}}</h1>
+  </div>
+
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 14px 20px 20px">
+
+    <!-- 1 NAME -->
+    <sc-if value="{{is1}}" hint-placeholder-val="{{ true }}">
+      <label class="s-label s-muted" for="c-name">Name</label>
+      <input id="c-name" class="s-field" type="text" placeholder="Character name" value="{{name}}" onInput="{{onName}}">
+      <label class="s-label s-muted" for="c-pro">Pronouns</label>
+      <input id="c-pro" class="s-field" type="text" placeholder="He / Him" value="{{pronouns}}" onInput="{{onPro}}">
+      <span class="s-muted" style="font-size: 14px; line-height: 1.45">Your sheet reads: name · community · subclass · class · ancestry. Each choice you make next restyles the sheet above.</span>
+    </sc-if>
+
+    <!-- 2 CLASS -->
+    <sc-if value="{{is2}}" hint-placeholder-val="{{ false }}">
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{classes}}" as="c" hint-placeholder-count="13">
+          <button class="s-press" data-cls="{{c.id}}" data-sub="a" style="padding: 0; border: 3px solid {{c.ring}}; border-radius: 10px; overflow: hidden; background: #FFFFFF; text-align: left; display: flex; flex-direction: column" aria-pressed="{{c.sel}}" onClick="{{c.pick}}">
+            <span style="background: var(--c-deep); color: #FFFFFF; padding: 10px; display: flex; align-items: center; gap: 8px">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{c.em}}"/></svg>
+              <span style="font: 800 18px/1 var(--head); text-transform: uppercase">{{c.name}}</span>
+            </span>
+            <span style="padding: 8px 10px; display: flex; flex-direction: column; gap: 2px">
+              <span style="font-size: 13px">{{c.domains}}</span>
+              <span class="s-muted" style="font-size: 12px">HP {{c.hp}} · Evasion {{c.ev}}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- 3 SUBCLASS -->
+    <sc-if value="{{is3}}" hint-placeholder-val="{{ false }}">
+      <span class="s-muted" style="font-size: 14px; line-height: 1.45">Both subclasses share the {{clsName}} colour and emblem — each shifts the accent and the frame around the emblem.</span>
+      <sc-for list="{{subs}}" as="o" hint-placeholder-count="2">
+        <button class="s-press" data-cls="{{cls}}" data-sub="{{o.id}}" style="padding: 14px; border: 3px solid {{o.ring}}; border-radius: 10px; background: #FFFFFF; display: flex; align-items: center; gap: 14px; text-align: left" aria-pressed="{{o.sel}}" onClick="{{o.pick}}">
+          <span style="width: 64px; height: 64px; flex: none; border-radius: 50%; background: var(--c-deep); color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+            <svg width="54" height="54" viewBox="-5 -5 34 34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{emblem}}"/><path d="{{o.frame}}" stroke="var(--accent)" stroke-width="2.4"/></svg>
+          </span>
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 4px"><span class="s-feat-name">{{o.name}}</span><span class="s-muted" style="font-size: 13px">{{o.cast}} · {{o.frameName}} frame</span></span>
+          <span style="width: 30px; height: 30px; border-radius: 6px; background: var(--accent); flex: none"></span>
+        </button>
+      </sc-for>
+    </sc-if>
+
+    <!-- 4 ANCESTRY -->
+    <sc-if value="{{is4}}" hint-placeholder-val="{{ false }}">
+      <div class="s-row" style="padding: 8px 12px; background: var(--fill); border-radius: 8px">
+        <span style="font-size: 14px; line-height: 1.35"><b>Mixed ancestry</b> · first feature from one, second from another</span>
+        <button class="s-check {{mixCls}}" aria-pressed="{{mixP}}" aria-label="Mixed ancestry" onClick="{{mixTap}}"></button>
+      </div>
+      <sc-if value="{{mixed}}" hint-placeholder-val="{{ false }}">
+        <div class="s-pills" style="justify-content: flex-start"><button class="s-pill {{slotACls}}" style="border: 2px solid var(--accent, var(--ink))" onClick="{{slotA}}">Left · {{ancAName}}</button><button class="s-pill {{slotBCls}}" style="border: 2px solid var(--accent, var(--ink))" onClick="{{slotB}}">Right · {{ancBName}}</button></div>
+      </sc-if>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+        <sc-for list="{{ancestries}}" as="a" hint-placeholder-count="24">
+          <button class="s-press" style="min-height: 88px; padding: 8px 4px; border: 2.5px solid {{a.ring}}; border-radius: 10px; background: {{a.bg}}; color: {{a.fg}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px" aria-pressed="{{a.sel}}" onClick="{{a.pick}}">
+            <svg width="44" height="32" viewBox="0 0 60 44" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{a.f}}" fill="currentColor" fill-opacity=".85" stroke="none"/><path d="{{a.s}}"/></svg>
+            <span style="font: 700 14px/1 var(--head)">{{a.name}}</span>
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- 5 COMMUNITY -->
+    <sc-if value="{{is5}}" hint-placeholder-val="{{ false }}">
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{communities}}" as="c" hint-placeholder-count="15">
+          <button class="s-press" style="padding: 0; border: 3px solid {{c.ring}}; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column; overflow: hidden" aria-pressed="{{c.sel}}" onClick="{{c.pick}}">
+            <span class="fx fx-{{c.id}}" style="display: block; padding: 8px; border-radius: 0"><span class="fx-in" style="display: block; height: 34px; padding: 0"></span></span>
+            <span style="padding: 8px 4px; font: 700 14px/1 var(--head); text-align: center">{{c.name}}</span>
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- 6 TRAITS -->
+    <sc-if value="{{is6}}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 12px; border: 2px solid var(--accent, var(--ink)); border-radius: 10px; display: flex; flex-direction: column; gap: 10px">
+        <div class="s-row"><span class="s-label">Recommended for {{recFor}}</span><button class="s-mini solid" onClick="{{useRec}}">Use</button></div>
+        <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; text-align: center">
+          <sc-for list="{{recTraits}}" as="r" hint-placeholder-count="6">
+            <span style="display: flex; flex-direction: column; gap: 2px"><span style="font: 700 9px/1 var(--head); text-transform: uppercase; letter-spacing: .03em">{{r.name}}</span><span class="s-num" style="font-size: 20px">{{r.v}}</span></span>
+          </sc-for>
+        </div>
+        <span class="s-muted" style="font-size: 13px; line-height: 1.4">{{recWhy}}</span>
+      </div>
+      <span class="s-muted" style="font-size: 14px; line-height: 1.45">Or place them yourself: tap a modifier, then tap a trait. Tap a placed modifier to send it back.</span>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; min-height: 52px">
+        <sc-for list="{{tray}}" as="m" hint-placeholder-count="6">
+          <button class="s-token {{m.cls}}" style="width: 48px; height: 48px; font: 600 20px/1 var(--head); color: {{m.fg}}" aria-pressed="{{m.sel}}" onClick="{{m.pick}}">{{m.label}}</button>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px">
+        <sc-for list="{{traitSlots}}" as="t" hint-placeholder-count="6">
+          <button class="s-trait s-press" onClick="{{t.tap}}" aria-label="{{t.name}} {{t.val}}">
+            <span class="tab">{{t.name}}</span>
+            <span class="face" style="{{t.face}}"><span class="s-num">{{t.val}}</span></span>
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- 7 EXPERIENCES -->
+    <sc-if value="{{is7}}" hint-placeholder-val="{{ false }}">
+      <span class="s-muted" style="font-size: 14px; line-height: 1.45">Two Experiences at +2 — a background, a skill, a saying. Keep them broad enough to come up often.</span>
+      <div class="s-row"><input class="s-field" type="text" placeholder="e.g. Raised in a Lighthouse Library" value="{{exp1}}" onInput="{{onExp1}}" aria-label="First Experience"><span class="s-num" style="font-size: 22px">+2</span></div>
+      <div class="s-row"><input class="s-field" type="text" placeholder="e.g. Reads Old Scripts" value="{{exp2}}" onInput="{{onExp2}}" aria-label="Second Experience"><span class="s-num" style="font-size: 22px">+2</span></div>
+    </sc-if>
+
+    <!-- 8 EQUIPMENT -->
+    <sc-if value="{{is8}}" hint-placeholder-val="{{ false }}">
+      <span class="s-muted" style="font-size: 14px; line-height: 1.45">Tap any item to see its stats. ★ = suggested for {{recFor}} ({{keyText}}).</span>
+      <sc-for list="{{gearGroups}}" as="g" hint-placeholder-count="3">
+        <section style="display: flex; flex-direction: column; margin-top: 8px">
+          <div class="s-row" style="padding-bottom: 6px; border-bottom: 2px solid var(--ink)"><span class="s-label" style="font-size: 16px">{{g.title}}</span><span class="s-muted" style="font-size: 13px">{{g.chosen}}</span></div>
+          <sc-if value="{{g.hasNote}}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; padding: 8px 0; color: var(--ink-2)">{{g.note}}</span></sc-if>
+          <sc-for list="{{g.rows}}" as="w" hint-placeholder-count="5">
+            <div style="border-bottom: 1px solid var(--line); {{w.dim}}">
+              <button class="s-row s-press" style="width: 100%; min-height: 52px; padding: 8px 0; border: 0; background: transparent; text-align: left" aria-expanded="{{w.open}}" onClick="{{w.toggle}}" disabled="{{w.locked}}">
+                <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+                  <span style="font: 700 17px/1.15 var(--head)">{{w.star}}{{w.name}}</span>
+                  <span class="s-muted" style="font-size: 13px">{{w.line}}</span>
+                </span>
+                <span style="display: flex; align-items: center; gap: 8px; flex: none">
+                  <span class="s-num" style="font-size: 16px">{{w.stat}}</span>
+                  <sc-if value="{{w.isSel}}" hint-placeholder-val="{{ false }}"><span class="s-label" style="font-size: 11px; padding: 4px 8px; border-radius: 6px; background: var(--accent, var(--ink)); color: #FFFFFF">Chosen</span></sc-if>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{w.chev}}"><path d="M6 9l6 6 6-6"/></svg>
+                </span>
+              </button>
+              <sc-if value="{{w.isOpen}}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 4px 0 14px; display: flex; flex-direction: column; gap: 8px">
+                  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px">
+                    <sc-for list="{{w.stats}}" as="st" hint-placeholder-count="4"><span style="display: flex; flex-direction: column"><span class="s-label s-muted" style="font-size: 11px">{{st.k}}</span><span style="font-size: 15px">{{st.v}}</span></span></sc-for>
+                  </div>
+                  <span class="s-feat-text" style="font-size: 15px"><b>{{w.featName}}</b> {{w.featText}}</span>
+                  <button class="s-mini {{w.btnCls}}" style="align-self: flex-start" onClick="{{w.choose}}">{{w.btn}}</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{g.canMore}}" hint-placeholder-val="{{ false }}">
+            <button class="s-mini" style="align-self: flex-start; margin-top: 8px" onClick="{{g.more}}">{{g.moreLabel}}</button>
+          </sc-if>
+        </section>
+      </sc-for>
+      <span class="s-label" style="margin-top: 10px">Potion</span>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px"><sc-for list="{{potions}}" as="w" hint-placeholder-count="2"><button class="s-mini {{w.cls}}" onClick="{{w.pick}}">{{w.name}}</button></sc-for></div>
+      <span class="s-muted" style="font-size: 14px; line-height: 1.45">Also added: a torch, 50 ft of rope, basic supplies, a handful of gold, and your class item.</span>
+    </sc-if>
+
+    <!-- 9 DOMAIN CARDS -->
+    <sc-if value="{{is9}}" hint-placeholder-val="{{ false }}">
+      <span class="s-muted" style="font-size: 14px; line-height: 1.45">Choose two level 1 cards from {{domText}}. Tap a card to read it. {{cardCount}} of 2 chosen.</span>
+      <sc-for list="{{cards}}" as="c" hint-placeholder-count="6">
+        <div style="border: 2px solid {{c.ring}}; border-radius: 10px; overflow: hidden">
+          <button class="s-row s-press" style="width: 100%; min-height: 58px; padding: 8px 12px; border: 0; background: #FFFFFF; text-align: left" aria-expanded="{{c.open}}" onClick="{{c.toggle}}">
+            <span style="display: flex; flex-direction: column; gap: 2px"><span class="s-feat-name" style="font-size: 18px">{{c.name}}</span><span class="s-muted" style="font-size: 13px">{{c.meta}}</span></span>
+            <span style="display: flex; align-items: center; gap: 8px">
+              <sc-if value="{{c.isSel}}" hint-placeholder-val="{{ false }}"><span class="s-label" style="font-size: 11px; padding: 4px 8px; border-radius: 6px; background: var(--accent, var(--ink)); color: #FFFFFF">Chosen</span></sc-if>
+              <span style="width: 34px; height: 34px; flex: none; border-radius: 50%; border: 2px solid var(--ink); display: inline-flex; align-items: center; justify-content: center" role="img" aria-label="Recall cost {{c.rc}}"><span class="s-num" style="font-size: 15px">{{c.rc}}</span><svg width="8" height="12" viewBox="0 0 10 14" aria-hidden="true"><path d="M6 0L0 8h4l-1 6 7-9H6z" fill="currentColor"/></svg></span>
+            </span>
+          </button>
+          <sc-if value="{{c.isOpen}}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 0 12px 14px; display: flex; flex-direction: column; gap: 10px">
+              <span class="s-feat-text" style="font-size: 15px; white-space: pre-line">{{c.text}}</span>
+              <button class="s-mini {{c.btnCls}}" style="align-self: flex-start" disabled="{{c.full}}" onClick="{{c.choose}}">{{c.btn}}</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </sc-if>
+
+    <!-- 10 BACKGROUND -->
+    <sc-if value="{{is10}}" hint-placeholder-val="{{ false }}">
+      <span class="s-label">Background questions · {{clsName}}</span>
+      <span class="s-muted" style="font-size: 14px; line-height: 1.45">Answer any of these, or write your own.</span>
+      <sc-for list="{{bgQs}}" as="q" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span class="s-feat-text" style="font-size: 15px"><b>{{q.q}}</b></span>
+          <textarea class="s-field" rows="3" style="padding: 10px 12px; resize: none" placeholder="Your answer" onInput="{{q.onInput}}" aria-label="{{q.q}}">{{q.a}}</textarea>
+        </div>
+      </sc-for>
+      <span class="s-label" style="margin-top: 10px">Connections · {{clsName}}</span>
+      <span class="s-muted" style="font-size: 14px; line-height: 1.45">Ask your fellow players one of these for their character to answer, or create your own.</span>
+      <sc-for list="{{conQs}}" as="q" hint-placeholder-count="3">
+        <span style="padding: 10px 12px; background: var(--fill); border-radius: 8px; font-size: 15px; line-height: 1.4">“{{q}}”</span>
+      </sc-for>
+      <textarea class="s-field" rows="3" style="padding: 10px 12px; resize: none" placeholder="Notes on your connections" onInput="{{onCon}}" aria-label="Connection notes">{{con}}</textarea>
+    </sc-if>
+
+    <!-- 11 REVIEW -->
+    <sc-if value="{{is11}}" hint-placeholder-val="{{ false }}">
+      <sc-for list="{{review}}" as="r" hint-placeholder-count="8">
+        <div class="s-row" style="min-height: 44px; border-bottom: 1px solid var(--line); align-items: flex-start; padding: 10px 0"><span class="s-label s-muted" style="font-size: 12px; padding-top: 3px">{{r.k}}</span><span style="font-size: 15px; text-align: right; max-width: 230px">{{r.v}}</span></div>
+      </sc-for>
+      <a href="V2Sheet.dc.html" class="s-btn solid s-press" style="min-height: 54px; margin-top: 6px">Create character</a>
+    </sc-if>
+
+    <div style="margin-top: auto; display: grid; grid-template-columns: 1fr 2fr; gap: 8px; padding-top: 12px">
+      <button class="s-btn s-press" disabled="{{atStart}}" onClick="{{back}}">Back</button>
+      <sc-if value="{{notLast}}" hint-placeholder-val="{{ true }}">
+        <button class="s-btn solid s-press" style="{{nextStyle}}" disabled="{{nextOff}}" onClick="{{next}}">{{nextLabel}}</button>
+      </sc-if>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"step":{"editor":"int","min":1,"max":11,"default":1,"section":"Screen"},"$preview":{"width":390,"height":2200}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      step: null, name: '', pronouns: '', cls: '', sub: '', anc: '', anc2: '', mixed: false, slot: 'a', com: '',
+      placed: {}, held: null, exp1: '', exp2: '', prim: '', sec: 'None', armor: '', potion: 'Minor Health Potion', cards: [],
+      open: '', more: {}, bga: {}, con: ''
+    };
+    this.MODS = [2, 1, 1, 0, 0, -1];
+    this.TRN = ['Agility', 'Strength', 'Finesse', 'Instinct', 'Presence', 'Knowledge'];
+    // [domain1, domain2, HP, Evasion]
+    this.CLASS = {
+      assassin: ['Blade', 'Midnight', 5, 12], bard: ['Grace', 'Codex', 5, 10], brawler: ['Valor', 'Bone', 6, 10], druid: ['Sage', 'Arcana', 6, 10],
+      guardian: ['Valor', 'Blade', 7, 9], ranger: ['Bone', 'Sage', 6, 12], rogue: ['Midnight', 'Grace', 6, 12], seraph: ['Splendor', 'Valor', 7, 9],
+      sorcerer: ['Arcana', 'Midnight', 6, 10], warlock: ['Dread', 'Grace', 5, 11], warrior: ['Blade', 'Bone', 6, 11], witch: ['Sage', 'Dread', 6, 10],
+      wizard: ['Codex', 'Splendor', 5, 11]
+    };
+    // Spellcast trait per subclass [a, b]  (SRD). null = subclass has no Spellcast trait.
+    this.CAST = {
+      assassin: ['Agility', 'Knowledge'], bard: ['Presence', 'Presence'], brawler: [null, null], druid: ['Instinct', 'Instinct'],
+      guardian: [null, null], ranger: ['Agility', 'Agility'], rogue: ['Finesse', 'Finesse'], seraph: ['Strength', 'Strength'],
+      sorcerer: ['Instinct', 'Instinct'], warlock: ['Presence', 'Presence'], warrior: [null, null], witch: ['Knowledge', 'Instinct'],
+      wizard: ['Knowledge', 'Knowledge']
+    };
+    // Suggested arrays (app suggestion built around the key trait). Order: Agi, Str, Fin, Ins, Pre, Kno
+    this.REC = {
+      'assassin.a': [2, -1, 1, 1, 0, 0], 'assassin.b': [1, -1, 1, 0, 0, 2], bard: [0, -1, 1, 0, 2, 1], brawler: [1, 2, 0, 1, 0, -1],
+      druid: [1, 0, -1, 2, 0, 1], guardian: [1, 2, 0, 1, 0, -1], ranger: [2, 0, 1, 1, -1, 0], rogue: [1, -1, 2, 0, 1, 0],
+      seraph: [0, 2, -1, 1, 1, 0], sorcerer: [0, -1, 1, 2, 1, 0], warlock: [0, -1, 0, 1, 2, 1], warrior: [2, 1, 1, 0, 0, -1],
+      'witch.a': [0, -1, 0, 1, 1, 2], 'witch.b': [0, -1, 0, 2, 1, 1], wizard: [0, -1, 1, 1, 0, 2]
+    };
+    this.ARMOR_REC = {
+      assassin: ['Leather Armor', 'Gambeson Armor'], bard: ['Mage Robes', 'Gambeson Armor'], brawler: ['Leather Armor', 'Brigandine Armor'],
+      druid: ['Mage Robes', 'Gambeson Armor'], guardian: ['Chainmail Armor', 'Full Plate Armor'], ranger: ['Leather Armor', 'Gambeson Armor'],
+      rogue: ['Leather Armor', 'Gambeson Armor'], seraph: ['Chainmail Armor', 'Scale Mail Armor'], sorcerer: ['Mage Robes', 'Gambeson Armor'],
+      warlock: ['Mage Robes', 'Gambeson Armor'], warrior: ['Chainmail Armor', 'Scale Mail Armor'], witch: ['Mage Robes', 'Gambeson Armor'],
+      wizard: ['Mage Robes', 'Gambeson Armor']
+    };
+    // Tier 1 weapons (SRD): [name, trait, range, damage, burden 1|2, magic, feature]
+    this.PRIM = [
+      ['Broadsword', 'Agility', 'Melee', 'd8 phy', 1, 0, 'Reliable: +1 to attack rolls'],
+      ['Katana', 'Agility', 'Melee', 'd10+3 phy', 2, 0, 'Quick: When you make an attack, you can mark a Stress to target another creature within range.'],
+      ['Longsword', 'Agility', 'Melee', 'd10+3 phy', 2, 0, ''],
+      ['Battleaxe', 'Strength', 'Melee', 'd10+3 phy', 2, 0, ''],
+      ['Brass Knuckles', 'Strength', 'Melee', 'd8+1 phy', 1, 0, ''],
+      ['Greatsword', 'Strength', 'Melee', 'd10+3 phy', 2, 0, 'Massive: −1 to Evasion; on a successful attack, roll an additional damage die and discard the lowest result.'],
+      ['Mace', 'Strength', 'Melee', 'd8+1 phy', 1, 0, ''],
+      ['Warhammer', 'Strength', 'Melee', 'd12+3 phy', 2, 0, 'Heavy: −1 to Evasion'],
+      ['Dagger', 'Finesse', 'Melee', 'd8+1 phy', 1, 0, ''],
+      ['Quarterstaff', 'Instinct', 'Melee', 'd10+3 phy', 2, 0, ''],
+      ['Cutlass', 'Presence', 'Melee', 'd8+1 phy', 1, 0, ''],
+      ['Rapier', 'Presence', 'Melee', 'd8 phy', 1, 0, 'Quick: When you make an attack, you can mark a Stress to target another creature within range.'],
+      ['Scimitar', 'Presence', 'Melee', 'd8+1 phy', 1, 0, ''],
+      ['Twisted Dagger', 'Knowledge', 'Melee', 'd8 phy', 1, 0, 'Piercing: Damage dealt with this weapon treats the target’s Major threshold as having a −2 penalty.'],
+      ['Halberd', 'Strength', 'Very Close', 'd10+2 phy', 2, 0, 'Cumbersome: −1 to Finesse'],
+      ['Spear', 'Finesse', 'Very Close', 'd8+3 phy', 2, 0, ''],
+      ['Whipsword', 'Finesse', 'Very Close', 'd8 phy', 1, 0, 'Versatile: This weapon can also be used with these statistics—Finesse, Melee, d10.'],
+      ['Rope Dart', 'Instinct', 'Close', 'd6+1 phy', 2, 0, ''],
+      ['Shortbow', 'Agility', 'Far', 'd6+3 phy', 2, 0, ''],
+      ['Crossbow', 'Finesse', 'Far', 'd6+1 phy', 1, 0, ''],
+      ['Longbow', 'Agility', 'Very Far', 'd8+3 phy', 2, 0, 'Cumbersome: −1 to Finesse'],
+      ['Arcane Gauntlets', 'Strength', 'Melee', 'd10+3 mag', 2, 1, ''],
+      ['Brightsword', 'Strength', 'Melee', 'd10+3 mag', 2, 1, ''],
+      ['Hallowed Axe', 'Strength', 'Melee', 'd8+1 mag', 1, 1, ''],
+      ['Shadowblade', 'Presence', 'Melee', 'd8 phy/mag', 1, 1, 'Otherworldly: On a successful attack, you can deal physical or magic damage.'],
+      ['Glowing Rings', 'Agility', 'Very Close', 'd10+2 mag', 2, 1, ''],
+      ['Hand Runes', 'Instinct', 'Very Close', 'd10 mag', 1, 1, ''],
+      ['Enchanted Chakram', 'Finesse', 'Close', 'd6+1 mag', 1, 1, 'Ricochet: When you throw this weapon, it returns to your hand. When you make an attack, you can mark a Stress to target another creature within Very Close range of the first target with that attack.'],
+      ['Returning Blade', 'Finesse', 'Close', 'd8 mag', 1, 1, 'Returning: When this weapon is thrown within its range, it appears in your hand immediately after the attack.'],
+      ['Casting Dagger', 'Instinct', 'Close', 'd6 mag', 1, 1, 'Versatile: This weapon can also be used with these statistics—Instinct, Melee, d8.'],
+      ['Shortstaff', 'Instinct', 'Close', 'd8+1 mag', 1, 1, ''],
+      ['Dualstaff', 'Instinct', 'Far', 'd6+3 mag', 2, 1, ''],
+      ['Scepter', 'Presence', 'Far', 'd6 mag', 2, 1, 'Versatile: This weapon can also be used with these statistics—Presence, Melee, d8.'],
+      ['Runelock Pistol', 'Knowledge', 'Far', 'd6+3 mag', 1, 1, 'Reloading: After you make an attack, roll a d6. On a result of 1, you must mark a Stress to reload this weapon before you can fire it again.'],
+      ['Wand', 'Knowledge', 'Far', 'd6+1 mag', 1, 1, ''],
+      ['Arcane Rifle', 'Agility', 'Very Far', 'd10+3 mag', 2, 1, 'Aimed: Your attack has disadvantage if the target is within Very Close range of you or within Melee range of one of your allies. You can mark a Stress to ignore this penalty.'],
+      ['Greatstaff', 'Knowledge', 'Very Far', 'd6 mag', 2, 1, 'Powerful: On a successful attack, roll an additional damage die and discard the lowest result.']
+    ];
+    this.SEC = [
+      ['Hatchet', 'Agility', 'Melee', 'd8 phy', 1, 0, 'Follow-Up: On a successful attack with your primary weapon within Melee range, you can mark a Stress to gain a +1 bonus to your Proficiency for this attack.'],
+      ['Shortsword', 'Agility', 'Melee', 'd8 phy', 1, 0, 'Paired: +2 to primary weapon damage to targets within Melee range'],
+      ['Offhand Brass Knuckles', 'Strength', 'Melee', 'd8 phy', 1, 0, 'Paired: +2 to primary weapon damage to targets within Melee range'],
+      ['Round Shield', 'Strength', 'Melee', 'd4 phy', 1, 0, 'Protective: +1 to Armor Score'],
+      ['Tower Shield', 'Strength', 'Melee', 'd6 phy', 1, 0, 'Barrier: +2 to Armor Score; −1 to Evasion'],
+      ['Small Dagger', 'Finesse', 'Melee', 'd8 phy', 1, 0, 'Paired: +2 to primary weapon damage to targets within Melee range'],
+      ['Throwing Knives', 'Finesse', 'Melee', 'd8 phy', 1, 0, 'Stockpiled: You can throw this weapon within Close range by making an attack roll using Finesse. You don’t have to retrieve it, as you always have another on hand.'],
+      ['Fighting Cloak', 'Presence', 'Melee', 'd4 phy', 1, 0, 'Padded: +2 to damage thresholds'],
+      ['Rune Shield', 'Knowledge', 'Melee', 'd4 mag', 1, 1, 'Protective: +1 to Armor Score'],
+      ['Focus Runes', 'Instinct', 'Very Close', 'd6 mag', 1, 1, 'Focused: +1 to primary weapon damage to targets within Very Close range'],
+      ['Whip', 'Presence', 'Very Close', 'd6 phy', 1, 0, 'Startling: Mark a Stress to crack the whip and force all adversaries within Melee range back to Close range.'],
+      ['Grappler', 'Finesse', 'Close', 'd6 phy', 1, 0, 'Hooked: On a successful attack, you can pull the target into Melee range.'],
+      ['Hand Crossbow', 'Finesse', 'Far', 'd6+1 phy', 1, 0, '']
+    ];
+    // [name, major, severe, score, feature]
+    this.ARM = [
+      ['Mage Robes', 4, 10, 2, 'Enchanted: Gain a bonus to your damage thresholds equal to your Spellcast trait.'],
+      ['Gambeson Armor', 5, 11, 3, 'Flexible: +1 to Evasion'],
+      ['Brigandine Armor', 6, 12, 3, 'Lined: Mark a Stress to negate Minor damage.'],
+      ['Leather Armor', 6, 13, 3, ''],
+      ['Scale Mail Armor', 7, 14, 3, 'Cumbersome: −1 to Finesse'],
+      ['Chainmail Armor', 7, 15, 4, 'Heavy: −1 to Evasion'],
+      ['Banded Armor', 8, 16, 4, 'Bulky: −1 to Evasion; when you take Severe damage, you must mark a Stress.'],
+      ['Full Plate Armor', 8, 17, 4, 'Very Heavy: −2 to Evasion; −1 to Agility']
+    ];
+    this.CARDS = {"Rune Ward": {"d": "Arcana", "t": "Spell", "rc": 0, "x": "You have a deeply personal trinket that can be infused with protective magic and held as a ward by you or an ally. Describe what it is and why it’s important to you. The ward’s holder can spend a Hope to reduce incoming damage by 1d8. If the Ward Die result is 8, the ward’s power ends after it reduces damage this turn. It can be recharged for free on your next rest."}, "Unleash Chaos": {"d": "Arcana", "t": "Spell", "rc": 1, "x": "At the beginning of a session, place a number of tokens equal to your Spellcast trait on this card. Make a Spellcast Roll against a target within Far range and spend any number of tokens to channel raw energy from within yourself to unleash against them. On a success, roll a number of d10s equal to the tokens you spent and deal that much magic damage to the target. Mark a Stress to replenish this card with tokens (up to your Spellcast trait). At the end of each session, clear all unspent tokens."}, "Wall Walk": {"d": "Arcana", "t": "Spell", "rc": 1, "x": "Spend a Hope to allow a creature you can touch to climb on walls and ceilings as easily as walking on the ground. This lasts until the end of the scene or you cast Wall Walk again."}, "Get Back Up": {"d": "Blade", "t": "Ability", "rc": 1, "x": "When you take Severe damage, you can mark a Stress to reduce the severity by one threshold."}, "Not Good Enough": {"d": "Blade", "t": "Ability", "rc": 1, "x": "When you roll your damage dice, you can reroll any 1s or 2s."}, "Whirlwind": {"d": "Blade", "t": "Ability", "rc": 0, "x": "When you make a successful attack against a target within Very Close range, you can spend a Hope to use the attack against all other targets within Very Close range. All additional adversaries you succeed against with this ability take half damage."}, "Deft Maneuvers": {"d": "Bone", "t": "Ability", "rc": 0, "x": "Once per rest, mark a Stress to sprint anywhere within Far range without making an Agility Roll to get there. If you end this movement within Melee range of an adversary and immediately make an attack against them, gain a +1 bonus to the attack roll."}, "I See It Coming": {"d": "Bone", "t": "Ability", "rc": 1, "x": "When you’re targeted by an attack made from beyond Melee range, you can mark a Stress to roll a d4 and gain a bonus to your Evasion equal to the result against the attack."}, "Untouchable": {"d": "Bone", "t": "Ability", "rc": 1, "x": "Gain a bonus to your Evasion equal to half your Agility."}, "Book of Ava": {"d": "Codex", "t": "Grimoire", "rc": 2, "x": "Power Push: Make a Spellcast Roll against a target within Melee range. On a success, they’re knocked back to Far range and take d10+2 magic damage using your Proficiency. Tava’s Armor: Spend a Hope to give a target you can touch a +1 bonus to their Armor Score until their next rest or you cast Tava’s Armor again. Ice Spike: Make a Spellcast Roll (12) to summon a large ice spike within Far range. If you use it as a weapon, make the Spellcast Roll against the target’s Difficulty instead. On a success, deal d6 physical damage using your Proficiency."}, "Book of Illiat": {"d": "Codex", "t": "Grimoire", "rc": 2, "x": "Slumber: Make a Spellcast Roll against a target within Very Close range. On a success, they’re Asleep until they take damage or the GM spends a Fear on their turn to clear this condition. Arcane Barrage: Once per rest, spend any number of Hope and shoot magical projectiles that strike a target of your choice within Close range. Roll a number of d6s equal to the Hope spent and deal that much magic damage to the target. Telepathy: Spend a Hope to open a line of mental communication with one target you can see. This connection lasts until your next rest or you cast Telepathy again."}, "Book of Tyfar": {"d": "Codex", "t": "Grimoire", "rc": 2, "x": "Wild Flame: Make a Spellcast Roll against up to three adversaries within Melee range. Targets you succeed against take 2d6 magic damage and must mark a Stress as flames erupt from your hand. Magic Hand: You conjure a magical hand with the same size and strength as your own within Far range. Mysterious Mist: Make a Spellcast Roll (13) to cast a temporary thick fog that gathers in a stationary area within Very Close range. The fog heavily obscures this area and everything in it."}, "Blighting Strike": {"d": "Dread", "t": "Spell", "rc": 1, "x": "Make a Spellcast Roll against a target within Far range. On a success: ◦ On a roll with Hope, deal d6+1 magic damage using your Proficiency. On a roll with Fear, deal d10+1 magic damage using your Proficiency. ◦ The target’s next successful attack deals half damage. On a failure, you must spend a Hope or mark a Stress."}, "Umbral Veil": {"d": "Dread", "t": "Spell", "rc": 1, "x": "Once per rest, you can mark a Stress to encase yourself in shadowy energy. When you do, place a number of tokens on this card equal to the number of Fear in the GM’s pool. After an attack roll is made against you, you can spend any number of tokens to give the result a −1 penalty per token spent. At the end of the scene, clear all unspent tokens."}, "Voice of Dread": {"d": "Dread", "t": "Spell", "rc": 0, "x": "You can magically speak to a creature you can see, tormenting them with your words. Make a Spellcast Roll against them. On a success, they must mark a Stress and are frozen with terror, making them temporarily Restrained."}, "Deft Deceiver": {"d": "Grace", "t": "Ability", "rc": 0, "x": "Spend a Hope to gain advantage on a roll to deceive or trick someone into believing a lie you tell them."}, "Enrapture": {"d": "Grace", "t": "Spell", "rc": 0, "x": "Make a Spellcast Roll against a target within Close range. On a success, they become temporarily Enraptured. While Enraptured, a target’s attention is fixed on you, narrowing their field of view and drowning out any sound but your voice. Once per rest on a success, you can mark a Stress to force the Enraptured target to mark a Stress as well."}, "Inspirational Words": {"d": "Grace", "t": "Ability", "rc": 1, "x": "Your speech is imbued with power. After a long rest, place a number of tokens on this card equal to your Presence. When you speak with an ally, you can spend a token from this card to give them one benefit from the following options: ◦ Your ally clears a Stress. ◦ Your ally clears a Hit Point. ◦ Your ally gains a Hope. When you take a long rest, clear all unspent tokens."}, "Pick and Pull": {"d": "Midnight", "t": "Ability", "rc": 0, "x": "You have advantage on action rolls to pick nonmagical locks, disarm nonmagical traps, or steal items from a target (either through stealth or by force)."}, "Rain of Blades": {"d": "Midnight", "t": "Spell", "rc": 1, "x": "Spend a Hope to make a Spellcast Roll and conjure throwing blades that strike out at all targets within Very Close range. Targets you succeed against take d8+2 magic damage using your Proficiency. If a target you hit is Vulnerable, they take an extra 1d8 damage."}, "Uncanny Disguise": {"d": "Midnight", "t": "Spell", "rc": 0, "x": "When you have a few minutes to prepare, you can mark a Stress to don the facade of any humanoid you can picture clearly in your mind. While disguised, you have advantage on Presence Rolls to avoid scrutiny. Place a number of tokens equal to your Spellcast trait on this card. When you take an action while disguised, spend a token from this card. After the action that spends the last token is resolved, the disguise drops."}, "Gifted Tracker": {"d": "Sage", "t": "Ability", "rc": 0, "x": "When you’re tracking a specific creature or group of creatures based on signs of their passage, you can spend any number of Hope and ask the GM that many questions from the following list. ◦ What direction did they go? ◦ How long ago did they pass through? ◦ What were they doing in this location? ◦ How many of them were here? When you encounter creatures you’ve tracked in this way, gain a +1 bonus to your Evasion against them."}, "Nature’s Tongue": {"d": "Sage", "t": "Ability", "rc": 0, "x": "You can speak the language of the natural world. When you want to speak to the plants and animals around you, make an Instinct Roll (12). On a success, they’ll give you the information they know. On a roll with Fear, their knowledge might be limited or come at a cost. Additionally, before you make a Spellcast Roll while within a natural environment, you can spend a Hope to gain a +2 bonus to the roll."}, "Vicious Entangle": {"d": "Sage", "t": "Spell", "rc": 1, "x": "Make a Spellcast Roll against a target within Far range. On a success, roots and vines reach out from the ground, dealing 1d8+1 physical damage and temporarily Restraining the target. Additionally on a success, you can spend a Hope to temporarily Restrain another adversary within Very Close range of your target."}, "Bolt Beacon": {"d": "Splendor", "t": "Spell", "rc": 1, "x": "Make a Spellcast Roll against a target within Far range. On a success, spend a Hope to send a bolt of shimmering light toward them, dealing d8+2 magic damage using your Proficiency. The target becomes temporarily Vulnerable and glows brightly until this condition is cleared."}, "Mending Touch": {"d": "Splendor", "t": "Spell", "rc": 1, "x": "You lay your hands upon a creature and channel healing magic to close their wounds. When you can take a few minutes to focus on the target you’re helping, you can spend 2 Hope to clear a Hit Point or a Stress on them. Once per long rest, when you spend this healing time learning something new about them or revealing something about yourself, you can clear 2 Hit Points or 2 Stress on them instead."}, "Reassurance": {"d": "Splendor", "t": "Ability", "rc": 0, "x": "Once per rest, after an ally attempts an action roll but before the consequences take place, you can offer assistance or words of support. When you do, your ally can reroll their dice."}, "Bare Bones": {"d": "Valor", "t": "Ability", "rc": 0, "x": "When you choose not to equip armor, you have a base Armor Score of 3 + your Strength and use the following as your base damage thresholds: ◦ Tier 1: 9/19 ◦ Tier 2: 11/24 ◦ Tier 3: 13/31 ◦ Tier 4: 15/38"}, "Forceful Push": {"d": "Valor", "t": "Ability", "rc": 0, "x": "Make an attack with your primary weapon against a target within Melee range. On a success, you deal damage and knock them back to Close range. On a success with Hope, add a d6 to your damage roll. Additionally, you can spend a Hope to make them temporarily Vulnerable."}, "I Am Your Shield": {"d": "Valor", "t": "Ability", "rc": 1, "x": "When an ally within Very Close range would take damage, you can mark a Stress to stand in the way and make yourself the target of the attack instead. When you take damage from this attack, you can mark any number of Armor Slots."}};
+    this.QS = {
+      assassin: [['You once killed someone you were close to. What happened, and how did it change you?', 'What organization trained you in the art of killing, and how did you become a member?', 'Throughout your career, one target has eluded you. Who are they, and how have they slipped through your fingers?'], ['I’ve killed someone for you. Who were they?', 'How did you save me when I was on the brink of death? What have I promised you as repayment?', 'What secret about myself did I tell you, and how did it change your view of me?']],
+      bard: [['Who from your community taught you to have such confidence in yourself?', 'You were in love once. Who did you adore, and how did they hurt you?', 'You’ve always looked up to another bard. Who are they, and why do you idolize them?'], ['What made you realize we were going to be such good friends?', 'What do I do that annoys you?', 'Why do you grab my hand at night?']],
+      brawler: [['Where did you spend time during your formative years that taught you, directly or indirectly, how to fight in the style you use?', 'What organization has vowed to kill you on sight, and what did you do to invoke their ire?', 'Who did you recently lose a fight to that you’re desperate for a rematch against?'], ['What is one thing we’re both afraid of?', 'What do I rely on you for during our travels? How do you feel about it?', 'I still haven’t forgiven you for something you said to me. What was it, and why did you say it?']],
+      druid: [['Why was the community you grew up in so reliant on nature and its creatures?', 'Who was the first wild animal you bonded with? Why did your bond end?', 'Who has been trying to hunt you down? What do they want from you?'], ['What did you confide in me that makes me leap into danger for you every time?', 'What animal do I say you remind me of?', 'What affectionate nickname have you given me?']],
+      guardian: [['Who from your community did you fail to protect, and why do you still think of them?', 'You’ve been tasked with protecting something important and delivering it somewhere dangerous. What is it, and where does it need to go?', 'You consider an aspect of yourself to be a weakness. What is it, and how has it affected you?'], ['How did I save your life the first time we met?', 'What small gift did you give me that you notice I always carry with me?', 'What lie have you told me about yourself that I absolutely believe?']],
+      ranger: [['A terrible creature hurt your community, and you’ve vowed to hunt them down. What are they, and what unique trail or sign do they leave behind?', 'Your first kill almost killed you, too. What was it, and what part of you was never the same after that event?', 'You’ve traveled many dangerous lands, but what is the one place you refuse to go?'], ['What friendly competition do we have?', 'Why do you act differently when we’re alone than when others are around?', 'What threat have you asked me to watch for, and why are you worried about it?']],
+      rogue: [['What did you get caught doing that got you exiled from your home community?', 'You used to have a different life, but you’ve tried to leave it behind. Who from your past is still chasing you?', 'Who from your past were you most sad to say goodbye to?'], ['What did I recently convince you to do that got us both in trouble?', 'What have I discovered about your past that I hold secret from the others?', 'Who do you know from my past, and how have they influenced your feelings about me?']],
+      seraph: [['Which god did you devote yourself to? What incredible feat did they perform for you in a moment of desperation?', 'How did your appearance change after taking your oath?', 'In what strange or unique way do you communicate with your god?'], ['What promise did you make me agree to, should you die on the battlefield?', 'Why do you ask me so many questions about my god?', 'You’ve told me to protect one member of our party above all others, even yourself. Who are they and why?']],
+      sorcerer: [['What did you do that made the people in your community wary of you?', 'What mentor taught you to control your untamed magic, and why are they no longer able to guide you?', 'You have a deep fear you hide from everyone. What is it, and why does it scare you?'], ['Why do you trust me so deeply?', 'What did I do that makes you cautious around me?', 'Why do we keep our shared past a secret?']],
+      warlock: [['Who from your community shunned you after you made a pact with your patron?', 'What desperate situation led you to pledge your life to your patron?', 'Your patron has given you one task you must accomplish above all else. What is it, and why does it worry you?'], ['Why do you think I confide in you about what my patron says and does?', 'Our relationship has changed since you saw me show tribute to my patron. What did you see, and how has it affected you?', 'I once did something very foolish, and you’ve never let me live it down. What was it?']],
+      warrior: [['Who taught you to fight, and why did they stay behind when you left home?', 'Somebody defeated you in battle years ago and left you to die. Who was it, and how did they betray you?', 'What legendary place have you always wanted to visit, and why is it so special?'], ['We knew each other long before this party came together. How?', 'What mundane task do you usually help me with off the battlefield?', 'What fear am I helping you overcome?']],
+      witch: [['Who from your community feared your magical craft? What rumor did they spread about you, and what truth did it contain?', 'You once used your power to help someone in a dire situation. Who were they, and why did they come to you?', 'Your magic once opened a door best left closed. Who or what was on the other side?'], ['What unique ritual or practice have I taught you that we now perform together?', 'I once appeared to you in a dream and shared a vision of the future. What did I tell you?', 'What do you typically come to me for advice about?']],
+      wizard: [['What responsibilities did your community once count on you for? How did you let them down?', 'You’ve spent your life searching for a book or object of great significance. What is it, and why is it so important to you?', 'You have a powerful rival. Who are they, and why are you so determined to defeat them?'], ['What favor have I asked of you that you’re not sure you can fulfill?', 'What weird hobby or strange fascination do we both share?', 'What secret about yourself have you entrusted only to me?']]
+    };
+    this.ANC = ['aetheris', 'clank', 'drakona', 'dwarf', 'earthkin', 'elf', 'emberkin', 'faerie', 'faun', 'firbolg', 'fungril', 'galapa', 'giant', 'gnome', 'goblin', 'halfling', 'human', 'infernis', 'katari', 'orc', 'ribbet', 'simiah', 'skykin', 'tidekin'];
+    this.COM = ['duneborne', 'freeborne', 'frostborne', 'hearthborne', 'highborne', 'loreborne', 'orderborne', 'reborne', 'ridgeborne', 'seaborne', 'slyborne', 'underborne', 'warborne', 'wanderborne', 'wildborne'];
+  }
+  themeTables() {
+    return {
+      EM: {
+        assassin: 'M4 20c0-9 3-15 8-16 5 1 8 7 8 16M9 13c1.5-1 4.5-1 6 0M12 15v5',
+        bard: 'M9 18V5l10-2v13M9 18a2.5 2.5 0 1 1-5 0a2.5 2.5 0 1 1 5 0M19 16a2.5 2.5 0 1 1-5 0a2.5 2.5 0 1 1 5 0',
+        brawler: 'M6 11V8a2 2 0 0 1 4 0v3M10 10V7a2 2 0 0 1 4 0v3M14 10V8a2 2 0 0 1 4 0v5c0 4-3 7-6 7s-6-2-6-6v-3h5',
+        druid: 'M5 19C5 10 11 5 19 5c0 8-5 14-14 14zM5 19l9-9M10 14h4M12 12V8',
+        guardian: 'M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6zM12 7v10M8 11h8',
+        ranger: 'M7 3c6 3 6 15 0 18M7 3v18M3 12h17M17 9l3 3-3 3',
+        rogue: 'M3 10c3-3 15-3 18 0-1 4-4 6-6 6-1 0-2-2-3-2s-2 2-3 2c-2 0-5-2-6-6zM8 11h2M14 11h2',
+        seraph: 'M8 4a4 1.5 0 1 0 8 0a4 1.5 0 1 0-8 0M12 9v11M12 12c-3-3-7-3-9-1 2 1 4 4 9 4M12 12c3-3 7-3 9-1-2 1-4 4-9 4',
+        sorcerer: 'M12 3c1 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-4 3-6 0 2 1 3 2 3 0-3 1-5 1-8z',
+        warlock: 'M3 12c3-5 15-5 18 0-3 5-15 5-18 0zM9.5 12a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0M12 3v3M12 18v3',
+        warrior: 'M4 4l12 12M20 4L8 16M14 18l4-4M10 18l-4-4M17 17l3 3M7 17l-3 3',
+        witch: 'M5 11h14M6 11c0 5 2 8 6 8s6-3 6-8M8 19l-1 2M16 19l1 2M15 3a3 3 0 1 0 3 4 2.4 2.4 0 0 1-3-4z',
+        wizard: 'M4 19h16M7 19l5-15 5 15M12 10.5l.9 1.8 2 .3-1.4 1.4.3 2-1.8-.9-1.8.9.3-2-1.4-1.4 2-.3z'
+      },
+      SUBS: {
+        assassin: ['Executioners Guild', 'Poisoners Guild'], bard: ['Troubadour', 'Wordsmith'], brawler: ['Juggernaut', 'Martial Artist'],
+        druid: ['Warden of the Elements', 'Warden of Renewal'], guardian: ['Stalwart', 'Vengeance'], ranger: ['Beastbound', 'Wayfinder'],
+        rogue: ['Nightwalker', 'Syndicate'], seraph: ['Divine Wielder', 'Winged Sentinel'], sorcerer: ['Elemental Origin', 'Primal Origin'],
+        warlock: ['Pact of the Endless', 'Pact of the Wrathful'], warrior: ['Call of the Brave', 'Call of the Slayer'], witch: ['Hedge', 'Moon'],
+        wizard: ['School of Knowledge', 'School of War']
+      },
+      ORN: {
+        aetheris: ['M30 6v8M30 30v8M10 22h8M42 22h8M16 8l6 6M38 30l6 6M44 8l-6 6M16 36l6-6', 'M30 15l2.5 4.5 5 .9-3.6 3.5.8 5-4.7-2.4-4.7 2.4.8-5-3.6-3.5 5-.9z'],
+        clank: ['M30 6v6M30 32v6M16 22h-6M50 22h-6M20 12l-4-4M44 36l-4-4M40 12l4-4M16 36l4-4M30 13a9 9 0 1 0 .01 0zM30 19a3 3 0 1 0 .01 0z', ''],
+        drakona: ['M8 38C12 22 26 10 52 6C40 14 32 24 30 38M12 42a5 5 0 0 1 10 0M22 42a5 5 0 0 1 10 0', ''],
+        dwarf: ['M20 4v28M30 4v32M40 4v28', 'M17 30h6v6h-6zM27 34h6v6h-6zM37 30h6v6h-6zM17 12h6v4h-6zM27 16h6v4h-6zM37 12h6v4h-6z'],
+        earthkin: ['M6 40h48', 'M8 40l6-12 10-2 6 14zM28 40l4-16 12-4 8 20zM22 24l4-12 10 0 4 10z'],
+        elf: ['M22 14v26M36 6v34M47 24v16', 'M18 40l4-26 6 26zM30 40l6-34 6 34zM43 40l4-16 5 16z'],
+        emberkin: ['', 'M30 42c-10 0-14-8-11-16 2 4 5 6 5 6-1-10 4-17 11-22-1 7 7 11 7 20 0 8-4 12-12 12z'],
+        faerie: ['M46 38C24 40 8 26 10 6c14 2 30 14 36 32zM46 38C36 30 24 24 16 14M46 38c-12 2-24 0-30-8', ''],
+        faun: ['M14 40C10 22 22 8 38 10c10 2 12 14 4 18-6 3-12-2-9-7 2-3 6-2 6 1', ''],
+        firbolg: ['M4 40l6-12 4 8 5-14 5 14 5-16 5 16 5-14 5 14 4-8 6 12', ''],
+        fungril: ['M22 24v16M39 30v10M6 40h48', 'M10 24a12 9 0 0 1 24 0zM30 30a9 7 0 0 1 18 0z'],
+        galapa: ['M30 4l14 8v16l-14 8-14-8V12zM30 4v32M16 12l28 16M44 12L16 28M8 40h44', ''],
+        giant: ['M6 6c5 10-5 18 0 34M16 4c5 12-5 20 0 36M26 4c5 12-5 20 0 36M36 4c5 12-5 20 0 36M46 6c5 10-5 18 0 34', ''],
+        gnome: ['M8 40h44', 'M14 38L32 4l12 34z'],
+        goblin: ['M52 32C40 32 14 24 4 8c16 2 32 6 42 14 5 4 7 8 6 10zM44 25C34 21 22 16 14 12', ''],
+        halfling: ['M8 40C20 32 34 22 52 8', 'M20 32c-2-8 4-12 10-12-1 7-4 11-10 12zM32 24c0-7 6-10 12-9-2 6-6 9-12 9zM12 38c-3-5 0-9 5-10 0 5-2 8-5 10z'],
+        human: ['M10 42C14 22 30 10 52 8', 'M16 32c-6-2-8-6-7-10 5 1 8 5 7 10zM23 23c-5-3-6-8-4-11 4 2 6 6 4 11zM33 16c-4-4-4-8-1-11 3 3 4 7 1 11zM43 11c-3-4-2-8 1-10 2 3 2 7-1 10z'],
+        infernis: ['', 'M10 42C8 24 16 10 34 4c-7 8-11 18-9 38zM30 42c2-13 8-21 24-25-7 6-11 14-13 25z'],
+        katari: ['M28 30h28M28 36l26 6M28 24l26-6', 'M10 28L16 4l16 18z'],
+        orc: ['', 'M54 42C38 42 24 32 20 4c7 12 16 22 34 26z'],
+        ribbet: ['M44 4c4 6 6 9 6 12a6 6 0 0 1-12 0c0-3 2-6 6-12z', 'M4 34a24 8 0 1 0 48 0a24 8 0 1 0-48 0z'],
+        simiah: ['M6 40C18 40 22 28 30 24s18 2 22-8c2-6-4-10-8-6', 'M18 36c-2-6 2-9 7-9-1 5-3 8-7 9zM34 24c0-6 4-8 9-7-1 5-4 7-9 7z'],
+        skykin: ['', 'M14 36a8 8 0 0 1 2-16 11 11 0 0 1 21-3 9 9 0 0 1 13 9 6 6 0 0 1-1 10z'],
+        tidekin: ['M4 18c6-6 12-6 18 0s12 6 18 0 12-6 18 0M4 30c6-6 12-6 18 0s12 6 18 0 12-6 18 0', '']
+      }
+    };
+  }
+
+  renderVals() {
+    const s = this.state, T = this._T || (this._T = this.themeTables());
+    const cap = (x) => x ? x.charAt(0).toUpperCase() + x.slice(1) : '';
+    const step = s.step || Math.max(1, Math.min(11, this.props.step || 1));
+    const go = (n) => this.setState({ step: Math.max(1, Math.min(11, n)), open: '' });
+    const TITLES = ['Name', 'Class', 'Subclass', 'Ancestry', 'Community', 'Traits', 'Experiences', 'Equipment', 'Domain cards', 'Background', 'Review'];
+    const HINTS = ['', 'Colour + emblem', 'Accent + frame', 'Header ornaments', 'Features material', '', '', '', '', '', ''];
+    const fmt = (n) => (n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '0');
+    const ring = (on) => on ? 'var(--accent, #141414)' : '#DCDAD6';
+    const ancA = s.anc, ancB = s.mixed ? s.anc2 : s.anc;
+    const subI = s.sub === 'b' ? 1 : 0;
+    const subName = s.cls ? T.SUBS[s.cls][subI] : '';
+    const parts = [s.com ? cap(s.com) : '', s.sub ? subName : '', s.cls ? cap(s.cls) : '', ancA ? (s.mixed && ancB && ancB !== ancA ? cap(ancA) + '/' + cap(ancB) : cap(ancA)) : ''].filter(Boolean);
+    const placedIds = Object.values(s.placed);
+    const free = this.MODS.map((v, id) => ({ v, id })).filter((m) => placedIds.indexOf(m.id) < 0);
+    const dom = s.cls ? this.CLASS[s.cls] : null;
+    const ready = [true, !!s.cls, !!s.sub, !!s.anc && (!s.mixed || !!s.anc2), !!s.com, free.length === 0, !!(s.exp1.trim() && s.exp2.trim()), !!(s.prim && s.armor), s.cards.length === 2, true, true][step - 1];
+    const blank = { s: '', f: '' };
+
+    /* recommendations */
+    const cast = s.cls ? this.CAST[s.cls][subI] : null;
+    const rec = s.cls ? (this.REC[s.cls + '.' + (s.sub || 'a')] || this.REC[s.cls]) : [0, 0, 0, 0, 0, 0];
+    const keyTrait = s.cls ? this.TRN[rec.indexOf(2)] : '';
+    const keys = [keyTrait].concat(cast && cast !== keyTrait ? [cast] : []);
+    const canMagic = !!cast;
+    const recFor = s.cls ? (subName ? subName + ' ' : '') + cap(s.cls) : 'your class';
+    const useRec = () => {
+      const pool = this.MODS.map((v, id) => ({ v, id })), placed = {};
+      this.TRN.forEach((n, i) => { const k = pool.findIndex((m) => m.v === rec[i]); placed[n] = pool[k].id; pool.splice(k, 1); });
+      this.setState({ placed, held: null });
+    };
+
+    /* gear rows */
+    const primWeapon = this.PRIM.find((w) => w[0] === s.prim);
+    const twoHanded = primWeapon && primWeapon[4] === 2;
+    const mkWeapon = (w, kind) => {
+      const [name, trait, range, dmg, burden, magic, feat] = w;
+      const id = kind + ':' + name, isOpen = s.open === id;
+      const locked = (magic && !canMagic) || (kind === 'sec' && twoHanded);
+      const isSel = kind === 'prim' ? s.prim === name : s.sec === name;
+      const recd = keys.indexOf(trait) >= 0 && !locked;
+      const fi = feat.indexOf(':');
+      return { name, isRec: recd, star: recd ? '★ ' : '', line: trait + ' · ' + range + ' · ' + (burden === 2 ? 'Two-handed' : 'One-handed'), stat: dmg,
+        locked, dim: locked ? 'opacity: .4' : '', open: isOpen ? 'true' : 'false', isOpen, chev: isOpen ? 'transform: rotate(180deg)' : '', isSel,
+        toggle: () => this.setState({ open: isOpen ? '' : id }),
+        stats: [{ k: 'Trait', v: trait }, { k: 'Range', v: range }, { k: 'Damage', v: dmg.replace('phy', 'physical').replace('mag', 'magic') }, { k: 'Burden', v: burden === 2 ? 'Two-handed' : 'One-handed' }],
+        featName: fi > 0 ? feat.slice(0, fi + 1) : (feat ? '' : 'No feature.'), featText: fi > 0 ? feat.slice(fi + 1).trim() : '',
+        btn: isSel ? 'Equipped' : 'Equip', btnCls: isSel ? 'solid' : '',
+        choose: () => {
+          if (kind === 'prim') this.setState({ prim: name, sec: burden === 2 ? 'None' : s.sec, open: '' });
+          else this.setState({ sec: name, open: '' });
+        } };
+    };
+    const mkArmor = (a) => {
+      const [name, mj, sv, sc, feat] = a;
+      const id = 'arm:' + name, isOpen = s.open === id, isSel = s.armor === name;
+      const recd = s.cls && this.ARMOR_REC[s.cls].indexOf(name) >= 0;
+      const fi = feat.indexOf(':');
+      return { name, isRec: recd, star: recd ? '★ ' : '', line: 'Base ' + mj + ' / ' + sv, stat: 'Score ' + sc, locked: false, dim: '',
+        open: isOpen ? 'true' : 'false', isOpen, chev: isOpen ? 'transform: rotate(180deg)' : '', isSel, toggle: () => this.setState({ open: isOpen ? '' : id }),
+        stats: [{ k: 'Armor score', v: sc }, { k: 'Thresholds at level 1', v: (mj + 1) + ' / ' + (sv + 1) }, { k: 'Base thresholds', v: mj + ' / ' + sv }],
+        featName: fi > 0 ? feat.slice(0, fi + 1) : 'No feature.', featText: fi > 0 ? feat.slice(fi + 1).trim() : '',
+        btn: isSel ? 'Equipped' : 'Equip', btnCls: isSel ? 'solid' : '', choose: () => this.setState({ armor: name, open: '' }) };
+    };
+    const group = (key, title, rows, chosen, note) => {
+      const recRows = rows.filter((r) => r.isRec), showAll = !!s.more[key] || recRows.length === 0;
+      const sorted = recRows.concat(rows.filter((r) => !r.isRec));
+      const vis = showAll ? sorted : sorted.filter((r) => r.isRec || r.isSel);
+      return { title, chosen: chosen || 'None chosen', rows: vis, hasNote: !!note, note,
+        canMore: recRows.length > 0, moreLabel: showAll ? 'Show suggested only' : 'Show all ' + rows.length,
+        more: () => this.setState({ more: Object.assign({}, s.more, { [key]: !showAll }) }) };
+    };
+    const secNote = twoHanded ? 'Your primary weapon is two-handed — no hand free for a secondary weapon.' : '';
+    const primNote = canMagic ? '' : recFor + ' has no Spellcast trait, so magic weapons are unavailable.';
+
+    /* cards */
+    const C = this.CARDS || {};
+    const cardList = dom ? Object.keys(C).filter((n) => C[n].d === dom[0] || C[n].d === dom[1]).sort((a, b) => (C[a].d === dom[0] ? 0 : 1) - (C[b].d === dom[0] ? 0 : 1)) : [];
+    const qs = s.cls ? this.QS[s.cls] : [[], []];
+
+    return {
+      cls: s.cls || 'none', sub: s.sub || 'a', hasCls: !!s.cls, community: s.com, hasCom: !!s.com, comName: cap(s.com),
+      emblem: s.cls ? T.EM[s.cls] : '', emFrame: s.sub === 'b' ? 'M12 -3.5L27.5 12 12 27.5-3.5 12z' : s.sub ? 'M12 -3a15 15 0 1 0 .01 0z' : '',
+      ornL: ancA ? { s: T.ORN[ancA][0], f: T.ORN[ancA][1] } : blank, ornR: ancB ? { s: T.ORN[ancB][0], f: T.ORN[ancB][1] } : blank,
+      previewName: s.name.trim() || 'Your character', sentence: parts.length ? 'a ' + parts.join(' ') : 'Choices will appear here',
+      bar: Array.from({ length: 11 }, (_, i) => ({ style: 'background: ' + (i < step ? 'var(--accent, #141414)' : '#DCDAD6') })),
+      stepNo: step, stepTitle: TITLES[step - 1], stepHint: HINTS[step - 1] ? 'Sets: ' + HINTS[step - 1] : '',
+      is1: step === 1, is2: step === 2, is3: step === 3, is4: step === 4, is5: step === 5, is6: step === 6, is7: step === 7, is8: step === 8, is9: step === 9, is10: step === 10, is11: step === 11,
+      atStart: step === 1, notLast: step < 11, back: () => go(step - 1), next: () => { if (ready) go(step + 1); },
+      nextOff: !ready, nextStyle: ready ? '' : 'opacity: .4', nextLabel: step === 10 ? 'Review' : 'Next',
+      name: s.name, pronouns: s.pronouns, onName: (e) => this.setState({ name: e.target.value }), onPro: (e) => this.setState({ pronouns: e.target.value }),
+      classes: Object.keys(this.CLASS).map((id) => ({ id, name: cap(id), em: T.EM[id], domains: this.CLASS[id][0] + ' & ' + this.CLASS[id][1], hp: this.CLASS[id][2], ev: this.CLASS[id][3],
+        ring: s.cls === id ? '#141414' : '#DCDAD6', sel: s.cls === id ? 'true' : 'false',
+        pick: () => this.setState(s.cls === id ? {} : { cls: id, sub: '', cards: [], prim: '', sec: 'None', armor: '' }) })),
+      clsName: cap(s.cls),
+      subs: s.cls ? ['a', 'b'].map((id, i) => ({ id, name: T.SUBS[s.cls][i], cast: this.CAST[s.cls][i] ? 'Spellcast: ' + this.CAST[s.cls][i] : 'No Spellcast trait',
+        frame: id === 'b' ? 'M12 -3.5L27.5 12 12 27.5-3.5 12z' : 'M12 -3a15 15 0 1 0 .01 0z', frameName: id === 'b' ? 'Diamond' : 'Ring',
+        ring: s.sub === id ? 'var(--accent)' : '#DCDAD6', sel: s.sub === id ? 'true' : 'false', pick: () => this.setState({ sub: id }) })) : [],
+      mixed: s.mixed, mixCls: s.mixed ? 'on' : '', mixP: s.mixed ? 'true' : 'false',
+      mixTap: () => this.setState({ mixed: !s.mixed, anc2: '', slot: 'a' }),
+      slotACls: s.slot === 'a' ? 'on' : '', slotBCls: s.slot === 'b' ? 'on' : '', slotA: () => this.setState({ slot: 'a' }), slotB: () => this.setState({ slot: 'b' }),
+      ancAName: cap(s.anc) || 'choose', ancBName: cap(s.anc2) || 'choose',
+      ancestries: this.ANC.map((id) => {
+        const on = s.anc === id || (s.mixed && s.anc2 === id);
+        return { name: cap(id), s: T.ORN[id][0], f: T.ORN[id][1], sel: on ? 'true' : 'false',
+          ring: on ? ring(true) : '#DCDAD6', bg: on ? 'var(--c-deep, #141414)' : '#FFFFFF', fg: on ? '#FFFFFF' : '#141414',
+          pick: () => { if (s.mixed && s.slot === 'b') this.setState({ anc2: id }); else this.setState({ anc: id, slot: s.mixed ? 'b' : 'a' }); } };
+      }),
+      communities: this.COM.map((id) => ({ id, name: cap(id), ring: ring(s.com === id), sel: s.com === id ? 'true' : 'false', pick: () => this.setState({ com: id }) })),
+      /* traits */
+      recFor, keyText: keys.join(' / ') || '—',
+      recTraits: this.TRN.map((n, i) => ({ name: n, v: fmt(rec[i]) })),
+      recWhy: cast ? 'Built around ' + cast + ', your Spellcast trait — it powers your spells and magic weapons.' : 'Built around ' + keyTrait + ', the trait your class’s weapons lean on. ' + recFor + ' has no Spellcast trait.',
+      useRec,
+      tray: free.map((m) => { const held = s.held === m.id; return { label: fmt(m.v), cls: held ? 'on' : '', fg: held ? '#FFFFFF' : '#141414', sel: held ? 'true' : 'false', pick: () => this.setState({ held: held ? null : m.id }) }; }),
+      traitSlots: this.TRN.map((name) => {
+        const id = s.placed[name], has = id !== undefined;
+        return { name, val: has ? fmt(this.MODS[id]) : '?', face: has ? '' : 'border-style: dashed; border-top: 0',
+          tap: () => {
+            if (has) { const p = Object.assign({}, s.placed); delete p[name]; this.setState({ placed: p, held: id }); }
+            else if (s.held !== null && s.held !== undefined) this.setState({ placed: Object.assign({}, s.placed, { [name]: s.held }), held: null });
+          } };
+      }),
+      exp1: s.exp1, exp2: s.exp2, onExp1: (e) => this.setState({ exp1: e.target.value }), onExp2: (e) => this.setState({ exp2: e.target.value }),
+      /* equipment */
+      gearGroups: [
+        group('prim', 'Primary weapon', this.PRIM.map((w) => mkWeapon(w, 'prim')), s.prim, primNote),
+        group('sec', 'Secondary weapon', this.SEC.map((w) => mkWeapon(w, 'sec')), s.sec !== 'None' ? s.sec : (twoHanded ? 'Hands full' : 'Optional'), secNote),
+        group('arm', 'Armor', this.ARM.map(mkArmor), s.armor, '')
+      ],
+      potions: ['Minor Health Potion', 'Minor Stamina Potion'].map((n) => ({ name: n, cls: s.potion === n ? 'solid' : '', pick: () => this.setState({ potion: n }) })),
+      /* cards */
+      domText: dom ? dom[0] + ' and ' + dom[1] : 'your class’s domains', cardCount: s.cards.length,
+      cards: cardList.map((n) => {
+        const c = C[n], on = s.cards.indexOf(n) >= 0, id = 'card:' + n, isOpen = s.open === id;
+        return { name: n, meta: c.d + ' · Level 1 ' + c.t, rc: c.rc, text: c.x.replace(/ ◦ /g, '\n• '), isSel: on, ring: on ? 'var(--accent, #141414)' : '#DCDAD6',
+          open: isOpen ? 'true' : 'false', isOpen, toggle: () => this.setState({ open: isOpen ? '' : id }),
+          full: !on && s.cards.length >= 2, btn: on ? 'Remove from loadout' : s.cards.length >= 2 ? 'Loadout full (2)' : 'Add to loadout', btnCls: on ? '' : 'solid',
+          choose: () => { if (on) this.setState({ cards: s.cards.filter((x) => x !== n) }); else if (s.cards.length < 2) this.setState({ cards: s.cards.concat(n), open: '' }); } };
+      }),
+      /* background */
+      bgQs: qs[0].map((q, i) => ({ q, a: s.bga[i] || '', onInput: (e) => this.setState({ bga: Object.assign({}, this.state.bga, { [i]: e.target.value }) }) })),
+      conQs: qs[1], con: s.con, onCon: (e) => this.setState({ con: e.target.value }),
+      review: [
+        { k: 'Name', v: (s.name || '—') + (s.pronouns ? ' (' + s.pronouns + ')' : '') },
+        { k: 'Heritage', v: (cap(s.com) || '—') + ' · ' + (ancA ? (s.mixed && ancB ? cap(ancA) + '/' + cap(ancB) : cap(ancA)) : '—') },
+        { k: 'Class', v: (cap(s.cls) || '—') + (subName ? ' · ' + subName : '') },
+        { k: 'Start', v: dom ? 'HP ' + dom[2] + ' · Evasion ' + dom[3] + ' · Stress 6 · Hope 2' : '—' },
+        { k: 'Traits', v: this.TRN.map((n) => n.slice(0, 3) + ' ' + (s.placed[n] !== undefined ? fmt(this.MODS[s.placed[n]]) : '?')).join(' · ') },
+        { k: 'Experiences', v: [s.exp1, s.exp2].filter(Boolean).map((x) => x + ' +2').join(' · ') || '—' },
+        { k: 'Gear', v: [s.prim, s.sec !== 'None' ? s.sec : '', s.armor, s.potion].filter(Boolean).join(' · ') || '—' },
+        { k: 'Cards', v: s.cards.join(' · ') || '—' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

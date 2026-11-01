@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Equipment</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cinzel:wght@600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="dh" data-theme="{{theme}}" style="width: 390px; height: 1240px; display: flex; flex-direction: column; overflow: hidden">
+
+  <header class="topbar">
+    <a href="Main.dc.html" class="iconbtn press" aria-label="Back to sheet"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <div class="lbl lbl-ink" style="font-size: 15px">Equipment</div>
+    <a href="Catalog.dc.html" class="iconbtn press" aria-label="Add item"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+  </header>
+
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 4px 16px 20px">
+
+    <!-- Equipped -->
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 class="lbl" style="margin: 0">Equipped</h2>
+        <span class="muted" style="font-size: 12px">Burden 2 of 2 hands</span>
+      </div>
+      <sc-for list="{{equipped}}" as="e" hint-placeholder-count="3">
+        <button class="card press" style="min-height: 72px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; text-align: left; width: 100%" aria-label="{{e.slot}}: {{e.name}}. Tap to swap.">
+          <span class="card-inset" style="width: 48px; height: 48px; flex: none; display: flex; align-items: center; justify-content: center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{e.icon}}"/></svg>
+          </span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <span class="lbl" style="font-size: 11px">{{e.slot}}</span>
+            <span style="font-size: 16px; font-weight: 700">{{e.name}}</span>
+            <span class="muted" style="font-size: 12px">{{e.meta}}</span>
+          </span>
+          <span class="num" style="font-size: 22px; flex: none">{{e.stat}}</span>
+        </button>
+      </sc-for>
+    </section>
+
+    <!-- Gold -->
+    <section class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 class="h2" style="margin: 0">Gold</h2>
+        <span class="hint">10 handfuls = 1 bag · 10 bags = 1 chest</span>
+      </div>
+      <sc-for list="{{gold}}" as="g" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline"><span class="lbl lbl-ink">{{g.label}}</span><span class="num muted" style="font-size: 16px">{{g.val}}</span></div>
+          <button class="track" style="gap: 6px" onPointerDown="{{g.down}}" onPointerUp="{{g.up}}" onPointerLeave="{{g.cancel}}" onKeyDown="{{g.key}}" onContextMenu="{{noMenu}}" aria-label="{{g.label}}: {{g.val}}. Tap to add, hold to remove.">
+            <sc-for list="{{g.slots}}" as="s" hint-placeholder-count="9"><span class="slot sm {{s.cls}}" style="--c: var(--gold); border-radius: 50%; width: 28px; height: 28px"></span></sc-for>
+          </button>
+        </div>
+      </sc-for>
+    </section>
+
+    <!-- Inventory -->
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 class="lbl" style="margin: 0">Inventory</h2>
+        <span class="muted" style="font-size: 12px">{{invCount}} items</span>
+      </div>
+      <div class="card" style="padding: 4px 0">
+        <sc-for list="{{inv}}" as="i" hint-placeholder-count="6">
+          <div style="min-height: 56px; padding: 0 6px 0 14px; display: flex; align-items: center; gap: 8px; {{i.border}}">
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+              <span style="font-size: 15px; font-weight: 600">{{i.name}}</span>
+              <span class="muted" style="font-size: 12px">{{i.note}}</span>
+            </span>
+            <button class="iconbtn press" aria-label="Use one {{i.name}}" onClick="{{i.dec}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+            <span class="num" style="font-size: 20px; width: 22px; text-align: center">{{i.qty}}</span>
+            <button class="iconbtn press" aria-label="Add one {{i.name}}" onClick="{{i.inc}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+        </sc-for>
+      </div>
+      <a href="Catalog.dc.html" class="btn press" style="border-style: dashed; background: transparent">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Add item
+      </a>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Sections">
+    <a href="Main.dc.html" class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Sheet</a>
+    <a href="Combat.dc.html" class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M14 4l6 0 0 6-9 9-3 0 0-3z"/><path d="M5 16l3 3M4 20l2-2"/></svg>Combat</a>
+    <a href="Dice.dc.html" class="tab-roll press" aria-label="Roll dice"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8.5 5v10L12 22l-8.5-5V7z"/><path d="M12 2v6M3.5 7L12 8l8.5-1M12 8l-5 9h10z"/></svg></a>
+    <a href="Equipment.dc.html" class="tab on" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l1 12H5z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg>Gear</a>
+    <a href="Resources.dc.html" class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="8" cy="9" r="4"/><circle cx="16" cy="15" r="4"/></svg>Class</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["neutral","parchment","midnight"],"default":"neutral","section":"Theme"},"$preview":{"width":390,"height":1240}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      coins: 34,
+      qty: [1, 1, 1, 2, 1, 1]
+    };
+  }
+  setCoins(v) { this.setState({ coins: Math.max(0, Math.min(1099, v)) }); }
+  coinTrack(step) {
+    return {
+      down: () => { this._lp = false; clearTimeout(this._t); this._t = setTimeout(() => { this._lp = true; this.setCoins(this.state.coins - step); }, 450); },
+      up: () => { clearTimeout(this._t); if (this._lp === false) this.setCoins(this.state.coins + step); this._lp = true; },
+      cancel: () => { clearTimeout(this._t); this._lp = true; },
+      key: (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.setCoins(this.state.coins + step); }
+        if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); this.setCoins(this.state.coins - step); }
+      }
+    };
+  }
+  renderVals() {
+    const c = this.state.coins;
+    const h = c % 10, b = Math.floor(c / 10) % 10, ch = Math.floor(c / 100);
+    const row = (n, len) => Array.from({ length: len }, (_, i) => ({ cls: i < n ? 'on' : '' }));
+    const items = [
+      ['Torch', 'Light source'],
+      ['50 ft of rope', ''],
+      ['Basic supplies', ''],
+      ['Minor Health Potion', 'Consumable · clear HP'],
+      ['Minor Stamina Potion', 'Consumable · clear Stress'],
+      ['An unopened letter', 'Keepsake']
+    ];
+    return {
+      theme: this.props.theme ?? 'neutral',
+      noMenu: (e) => e.preventDefault(),
+      equipped: [
+        { slot: 'Primary weapon', name: 'Improved Rapier', meta: 'Presence · Melee · One-handed', stat: 'd8+3', icon: 'M14 4h6v6l-9 9H8v-3zM5 16l3 3M4 20l2-2' },
+        { slot: 'Secondary weapon', name: 'Small Dagger', meta: 'Finesse · Melee · One-handed', stat: 'd8', icon: 'M15 3l6 6-10 10-4 0 0-4zM4 20l3-3' },
+        { slot: 'Armor', name: 'Improved Leather Armor', meta: 'Base thresholds 7 / 16 · +Level', stat: '4', icon: 'M12 3l7 3v5c0 5-3.2 8.3-7 10-3.8-1.7-7-5-7-10V6z' }
+      ],
+      gold: [
+        { label: 'Handfuls', val: h, slots: row(h, 9), ...this.coinTrack(1) },
+        { label: 'Bags', val: b, slots: row(b, 9), ...this.coinTrack(10) },
+        { label: 'Chest', val: ch, slots: row(ch, 1), ...this.coinTrack(100) }
+      ],
+      invCount: this.state.qty.reduce((a, q) => a + q, 0),
+      inv: items.map(([name, note], i) => ({
+        name, note: note || 'Gear', qty: this.state.qty[i],
+        border: i ? 'border-top: 1px solid var(--line)' : '',
+        inc: () => { const q = this.state.qty.slice(); q[i] = q[i] + 1; this.setState({ qty: q }); },
+        dec: () => { const q = this.state.qty.slice(); q[i] = Math.max(0, q[i] - 1); this.setState({ qty: q }); }
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

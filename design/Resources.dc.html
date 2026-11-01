@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Class resources</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cinzel:wght@600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="dh" data-theme="{{theme}}" style="width: 390px; height: 1000px; display: flex; flex-direction: column; overflow: hidden">
+
+  <header class="topbar">
+    <a href="Main.dc.html" class="iconbtn press" aria-label="Back to sheet"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <div class="lbl lbl-ink" style="font-size: 15px">Bard resources</div>
+    <span style="width: 44px"></span>
+  </header>
+
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 4px 16px 20px">
+
+    <div class="hint" style="justify-content: center">Tap to spend · Hold to restore</div>
+
+    <!-- Dice pool -->
+    <section class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px">
+        <div style="display: flex; flex-direction: column; gap: 3px">
+          <span class="lbl" style="font-size: 11px">Class feature · Dice pool</span>
+          <h2 class="h2" style="margin: 0">Rally</h2>
+        </div>
+        <span class="tag">Once per session</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{rally}}" as="r" hint-placeholder-count="4">
+          <button class="press" style="min-height: 92px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 0; background: transparent" onPointerDown="{{r.down}}" onPointerUp="{{r.up}}" onPointerLeave="{{r.cancel}}" onKeyDown="{{r.key}}" onContextMenu="{{noMenu}}" aria-label="{{r.who}} rally die {{r.state}}. Tap to spend, hold to restore.">
+            <span class="die {{r.dieCls}}" style="width: 56px; height: 56px; {{r.dieStyle}}"><span class="num" style="font-size: 18px">d6</span></span>
+            <span style="font-size: 12px; font-weight: 600">{{r.who}}</span>
+            <span class="muted" style="font-size: 11px">{{r.state}}</span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- Card tokens -->
+    <section class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px">
+        <div style="display: flex; flex-direction: column; gap: 3px">
+          <span class="lbl dom-grace" style="font-size: 11px; color: var(--dc)">Grace · Domain card tokens</span>
+          <h2 class="h2" style="margin: 0">Inspirational Words</h2>
+        </div>
+        <span class="tag">Refill on long rest · = Presence</span>
+      </div>
+      <button class="track dom-grace" style="gap: 10px" onPointerDown="{{iw.down}}" onPointerUp="{{iw.up}}" onPointerLeave="{{iw.cancel}}" onKeyDown="{{iw.key}}" onContextMenu="{{noMenu}}" aria-label="Inspirational Words tokens, {{iwLeft}} of 2 left. Tap to spend, hold to restore.">
+        <sc-for list="{{iwTokens}}" as="t" hint-placeholder-count="2"><span class="token {{t.cls}}" style="--c: var(--dc); width: 48px; height: 48px"></span></sc-for>
+      </button>
+      <span class="muted" style="font-size: 13px">{{iwLeft}} of 2 tokens left</span>
+    </section>
+
+    <!-- Hope feature -->
+    <section class="card" style="padding: 14px; display: flex; align-items: center; gap: 12px">
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 3px">
+        <span class="lbl" style="font-size: 11px; color: var(--hope-ink)">Hope feature</span>
+        <span style="font-size: 17px; font-weight: 700">Make a Scene</span>
+        <span class="muted" style="font-size: 12px">You have 3 Hope</span>
+      </div>
+      <button class="btn btn-hope press" style="flex: none">Spend 3 Hope</button>
+    </section>
+
+    <!-- Custom tracker -->
+    <section class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px">
+        <div style="display: flex; flex-direction: column; gap: 3px">
+          <span class="lbl" style="font-size: 11px">Custom · Countdown</span>
+          <h2 class="h2" style="margin: 0">[Your countdown]</h2>
+        </div>
+        <button class="iconbtn press" aria-label="Edit tracker"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <button class="track" style="gap: 8px" onPointerDown="{{cd.down}}" onPointerUp="{{cd.up}}" onPointerLeave="{{cd.cancel}}" onKeyDown="{{cd.key}}" onContextMenu="{{noMenu}}" aria-label="Countdown at {{cdLeft}}. Tap to tick down, hold to tick up.">
+          <sc-for list="{{cdTicks}}" as="t" hint-placeholder-count="6"><span class="slot {{t.cls}}" style="--c: var(--ink)"></span></sc-for>
+        </button>
+        <span class="num" style="margin-left: auto; font-size: 34px">{{cdLeft}}</span>
+      </div>
+    </section>
+
+    <button class="btn press" style="border-style: dashed; background: transparent">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      Add tracker — tokens, dice pool or countdown
+    </button>
+  </main>
+
+  <nav class="tabbar" aria-label="Sections">
+    <a href="Main.dc.html" class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Sheet</a>
+    <a href="Combat.dc.html" class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M14 4l6 0 0 6-9 9-3 0 0-3z"/><path d="M5 16l3 3M4 20l2-2"/></svg>Combat</a>
+    <a href="Dice.dc.html" class="tab-roll press" aria-label="Roll dice"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8.5 5v10L12 22l-8.5-5V7z"/><path d="M12 2v6M3.5 7L12 8l8.5-1M12 8l-5 9h10z"/></svg></a>
+    <a href="Equipment.dc.html" class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l1 12H5z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg>Gear</a>
+    <a href="Resources.dc.html" class="tab on" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="8" cy="9" r="4"/><circle cx="16" cy="15" r="4"/></svg>Class</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["neutral","parchment","midnight"],"default":"neutral","section":"Theme"},"$preview":{"width":390,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { rallyUsed: [false, true, false, false], iw: 1, cd: 4 };
+  }
+  hold(onTap, onHold) {
+    return {
+      down: () => { this._lp = false; clearTimeout(this._t); this._t = setTimeout(() => { this._lp = true; onHold(); }, 450); },
+      up: () => { clearTimeout(this._t); if (this._lp === false) onTap(); this._lp = true; },
+      cancel: () => { clearTimeout(this._t); this._lp = true; },
+      key: (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap(); }
+        if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); onHold(); }
+      }
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const setRally = (i, v) => { const u = this.state.rallyUsed.slice(); u[i] = v; this.setState({ rallyUsed: u }); };
+    const iwSpent = s.iw;
+    return {
+      theme: this.props.theme ?? 'neutral',
+      noMenu: (e) => e.preventDefault(),
+      rally: ['You', '[Ally 1]', '[Ally 2]', '[Ally 3]'].map((who, i) => {
+        const used = s.rallyUsed[i];
+        return Object.assign({
+          who, state: used ? 'Spent' : 'Ready',
+          dieCls: used ? '' : 'die-plain',
+          dieStyle: used ? 'background: var(--card-2); color: var(--ink-2)' : ''
+        }, this.hold(() => setRally(i, true), () => setRally(i, false)));
+      }),
+      iw: this.hold(() => this.setState({ iw: Math.min(2, this.state.iw + 1) }), () => this.setState({ iw: Math.max(0, this.state.iw - 1) })),
+      iwTokens: [0, 1].map((i) => ({ cls: i < 2 - iwSpent ? 'on' : '' })),
+      iwLeft: 2 - iwSpent,
+      cd: this.hold(() => this.setState({ cd: Math.max(0, this.state.cd - 1) }), () => this.setState({ cd: Math.min(6, this.state.cd + 1) })),
+      cdTicks: Array.from({ length: 6 }, (_, i) => ({ cls: i < s.cd ? 'on' : '' })),
+      cdLeft: s.cd
+    };
+  }
+}
+</script>
+</body>
+</html>

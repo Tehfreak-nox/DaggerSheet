@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dice roller — result</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cinzel:wght@600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="dh" data-theme="{{theme}}" style="width: 390px; height: 900px; display: flex; flex-direction: column; overflow: hidden">
+
+  <header class="topbar">
+    <a href="Dice.dc.html" class="iconbtn press" aria-label="Back to roll setup"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <div class="lbl lbl-ink" style="font-size: 15px">Result</div>
+    <span style="width: 44px"></span>
+  </header>
+
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 4px 16px 20px">
+
+    <article class="card lift" style="padding: 0; overflow: hidden; display: flex; flex-direction: column">
+      <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; {{bannerStyle}}">
+        <span class="h2" style="font-size: 24px">{{outcome}}</span>
+        <span class="lbl" style="color: inherit; opacity: .85">vs {{dc}}</span>
+      </div>
+
+      <div style="padding: 18px 16px 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; {{hopeDim}}">
+          <div class="die die-hope" style="width: 104px; height: 104px"><span class="num" style="font-size: 48px">{{hopeDie}}</span></div>
+          <span class="lbl lbl-ink">Hope d12</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; {{fearDim}}">
+          <div class="die die-fear" style="width: 104px; height: 104px"><span class="num" style="font-size: 48px">{{fearDie}}</span></div>
+          <span class="lbl lbl-ink">Fear d12</span>
+        </div>
+      </div>
+
+      <div style="padding: 8px 16px 0; display: flex; flex-direction: column">
+        <div style="min-height: 36px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line)"><span style="font-size: 14px">Duality dice</span><span class="num" style="font-size: 20px">{{diceSum}}</span></div>
+        <div style="min-height: 36px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line)"><span style="font-size: 14px">Presence</span><span class="num" style="font-size: 20px">+2</span></div>
+        <div style="min-height: 36px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line)"><span style="font-size: 14px">Travelling Troupe Player <span class="tag" style="background: var(--hope); color: #1B1205; height: 20px">−1 Hope</span></span><span class="num" style="font-size: 20px">+2</span></div>
+      </div>
+
+      <div style="padding: 12px 16px 16px; display: flex; align-items: flex-end; justify-content: space-between">
+        <span class="lbl lbl-ink">Total</span>
+        <span class="num" style="font-size: 64px">{{total}}</span>
+      </div>
+    </article>
+
+    <!-- Applied effects -->
+    <section class="card" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 10px">
+      <h2 class="lbl" style="margin: 0">Applied automatically</h2>
+      <sc-for list="{{effects}}" as="f" hint-placeholder-count="2">
+        <div style="display: flex; align-items: center; gap: 10px; min-height: 44px">
+          <span class="{{f.icon}}" style="{{f.iconStyle}}"></span>
+          <span style="flex: 1; font-size: 14px; font-weight: 500">{{f.text}}</span>
+          <button class="lbl press" style="border: 0; background: transparent; min-height: 44px; padding: 0 6px">Undo</button>
+        </div>
+      </sc-for>
+    </section>
+
+    <div style="margin-top: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <a href="Combat.dc.html" class="btn press">Roll damage</a>
+      <a href="Main.dc.html" class="btn btn-primary press">Done</a>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"outcome":{"editor":"enum","options":["hope","fear","critical"],"default":"hope","section":"Result"},"theme":{"editor":"enum","options":["neutral","parchment","midnight"],"default":"neutral","section":"Theme"},"$preview":{"width":390,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const o = this.props.outcome ?? 'hope';
+    const R = {
+      hope: { h: 9, f: 4, title: 'Success with Hope', banner: 'background: var(--hope); color: #1B1205',
+        effects: [{ icon: 'hope on', text: '+1 Hope (now 3 of 6)' }] },
+      fear: { h: 3, f: 10, title: 'Success with Fear', banner: 'background: var(--fear); color: #FFFFFF',
+        effects: [{ icon: 'token on', text: 'GM gains 1 Fear', st: '--c: var(--fear); width: 26px; height: 26px; margin: 5px' }] },
+      critical: { h: 7, f: 7, title: 'Critical Success', banner: 'background: var(--accent); color: var(--on-accent)',
+        effects: [{ icon: 'hope on', text: '+1 Hope (now 3 of 6)' }, { icon: 'slot stress', text: 'Clear 1 Stress (now 0 of 6)', st: 'width: 26px; height: 26px; margin: 5px' }] }
+    }[o];
+    const sum = R.h + R.f;
+    return {
+      theme: this.props.theme ?? 'neutral',
+      outcome: R.title,
+      bannerStyle: R.banner,
+      dc: 'Difficulty 14',
+      hopeDie: R.h, fearDie: R.f,
+      hopeDim: o === 'fear' ? 'opacity: .5' : '',
+      fearDim: o === 'hope' ? 'opacity: .5' : '',
+      diceSum: sum,
+      total: sum + 4,
+      effects: R.effects.map((e) => ({ text: e.text, icon: e.icon, iconStyle: e.st || '' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

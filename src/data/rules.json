@@ -1,0 +1,378 @@
+{
+  "creation": {
+    "level": 1,
+    "stress": 6,
+    "hope": 2,
+    "proficiency": 1,
+    "traitModifiers": [
+      2,
+      1,
+      1,
+      0,
+      0,
+      -1
+    ],
+    "experiences": {
+      "count": 2,
+      "modifier": 2
+    },
+    "domainCards": {
+      "count": 2,
+      "level": 1
+    },
+    "startingInventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "Minor Health Potion",
+        "Minor Stamina Potion"
+      ],
+      "notes": [
+        "One of the class-specific items listed on your character guide",
+        "If applicable, whichever class-specific item you selected to carry your spells"
+      ]
+    },
+    "exampleExperiences": {
+      "backgrounds": [
+        "Assassin",
+        "Blacksmith",
+        "Bodyguard",
+        "Bounty Hunter",
+        "Chef to the Royal Family",
+        "Circus Performer",
+        "Con Artist",
+        "Fallen Monarch",
+        "Field Medic",
+        "High Priestess",
+        "Merchant",
+        "Noble",
+        "Pirate",
+        "Politician",
+        "Runaway",
+        "Scholar",
+        "Sellsword",
+        "Soldier",
+        "Storyteller",
+        "Thief",
+        "World Traveler"
+      ],
+      "characteristics": [
+        "Affable",
+        "Battle-Hardened",
+        "Bookworm",
+        "Charming",
+        "Cowardly",
+        "Friend to All",
+        "Helpful",
+        "Intimidating Presence",
+        "Leader",
+        "Lone Wolf",
+        "Loyal",
+        "Observant",
+        "Prankster",
+        "Silver Tongue",
+        "Sticky Fingers",
+        "Stubborn to a Fault",
+        "Survivor",
+        "Young and Naive"
+      ],
+      "specialties": [
+        "Acrobat",
+        "Gambler",
+        "Healer",
+        "Inventor",
+        "Magical Historian",
+        "Mapmaker",
+        "Master of Disguise",
+        "Navigator",
+        "Sharpshooter",
+        "Survivalist",
+        "Swashbuckler",
+        "Tactician"
+      ],
+      "skills": [
+        "Animal Whisperer",
+        "Barter",
+        "Deadly Aim",
+        "Fast Learner",
+        "Incredible Strength",
+        "Liar",
+        "Light Feet",
+        "Negotiator",
+        "Photographic Memory",
+        "Quick Hands",
+        "Repair",
+        "Scavenger",
+        "Tracker"
+      ],
+      "phrases": [
+        "Catch Me If You Can",
+        "Fake It Till You Make It",
+        "First Time’s the Charm",
+        "Hold the Line",
+        "I Won’t Let You Down",
+        "I’ll Catch You",
+        "I’ve Got Your Back",
+        "Knowledge Is Power",
+        "Nature’s Friend",
+        "Never Again",
+        "No One Left Behind",
+        "Pick on Someone Your Own Size",
+        "The Show Must Go On",
+        "This Is Not a Negotiation",
+        "Wolf in Sheep’s Clothing"
+      ]
+    }
+  },
+  "caps": {
+    "hope": 6,
+    "armorScore": 12,
+    "loadout": 5,
+    "hitPointSlots": 12,
+    "stressSlots": 12,
+    "proficiency": 6,
+    "consumablesEach": 5
+  },
+  "downtime": {
+    "movesPerRest": 2,
+    "shortRestsBeforeLong": 3,
+    "intro": "Between conflicts, the party can take a rest to recover expended resources and deepen their bonds. During a rest, each PC can make up to two downtime moves.\n\nWhen the party rests, they must choose between a short rest and a long rest. If a party takes three short rests in a row, their next rest must be a long rest.\n\nIf a short rest is interrupted, such as by an adversary's attack, the characters don’t gain its benefits. If a long rest is interrupted, the characters only gain the benefits of a short rest.",
+    "short": {
+      "moves": [
+        {
+          "id": "tend-to-wounds",
+          "name": "Tend to Wounds",
+          "text": "Clear 1d4+Tier Hit Points for yourself or an ally."
+        },
+        {
+          "id": "clear-stress",
+          "name": "Clear Stress",
+          "text": "Clear 1d4+Tier Stress."
+        },
+        {
+          "id": "repair-armor",
+          "name": "Repair Armor",
+          "text": "Clear 1d4+Tier Armor Slots from your or an ally’s armor."
+        },
+        {
+          "id": "prepare",
+          "name": "Prepare",
+          "text": "Describe how you prepare yourself for the path ahead, then gain a Hope. If you choose to Prepare with one or more members of your party, you each gain 2 Hope."
+        }
+      ],
+      "end": "At the end of a short rest, any features or effects with a limited number of uses per rest refresh and any features or effects that last until your next rest expire."
+    },
+    "long": {
+      "moves": [
+        {
+          "id": "tend-to-all-wounds",
+          "name": "Tend to All Wounds",
+          "text": "Clear all Hit Points for yourself or an ally."
+        },
+        {
+          "id": "clear-all-stress",
+          "name": "Clear All Stress",
+          "text": "Clear all Stress."
+        },
+        {
+          "id": "repair-all-armor",
+          "name": "Repair All Armor",
+          "text": "Clear all Armor Slots from your or an ally’s armor"
+        },
+        {
+          "id": "prepare",
+          "name": "Prepare",
+          "text": "Describe how you prepare for the next day’s adventure, then gain a Hope. If you choose to Prepare with one or more members of your party, you each gain 2 Hope."
+        },
+        {
+          "id": "work-on-a-project",
+          "name": "Work on a Project",
+          "text": "With GM approval, a PC may pursue a long-term project, such as deciphering an ancient text or crafting a new weapon. The first time they start a new project, assign it a countdown. Each time a PC makes the Work on a Project move, they either advance their project’s countdown automatically or make an action roll to advance it (GM’s choice)."
+        }
+      ],
+      "end": "At the end of a long rest, any features or effects with a limited number of uses per rest or per long rest refresh and any features or effects that last until your next rest or until your next long rest expire."
+    }
+  },
+  "leveling": {
+    "tiers": [
+      {
+        "tier": 1,
+        "levels": [
+          1,
+          1
+        ]
+      },
+      {
+        "tier": 2,
+        "levels": [
+          2,
+          4
+        ]
+      },
+      {
+        "tier": 3,
+        "levels": [
+          5,
+          7
+        ]
+      },
+      {
+        "tier": 4,
+        "levels": [
+          8,
+          10
+        ]
+      }
+    ],
+    "achievements": [
+      {
+        "level": 2,
+        "newExperience": 2,
+        "proficiency": 1,
+        "clearMarkedTraits": false
+      },
+      {
+        "level": 5,
+        "newExperience": 2,
+        "proficiency": 1,
+        "clearMarkedTraits": true
+      },
+      {
+        "level": 8,
+        "newExperience": 2,
+        "proficiency": 1,
+        "clearMarkedTraits": true
+      }
+    ],
+    "advancementsPerLevel": 2,
+    "advancements": [
+      {
+        "id": "traits",
+        "text": "Gain a +1 bonus to two unmarked character traits and mark them.",
+        "cost": 1,
+        "minTier": 2,
+        "slots": {
+          "2": 3,
+          "3": 3,
+          "4": 3
+        }
+      },
+      {
+        "id": "hitPoint",
+        "text": "Permanently gain one Hit Point slot.",
+        "cost": 1,
+        "minTier": 2,
+        "slots": {
+          "2": 2,
+          "3": 2,
+          "4": 2
+        }
+      },
+      {
+        "id": "stress",
+        "text": "Permanently gain one Stress slot.",
+        "cost": 1,
+        "minTier": 2,
+        "slots": {
+          "2": 2,
+          "3": 2,
+          "4": 2
+        }
+      },
+      {
+        "id": "experiences",
+        "text": "Permanently gain a +1 bonus to two Experiences.",
+        "cost": 1,
+        "minTier": 2,
+        "slots": {
+          "2": 1,
+          "3": 1,
+          "4": 1
+        }
+      },
+      {
+        "id": "domainCard",
+        "text": "Choose an additional domain card of your level or lower from a domain you have access to.",
+        "cost": 1,
+        "minTier": 2,
+        "slots": {
+          "2": 1,
+          "3": 1,
+          "4": 1
+        }
+      },
+      {
+        "id": "evasion",
+        "text": "Permanently gain a +1 bonus to your Evasion.",
+        "cost": 1,
+        "minTier": 2,
+        "slots": {
+          "2": 1,
+          "3": 1,
+          "4": 1
+        }
+      },
+      {
+        "id": "subclass",
+        "text": "Take an upgraded subclass card. Then cross out the multiclass option for this tier.",
+        "cost": 1,
+        "minTier": 3,
+        "slots": {
+          "2": 0,
+          "3": 1,
+          "4": 1
+        }
+      },
+      {
+        "id": "proficiency",
+        "text": "Increase your Proficiency by +1.",
+        "cost": 2,
+        "minTier": 3,
+        "slots": {
+          "2": 0,
+          "3": 2,
+          "4": 2
+        }
+      },
+      {
+        "id": "multiclass",
+        "text": "Multiclass: Choose an additional class for your character, then cross out an unused “Take an upgraded subclass card” and the other multiclass option on this sheet.",
+        "cost": 2,
+        "minTier": 3,
+        "slots": {
+          "2": 0,
+          "3": 2,
+          "4": 2
+        }
+      }
+    ],
+    "advancementRules": "Choose any two advancements with at least one unmarked slot from your tier or below. Options with multiple slots can be chosen more than once. When you choose an advancement, mark one of its slots.\n• When you choose to increase two unmarked character traits and mark them: Choose two unmarked character traits and gain a permanent +1 bonus to them. You can’t increase these stats again until the next tier (when your tier achievement allows you to clear those marks).\n• When you choose to permanently add 1 or more Hit Point slots: Darken the outline of the next rectangle in the Hit Point section of your character sheet in pen or permanent marker.\n• When you choose to permanently add 1 or more Stress slots: Darken the outline of the next rectangle in the Stress section of your character sheet in pen or permanent marker.\n• When you choose to increase your Experience: Choose two Experiences on your character sheet and gain a permanent +1 bonus to both.\n• When you take an additional domain card: You can choose an additional domain card at or below your level or from your class’s domains. If you’ve multiclassed, you can instead select a card at or below half your level from your chosen multiclass domain.\n• When you choose to increase your Evasion: Gain a permanent +1 bonus to your Evasion.\n• When you choose to take an upgraded subclass card: Take the next card for your subclass. If you have only the foundation card, take a specialization; if you have a specialization already, take a mastery. Then cross out this tier’s multiclass option.\n• When you choose to increase your Proficiency: Fill in one of the open circles in the “Proficiency” section of your character sheet, then increase your weapon’s number of damage dice by 1. The black box around this advancement’s slots indicates you must spend two advancements and mark both level-up slots in order to take it as an option.\n• When you choose to multiclass: Choose an additional class, select one of its domains, and gain its class feature. Add the appropriate multiclass module to your character sheet and take the foundation card from one of its subclasses. Then cross out the “upgraded subclass” advancement option in this tier and all other “multiclass” advancement options on your character sheet. The black box around this advancement’s slots indicates you must spend two advancements and mark both level-up slots in order to take it as an option.",
+    "thresholdIncrease": 1,
+    "domainCardStep": "Acquire a new domain card at your level or lower from one of your class’s domains and add it to your loadout or vault. If your loadout is already full, you can’t add the new card to it until you move another into your vault. You can also exchange one domain card you’ve previously acquired for a different domain card of the same level or lower.",
+    "multiclass": {
+      "minLevel": 5,
+      "text": "Starting at level 5, you can choose multiclassing as an option when leveling up. When you multiclass, you choose an additional class, gain access to one of its domains, and acquire its class feature. Take the appropriate multiclass module and add it to the right side of your character sheet, then choose a foundation card from one of its subclasses. If your foundation cards specify different Spellcast traits, you can choose which one to apply when making a Spellcast roll.\n\nWhenever you have the option to acquire a new domain card, you can choose from cards at or below half your current level (rounded up) from the domain you chose when you selected the multiclass advancement."
+    },
+    "domainCardLevelLimits": {
+      "2": 4,
+      "3": 7,
+      "4": 10
+    }
+  },
+  "gold": {
+    "denominations": [
+      "coins",
+      "handfuls",
+      "bags",
+      "chests"
+    ],
+    "perNext": 10,
+    "maxChests": 1,
+    "coinsOptional": true,
+    "text": "GOLD Gold is an abstract measurement of how much wealth a character has, and is measured in handfuls, bags, and chests, with 10 handfuls to 1 bag, and 10 bags to 1 chest. When you have marked all of the slots in a category and you gain another gold reward in that category, mark a slot in the following category and clear all the slots in the current one.\n\nFor example, if you have 9 handfuls and gain another, you instead mark 1 bag and erase all handfuls. If you have 9 bags and gain another, you mark 1 chest and erase all bags.\n\nYou can’t have more than 1 chest, so if all your Gold slots are marked, you’ll need to spend some of your gold or store it somewhere else before you can acquire more.\n\nOptional Rule: Gold Coins If your group wants to track gold with more granularity, you can add coins as your lowest denomination. Following the established pattern, 10 coins equal 1 handful."
+  }
+}

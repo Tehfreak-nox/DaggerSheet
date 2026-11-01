@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Theme layer — tokens</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cinzel:wght@600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="dh" data-theme="neutral" style="width: 1100px; height: 834px; padding: 32px; display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 28px">
+
+  <!-- Token sheet -->
+  <div style="display: flex; flex-direction: column; gap: 18px; min-width: 0">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span class="lbl">theme.css · data-theme="neutral"</span>
+      <h1 class="h1" style="margin: 0; font-size: 36px">Neutral — default theme</h1>
+      <p class="muted" style="margin: 0; font-size: 14px; line-height: 1.5; max-width: 560px">Screens only reference these tokens and component classes. Swapping the theme changes colours, table texture, card borders, radii, slot shape and the number typeface without touching layout.</p>
+    </div>
+
+    <section class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <span class="lbl lbl-ink">Colour</span>
+      <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px">
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--table); border: 1px solid var(--line)"></span><span style="font-size: 12px; font-weight: 600">--table</span><span class="muted" style="font-size: 11px">#E8E6E1</span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--card); border: 1px solid var(--line)"></span><span style="font-size: 12px; font-weight: 600">--card</span><span class="muted" style="font-size: 11px">#FBFAF7</span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--card-2); border: 1px solid var(--line)"></span><span style="font-size: 12px; font-weight: 600">--card-2</span><span class="muted" style="font-size: 11px">#F1EFEA</span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--ink)"></span><span style="font-size: 12px; font-weight: 600">--ink</span><span class="muted" style="font-size: 11px">#1B1A17</span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--ink-2)"></span><span style="font-size: 12px; font-weight: 600">--ink-2</span><span class="muted" style="font-size: 11px">#56524A</span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--line)"></span><span style="font-size: 12px; font-weight: 600">--line</span><span class="muted" style="font-size: 11px">#D7D3CA</span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--hope)"></span><span style="font-size: 12px; font-weight: 600">--hope</span><span class="muted" style="font-size: 11px">#C9831A</span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--fear)"></span><span style="font-size: 12px; font-weight: 600">--fear</span><span class="muted" style="font-size: 11px">#3E3A8C</span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--hp)"></span><span style="font-size: 12px; font-weight: 600">--hp</span><span class="muted" style="font-size: 11px">#B23A2B</span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--stress)"></span><span style="font-size: 12px; font-weight: 600">--stress</span><span class="muted" style="font-size: 11px">#3B5C86</span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--armor)"></span><span style="font-size: 12px; font-weight: 600">--armor</span><span class="muted" style="font-size: 11px">#5A636D</span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="height: 48px; border-radius: 8px; background: var(--gold)"></span><span style="font-size: 12px; font-weight: 600">--gold</span><span class="muted" style="font-size: 11px">#B38A2E</span></div>
+      </div>
+    </section>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+      <section class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <span class="lbl lbl-ink">Numbers &amp; labels</span>
+        <div style="display: flex; align-items: baseline; gap: 14px"><span class="num" style="font-size: 56px">+2</span><span class="num" style="font-size: 40px">2d8+3</span></div>
+        <span class="lbl">--font-num · Barlow Condensed 700 · tabular</span>
+        <span style="font-size: 14px">--font-ui · Inter 400–700</span>
+      </section>
+      <section class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px">
+        <span class="lbl lbl-ink">Slots &amp; tokens</span>
+        <div style="display: flex; gap: 8px; align-items: center"><span class="slot hp on"></span><span class="slot hp"></span><span class="slot stress on"></span><span class="slot stress"></span><span class="hope on"></span><span class="hope"></span><span class="token on" style="--c: var(--gold); width: 32px; height: 32px"></span></div>
+        <span class="muted" style="font-size: 12px">--slot-radius 6px · border 2.5px · inset ring when marked</span>
+      </section>
+      <section class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <span class="lbl lbl-ink">Surfaces</span>
+        <div style="display: flex; gap: 12px"><span class="card" style="width: 72px; height: 52px"></span><span class="card lift" style="width: 72px; height: 52px"></span><span class="card-inset" style="width: 72px; height: 52px"></span></div>
+        <span class="muted" style="font-size: 12px">--radius-card 14px · --border-w 1.5px · --shadow-card / --shadow-lift</span>
+      </section>
+      <section class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <span class="lbl lbl-ink">Dice</span>
+        <div style="display: flex; gap: 10px"><div class="die die-hope" style="width: 52px; height: 52px"><span class="num" style="font-size: 22px">9</span></div><div class="die die-fear" style="width: 52px; height: 52px"><span class="num" style="font-size: 22px">4</span></div><div class="die die-plain" style="width: 52px; height: 52px"><span class="num" style="font-size: 18px">d6</span></div></div>
+        <span class="muted" style="font-size: 12px">Hope light, Fear dark — tellable apart by lightness, not hue alone</span>
+      </section>
+    </div>
+  </div>
+
+  <!-- Swap preview -->
+  <div style="display: flex; flex-direction: column; gap: 12px">
+    <span class="lbl lbl-ink">Same component, three themes</span>
+    <sc-for list="{{themes}}" as="t" hint-placeholder-count="3">
+      <div class="dh" data-theme="{{t.id}}" style="border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(0,0,0,.12)">
+        <div style="display: flex; justify-content: space-between; align-items: baseline"><span class="lbl" style="color: var(--ink)">{{t.label}}</span><span class="lbl" style="font-size: 11px">{{t.note}}</span></div>
+        <div class="card" style="padding: 12px; display: flex; gap: 12px; align-items: center">
+          <div class="trait" style="min-height: 76px; width: 84px; flex: none; box-shadow: none"><span class="num" style="font-size: 30px">+2</span><span class="lbl lbl-ink" style="font-size: 11px">Presence</span></div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; gap: 6px"><span class="slot hp on sm"></span><span class="slot hp on sm"></span><span class="slot hp sm"></span><span class="slot hp sm"></span><span class="slot hp sm"></span><span class="slot hp sm"></span></div>
+            <div style="display: flex; gap: 0"><span class="hope on" style="width: 18px; height: 18px"></span><span class="hope on" style="width: 18px; height: 18px"></span><span class="hope" style="width: 18px; height: 18px"></span><span class="hope" style="width: 18px; height: 18px"></span></div>
+          </div>
+          <div class="die die-hope" style="width: 48px; height: 48px"><span class="num" style="font-size: 20px">9</span></div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1100,"height":834}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      themes: [
+        { id: 'neutral', label: 'Neutral (default)', note: 'Barlow · rounded squares' },
+        { id: 'parchment', label: 'Parchment', note: 'Cinzel · round tokens · wood table' },
+        { id: 'midnight', label: 'Midnight', note: 'Dark table · amber accent' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

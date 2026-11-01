@@ -1,0 +1,154 @@
+/* ==========================================================
+   LAYERED THEME SYSTEM  (loads after theme.css)
+   Root attributes, applied in this order:
+     data-class      → base palette + emblem + resource-token shape
+     data-sub="a|b"  → subclass accent shift (+ emblem frame variant)
+     .anc-<name>     → ancestry frame texture (top / bottom halves)
+     data-community  → widget style
+   RULE: textures only on frames + backgrounds. Anything holding a
+   number (.w-num, .num-plate, .ctk, .slot, cards) is a solid fill.
+   ========================================================== */
+
+/* ---------- 1. CLASS palettes ---------- */
+[data-class="bard"]     { --cls-deep:#4A1634; --cls-main:#A3407A; --cls-light:#F1DAE6; --cls-paper:#FDF7FA; --cls-sub-a:#8C2F6E; --cls-sub-b:#9A2E4E; }
+[data-class="druid"]    { --cls-deep:#1D3622; --cls-main:#4C7A3A; --cls-light:#DDE8CE; --cls-paper:#F8FAF3; --cls-sub-a:#1F6658; --cls-sub-b:#4F6B17; }
+[data-class="guardian"] { --cls-deep:#1C2A3E; --cls-main:#3D5A80; --cls-light:#D9E2EE; --cls-paper:#F5F7FA; --cls-sub-a:#2E5F7F; --cls-sub-b:#4A4A8C; }
+[data-class="ranger"]   { --cls-deep:#1F3833; --cls-main:#3F6E5C; --cls-light:#D6E6DE; --cls-paper:#F6FAF8; --cls-sub-a:#2D6A4F; --cls-sub-b:#4A6A2F; }
+[data-class="rogue"]    { --cls-deep:#221B2E; --cls-main:#4A3D63; --cls-light:#DFDAEA; --cls-paper:#F8F7FB; --cls-sub-a:#2E2A55; --cls-sub-b:#5A3352; }
+[data-class="seraph"]   { --cls-deep:#4A3810; --cls-main:#9C7A24; --cls-light:#F1E6C6; --cls-paper:#FDFAF1; --cls-sub-a:#7A4E0E; --cls-sub-b:#5E5A14; }
+[data-class="sorcerer"] { --cls-deep:#331247; --cls-main:#7B3FB0; --cls-light:#E8DAF4; --cls-paper:#FBF7FE; --cls-sub-a:#8A2F7A; --cls-sub-b:#5A3FB0; }
+[data-class="warrior"]  { --cls-deep:#3A1510; --cls-main:#9B3A26; --cls-light:#F2DAD2; --cls-paper:#FDF7F5; --cls-sub-a:#8A4A12; --cls-sub-b:#8C2424; }
+[data-class="wizard"]   { --cls-deep:#191D48; --cls-main:#3A4BA0; --cls-light:#DADEF4; --cls-paper:#F7F8FD; --cls-sub-a:#2A5A9C; --cls-sub-b:#5A3A9C; }
+[data-class="assassin"] { --cls-deep:#1A1214; --cls-main:#5E1F2A; --cls-light:#E7D7DA; --cls-paper:#FAF6F7; --cls-sub-a:#4A1A30; --cls-sub-b:#6A2A1A; }
+[data-class="brawler"]  { --cls-deep:#3D2210; --cls-main:#A5582A; --cls-light:#F3DFCD; --cls-paper:#FDF8F3; --cls-sub-a:#8A3E14; --cls-sub-b:#7A4A1E; }
+[data-class="witch"]    { --cls-deep:#123B44; --cls-main:#2D7C86; --cls-light:#D2E8EB; --cls-paper:#F4FAFB; --cls-sub-a:#1F5F78; --cls-sub-b:#2F6E5A; }
+[data-class="warlock"]  { --cls-deep:#20240F; --cls-main:#5E6B1A; --cls-light:#E3E9C6; --cls-paper:#FAFBF2; --cls-sub-a:#4F5A10; --cls-sub-b:#3F5A2A; }
+
+/* class palette → theme tokens */
+[data-class] {
+  --table: var(--cls-light);
+  --card: var(--cls-paper);
+  --card-2: color-mix(in srgb, var(--cls-light) 55%, var(--cls-paper));
+  --line: color-mix(in srgb, var(--cls-main) 30%, var(--cls-paper));
+  --line-strong: var(--cls-deep);
+  --ink: color-mix(in srgb, var(--cls-deep) 75%, #000);
+  --ink-2: color-mix(in srgb, var(--cls-deep) 72%, #6b6b6b);
+  --accent: var(--cls-deep);
+  --on-accent: #FFFFFF;
+}
+
+/* ---------- 2. SUBCLASS shift ---------- */
+[data-sub="a"] { --accent: var(--cls-sub-a); }
+[data-sub="b"] { --accent: var(--cls-sub-b); }
+
+/* ---------- Emblem ---------- */
+.emblem { width: 64px; height: 64px; flex: none; border-radius: 50%; background: var(--cls-paper); border: 2px solid var(--cls-main); display: inline-flex; align-items: center; justify-content: center; color: var(--cls-main); }
+.emblem .em-frame { stroke: var(--accent); }
+
+/* ---------- 3. ANCESTRY frames (texture lives here only) ---------- */
+.framed { position: relative; }
+.anc-half { position: absolute; left: 0; right: 0; }
+.anc-top { top: 0; height: 50%; border-radius: 26px 26px 0 0; }
+.anc-bot { bottom: 0; height: 50%; border-radius: 0 0 26px 26px; }
+.anc-full { inset: 0; border-radius: 26px; }
+
+.anc-firbolg {
+  background:
+    repeating-linear-gradient(78deg, rgba(255,240,220,.14) 0 1.5px, transparent 1.5px 5px),
+    repeating-linear-gradient(102deg, rgba(40,20,5,.22) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(255,230,200,.08) 0 3px, transparent 3px 9px),
+    linear-gradient(#93694A, #6A4A30);
+}
+.anc-earthkin {
+  background:
+    linear-gradient(115deg, transparent 48%, rgba(30,28,25,.6) 48.5% 49.6%, transparent 50.2%) 0 0 / 62px 72px,
+    linear-gradient(35deg, transparent 47%, rgba(30,28,25,.5) 47.5% 48.6%, transparent 49.2%) 20px 10px / 84px 56px,
+    linear-gradient(168deg, transparent 49%, rgba(30,28,25,.45) 49.3% 50.4%, transparent 50.8%) 10px 0 / 46px 92px,
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,.14), transparent 42%) 0 0 / 70px 70px,
+    linear-gradient(#8E897F, #6C685F);
+}
+.anc-simiah {
+  background:
+    radial-gradient(5px 9px at 50% 50%, #6E9C45 92%, transparent 100%) 0 0 / 22px 26px,
+    radial-gradient(5px 9px at 50% 50%, #507C30 92%, transparent 100%) 11px 13px / 22px 26px,
+    repeating-linear-gradient(72deg, transparent 0 9px, rgba(30,48,16,.65) 9px 11px, transparent 11px 22px),
+    linear-gradient(#405E2B, #2D451F);
+}
+.anc-galapa {
+  background:
+    repeating-linear-gradient(0deg, rgba(40,35,18,.55) 0 2px, transparent 2px 38px),
+    repeating-linear-gradient(90deg, rgba(40,35,18,.55) 0 2px, transparent 2px 38px),
+    conic-gradient(from 45deg, rgba(0,0,0,.16) 0 90deg, rgba(255,255,255,.10) 90deg 180deg, rgba(0,0,0,.08) 180deg 270deg, rgba(255,255,255,.14) 270deg) 0 0 / 38px 38px,
+    linear-gradient(#7F7549, #5C5433);
+}
+.anc-drakona {
+  background:
+    radial-gradient(circle at 50% 0%, transparent 9px, rgba(25,8,6,.5) 9.5px 11px, transparent 11.5px) 0 0 / 20px 14px,
+    radial-gradient(circle at 50% 0%, transparent 9px, rgba(25,8,6,.5) 9.5px 11px, transparent 11.5px) 10px 7px / 20px 14px,
+    linear-gradient(#94402F, #5E2219);
+}
+.anc-elf {
+  background:
+    repeating-linear-gradient(45deg, rgba(218,190,118,.38) 0 1px, transparent 1px 11px),
+    repeating-linear-gradient(-45deg, rgba(218,190,118,.38) 0 1px, transparent 1px 11px),
+    linear-gradient(#2F3D52, #1F2937);
+}
+
+/* sheet surface inside the frame (background → table texture allowed) */
+.sheet-inner { position: relative; margin: 14px; border-radius: 16px; background: var(--table-texture), var(--table); box-shadow: 0 0 0 2px rgba(0,0,0,.35), inset 0 2px 8px rgba(0,0,0,.12); }
+.seam { position: absolute; left: 0; top: 50%; transform: translateY(-50%); z-index: 2; padding: 4px 8px; border-radius: 0 8px 8px 0; background: var(--cls-deep); color: #FFFFFF; font: 600 10px/1.2 var(--font-num); letter-spacing: .08em; text-transform: uppercase; }
+
+/* ---------- 4. COMMUNITY widgets ---------- */
+.w { position: relative; min-height: 88px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: var(--card); border: var(--border-w) solid var(--line); border-radius: var(--radius-chip); box-shadow: var(--shadow-card); color: var(--ink); }
+.w-num { position: relative; z-index: 1; font-family: var(--font-num); font-weight: 700; font-variant-numeric: tabular-nums; font-size: 34px; line-height: 1; padding: 0 6px; border-radius: 6px; background: var(--card); }
+.w-lbl { position: relative; z-index: 1; font-family: var(--font-num); font-weight: 600; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.w-ins { display: none; }
+
+/* Loreborne — numbers on scroll rolls */
+[data-community="loreborne"] .w { margin: 0 10px; border-left: 0; border-right: 0; border-radius: 2px; border-color: #C8B386; background: #FBF4E2; box-shadow: 0 6px 10px -8px rgba(0,0,0,.5); }
+[data-community="loreborne"] .w::before,
+[data-community="loreborne"] .w::after { content: ""; position: absolute; top: -6px; bottom: -6px; width: 13px; border-radius: 7px; background: linear-gradient(90deg, #A88850, #F0DFB8 45%, #9A7A44); box-shadow: 0 2px 4px rgba(0,0,0,.3); }
+[data-community="loreborne"] .w::before { left: -11px; }
+[data-community="loreborne"] .w::after { right: -11px; }
+[data-community="loreborne"] .w-num { background: #FBF4E2; color: #2A1E10; }
+[data-community="loreborne"] .w-lbl { color: #5A4526; }
+[data-community="loreborne"] .slot { border-radius: 3px; }
+
+/* Orderborne — banners + rank insignia */
+[data-community="orderborne"] .w { border: 0; border-radius: 0; padding: 14px 8px 20px; background: var(--accent); color: #FFFFFF; box-shadow: none; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%); }
+[data-community="orderborne"] .w::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: #C9A24A; }
+[data-community="orderborne"] .w-num { background: transparent; color: #FFFFFF; }
+[data-community="orderborne"] .w-lbl { color: #F1E6CC; }
+[data-community="orderborne"] .w-ins { display: block; color: #E3C06A; }
+[data-community="orderborne"] .slot { border-radius: 2px; }
+
+/* Seaborne — rope + brass */
+[data-community="seaborne"] .w { border: 5px solid transparent; border-radius: 14px; background: linear-gradient(var(--card), var(--card)) padding-box, repeating-linear-gradient(60deg, #D4B27C 0 3px, #96723F 3px 6px) border-box; }
+[data-community="seaborne"] .w::before,
+[data-community="seaborne"] .w::after { content: ""; position: absolute; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #F4DA92, #9A7024); }
+[data-community="seaborne"] .w::before { left: 5px; }
+[data-community="seaborne"] .w::after { right: 5px; }
+[data-community="seaborne"] .slot { border-radius: 50%; box-shadow: 0 0 0 2px #B88D3A; }
+
+/* Wildborne — leaves */
+[data-community="wildborne"] .w { border: 2px solid var(--cls-main); border-radius: 6px 30px 6px 30px; }
+[data-community="wildborne"] .w::after { content: ""; position: absolute; top: -8px; right: 16px; width: 18px; height: 11px; background: #5E8C3A; border-radius: 0 100% 0 100%; transform: rotate(-22deg); }
+[data-community="wildborne"] .w::before { content: ""; position: absolute; bottom: -7px; left: 16px; width: 14px; height: 9px; background: #7AA24C; border-radius: 100% 0 100% 0; transform: rotate(-12deg); }
+[data-community="wildborne"] .slot { border-radius: 2px 60% 2px 60%; }
+
+/* ---------- 5. CLASS resource tokens (shape = class, colour = subclass) ---------- */
+.ctk { width: 56px; height: 56px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: var(--accent); color: #FFFFFF; font-family: var(--font-num); font-weight: 700; font-size: 22px; line-height: 1; border-radius: 12px; }
+.ctk.spent { background: var(--card-2); color: var(--ink-2); box-shadow: inset 0 0 0 2px var(--line); }
+[data-class="bard"] .ctk { border-radius: 16px; box-shadow: inset 0 0 0 3px var(--cls-paper), 0 0 0 2px var(--accent); }
+[data-class="druid"] .ctk { border-radius: 4px 50% 4px 50%; }
+[data-class="guardian"] .ctk { clip-path: polygon(50% 3%, 97% 94%, 3% 94%); padding-top: 18px; border-radius: 0; }
+[data-class="ranger"] .ctk { border-radius: 50%; box-shadow: inset 0 0 0 4px var(--cls-paper), inset 0 0 0 7px var(--accent); }
+[data-class="rogue"] .ctk { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); border-radius: 0; }
+[data-class="seraph"] .ctk { clip-path: polygon(50% 3%, 97% 94%, 3% 94%); padding-top: 18px; border-radius: 0; box-shadow: none; }
+[data-class="sorcerer"] .ctk { clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%); border-radius: 0; }
+[data-class="warrior"] .ctk { border-radius: 10px; box-shadow: inset -5px -5px 0 rgba(0,0,0,.28), inset 3px 3px 0 rgba(255,255,255,.18); }
+[data-class="wizard"] .ctk { clip-path: polygon(50% 0, 79% 10%, 98% 35%, 98% 65%, 79% 90%, 50% 100%, 21% 90%, 2% 65%, 2% 35%, 21% 10%); border-radius: 0; }
+[data-class="assassin"] .ctk { clip-path: polygon(50% 0, 88% 50%, 50% 100%, 12% 50%); border-radius: 0; }
+[data-class="brawler"] .ctk { border-radius: 18px 18px 10px 10px; box-shadow: inset 0 -6px 0 rgba(0,0,0,.25); }
+[data-class="witch"] .ctk { border-radius: 50%; box-shadow: inset 6px -4px 0 rgba(0,0,0,.22); }
+[data-class="warlock"] .ctk { border-radius: 50%; box-shadow: inset 0 0 0 3px var(--cls-paper), inset 0 0 0 5px var(--accent), 0 0 0 2px var(--cls-deep); }

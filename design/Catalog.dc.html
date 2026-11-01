@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add item</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cinzel:wght@600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="dh" data-theme="{{theme}}" style="width: 390px; height: 980px; display: flex; flex-direction: column; overflow: hidden">
+
+  <header class="topbar">
+    <a href="Equipment.dc.html" class="iconbtn press" aria-label="Close"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+    <div class="lbl lbl-ink" style="font-size: 15px">Add item</div>
+    <span style="width: 44px"></span>
+  </header>
+
+  <div style="padding: 0 16px 12px">
+    <div class="seg" role="tablist" aria-label="Item source">
+      <button class="seg-i {{tabCatCls}}" role="tab" aria-selected="{{tabCatSel}}" onClick="{{showCat}}">Catalog</button>
+      <button class="seg-i {{tabCusCls}}" role="tab" aria-selected="{{tabCusSel}}" onClick="{{showCus}}">Custom item</button>
+    </div>
+  </div>
+
+  <!-- CATALOG -->
+  <sc-if value="{{isCat}}" hint-placeholder-val="{{ true }}">
+    <main style="flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 0 16px 20px; min-height: 0">
+      <label style="position: relative; display: block">
+        <span style="position: absolute; left: 1px; top: 1px; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search items</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 14px; top: 14px; color: var(--ink-2)"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+        <input class="field" type="search" placeholder="Search weapons, armor, loot…" value="{{q}}" onInput="{{onQ}}" style="padding-left: 44px">
+      </label>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <sc-for list="{{kinds}}" as="k" hint-placeholder-count="5">
+          <button class="pill press {{k.cls}}" aria-pressed="{{k.pressed}}" onClick="{{k.pick}}">{{k.label}}</button>
+        </sc-for>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span class="lbl">Tier</span>
+        <sc-for list="{{tiers}}" as="t" hint-placeholder-count="4">
+          <button class="pill press {{t.cls}}" style="min-width: 44px; justify-content: center; padding: 0 10px" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}"><span class="num" style="font-size: 17px">{{t.label}}</span></button>
+        </sc-for>
+      </div>
+
+      <div class="muted" style="font-size: 12px">{{resultCount}}</div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <sc-for list="{{items}}" as="i" hint-placeholder-count="6">
+          <div class="card" style="min-height: 68px; padding: 10px 8px 10px 14px; display: flex; align-items: center; gap: 10px">
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+              <span style="font-size: 15px; font-weight: 700">{{i.name}}</span>
+              <span class="muted" style="font-size: 12px">{{i.meta}}</span>
+            </span>
+            <span class="num" style="font-size: 20px">{{i.stat}}</span>
+            <button class="btn press {{i.addCls}}" style="min-height: 44px; min-width: 64px; padding: 0 12px" onClick="{{i.add}}" aria-label="Add {{i.name}}">{{i.addLabel}}</button>
+          </div>
+        </sc-for>
+      </div>
+    </main>
+  </sc-if>
+
+  <!-- CUSTOM -->
+  <sc-if value="{{isCus}}" hint-placeholder-val="{{ false }}">
+    <main style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 0 16px 20px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label class="lbl" for="ci-name">Name</label>
+        <input id="ci-name" class="field" type="text" placeholder="e.g. Grandmother's Lute-Blade">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span class="lbl">Type</span>
+        <div class="seg" role="group" aria-label="Item type">
+          <sc-for list="{{types}}" as="t" hint-placeholder-count="4"><button class="seg-i {{t.cls}}" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label class="lbl" for="ci-trait">Trait</label>
+          <select id="ci-trait" class="field"><option>Presence</option><option>Agility</option><option>Strength</option><option>Finesse</option><option>Instinct</option><option>Knowledge</option></select>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label class="lbl" for="ci-range">Range</label>
+          <select id="ci-range" class="field"><option>Melee</option><option>Very Close</option><option>Close</option><option>Far</option><option>Very Far</option></select>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span class="lbl">Damage die</span>
+        <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px">
+          <sc-for list="{{dice}}" as="d" hint-placeholder-count="5"><button class="pill press {{d.cls}}" style="justify-content: center; min-height: 48px; border-radius: var(--radius-chip)" aria-pressed="{{d.pressed}}" onClick="{{d.pick}}"><span class="num" style="font-size: 20px">{{d.label}}</span></button></sc-for>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div class="card" style="padding: 6px; display: flex; align-items: center; justify-content: space-between">
+          <button class="iconbtn press" aria-label="Lower damage modifier" onClick="{{modDown}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+          <div style="display: flex; flex-direction: column; align-items: center"><span class="num" style="font-size: 22px">+{{mod}}</span><span class="lbl" style="font-size: 10px">Modifier</span></div>
+          <button class="iconbtn press" aria-label="Raise damage modifier" onClick="{{modUp}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
+        <div class="seg" role="group" aria-label="Damage type" style="align-items: stretch">
+          <button class="seg-i on" aria-pressed="true">Phy</button>
+          <button class="seg-i" aria-pressed="false">Mag</button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label class="lbl" for="ci-feat">Feature</label>
+        <textarea id="ci-feat" class="field" rows="3" placeholder="Describe what makes it special" style="padding: 12px 14px; resize: none"></textarea>
+      </div>
+      <div class="card-inset" style="padding: 12px 14px; display: flex; align-items: center; justify-content: space-between">
+        <span class="lbl">Preview</span>
+        <span class="num" style="font-size: 24px">{{preview}}</span>
+      </div>
+      <button class="btn btn-primary press" style="margin-top: auto; min-height: 56px">Save to inventory</button>
+    </main>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tab":{"editor":"enum","options":["catalog","custom"],"default":"catalog","section":"Screen"},"theme":{"editor":"enum","options":["neutral","parchment","midnight"],"default":"neutral","section":"Theme"},"$preview":{"width":390,"height":980}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: null, q: '', kind: 'All', tier: 1, added: {}, type: 'Weapon', die: 'd8', mod: 1 };
+  }
+  renderVals() {
+    const s = this.state;
+    const tab = s.tab || this.props.tab || 'catalog';
+    const DB = [
+      { name: 'Longsword', kind: 'Weapons', tier: 1, meta: 'Agility · Melee · Two-handed', stat: 'd10+3' },
+      { name: 'Battleaxe', kind: 'Weapons', tier: 1, meta: 'Strength · Melee · Two-handed', stat: 'd10+3' },
+      { name: 'Shortbow', kind: 'Weapons', tier: 1, meta: 'Agility · Far · Two-handed', stat: 'd6+3' },
+      { name: 'Leather Armor', kind: 'Armor', tier: 1, meta: 'Thresholds 6 / 13', stat: '3' },
+      { name: 'Chainmail Armor', kind: 'Armor', tier: 1, meta: 'Thresholds 7 / 15 · Heavy', stat: '4' },
+      { name: 'Minor Health Potion', kind: 'Consumables', tier: 1, meta: 'Clear HP', stat: '' },
+      { name: 'Minor Stamina Potion', kind: 'Consumables', tier: 1, meta: 'Clear Stress', stat: '' },
+      { name: 'Improved Rapier', kind: 'Weapons', tier: 2, meta: 'Presence · Melee · One-handed', stat: 'd8+3' },
+      { name: 'Improved Leather Armor', kind: 'Armor', tier: 2, meta: 'Thresholds 7 / 16', stat: '4' }
+    ];
+    const q = s.q.trim().toLowerCase();
+    const list = DB.filter((d) => (s.kind === 'All' || d.kind === s.kind) && d.tier === s.tier && (!q || d.name.toLowerCase().includes(q)));
+    const sel = (on) => ({ cls: on ? 'on' : '', pressed: on ? 'true' : 'false' });
+    return {
+      theme: this.props.theme ?? 'neutral',
+      isCat: tab === 'catalog', isCus: tab === 'custom',
+      tabCatCls: tab === 'catalog' ? 'on' : '', tabCusCls: tab === 'custom' ? 'on' : '',
+      tabCatSel: tab === 'catalog' ? 'true' : 'false', tabCusSel: tab === 'custom' ? 'true' : 'false',
+      showCat: () => this.setState({ tab: 'catalog' }),
+      showCus: () => this.setState({ tab: 'custom' }),
+      q: s.q,
+      onQ: (e) => this.setState({ q: e.target.value }),
+      kinds: ['All', 'Weapons', 'Armor', 'Consumables', 'Loot'].map((k) => ({ label: k, ...sel(s.kind === k), pick: () => this.setState({ kind: k }) })),
+      tiers: [1, 2, 3, 4].map((t) => ({ label: t, ...sel(s.tier === t), pick: () => this.setState({ tier: t }) })),
+      resultCount: list.length + (list.length === 1 ? ' item' : ' items') + ' · Tier ' + s.tier,
+      items: list.map((d) => {
+        const done = !!s.added[d.name];
+        return {
+          name: d.name, meta: d.meta, stat: d.stat,
+          addLabel: done ? 'Added' : 'Add', addCls: done ? '' : 'btn-primary',
+          add: () => this.setState({ added: Object.assign({}, s.added, { [d.name]: !done }) })
+        };
+      }),
+      types: ['Weapon', 'Armor', 'Item', 'Consumable'].map((t) => ({ label: t, ...sel(s.type === t), pick: () => this.setState({ type: t }) })),
+      dice: ['d4', 'd6', 'd8', 'd10', 'd12'].map((d) => ({ label: d, ...sel(s.die === d), pick: () => this.setState({ die: d }) })),
+      mod: s.mod,
+      modUp: () => this.setState({ mod: s.mod + 1 }),
+      modDown: () => this.setState({ mod: Math.max(0, s.mod - 1) }),
+      preview: s.die + (s.mod ? '+' + s.mod : '')
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cards — loadout and vault</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./sheet.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700;800&amp;family=Barlow:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="s" style="width: 390px; height: 2900px; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="padding: 22px 12px 0 20px; display: flex; align-items: center; justify-content: space-between">
+    <h1 style="margin: 0; font: 800 26px/1 var(--head); letter-spacing: .03em; text-transform: uppercase">Cards</h1>
+    <a href="V2Sheet.dc.html" class="s-icon s-press" aria-label="Done"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+  </header>
+
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 22px; padding: 16px 20px 30px">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; gap: 4px" role="group" aria-label="When are you swapping?">
+        <button class="s-pill {{restCls}}" style="border: 2px solid var(--ink)" aria-pressed="{{restSel}}" onClick="{{setRest}}">Resting · free</button>
+        <button class="s-pill {{sceneCls}}" style="border: 2px solid var(--ink)" aria-pressed="{{sceneSel}}" onClick="{{setScene}}">Mid-scene · Stress</button>
+      </div>
+      <span class="s-muted" style="font-size: 14px; line-height: 1.4">{{ruleText}}</span>
+    </div>
+
+    <!-- Loadout strip -->
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <div class="s-row"><span class="s-label" style="font-size: 18px">Loadout</span><span class="s-num" style="font-size: 18px">{{loadCount}} / 5</span></div>
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px">
+        <sc-for list="{{strip}}" as="c" hint-placeholder-count="5">
+          <div style="min-height: 84px; padding: 8px 4px; border: 2px solid {{c.border}}; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center">
+            <sc-if value="{{c.arc}}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" role="img" aria-label="Arcana"><circle cx="12" cy="12" r="9.5"/><path d="M12 4.5l1.8 5.7L19.5 12l-5.7 1.8L12 19.5l-1.8-5.7L4.5 12l5.7-1.8z" fill="currentColor"/></svg></sc-if>
+            <sc-if value="{{c.mid}}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" role="img" aria-label="Midnight"><path d="M16 3.5a9 9 0 1 0 4.5 13.5A7 7 0 0 1 16 3.5z" fill="currentColor"/></svg></sc-if>
+            <span style="font: 700 12px/1.1 var(--head)">{{c.name}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- By level -->
+    <sc-for list="{{levels}}" as="L" hint-placeholder-count="10">
+      <section style="display: flex; flex-direction: column; {{L.style}}">
+        <div class="s-title" style="margin-bottom: 4px"><i></i><span>Level {{L.n}}</span><i></i></div>
+        <sc-if value="{{L.locked}}" hint-placeholder-val="{{ false }}"><span class="s-muted" style="font-size: 13px; text-align: center; padding-bottom: 4px">Unlocks at level {{L.n}}</span></sc-if>
+        <sc-for list="{{L.cards}}" as="c" hint-placeholder-count="2">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line)">
+            <span style="width: 38px; height: 38px; flex: none; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; border: 2px solid var(--ink); background: {{c.iconBg}}; color: {{c.iconFg}}">
+              <sc-if value="{{c.arc}}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" role="img" aria-label="Arcana"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z" fill="currentColor"/></svg></sc-if>
+              <sc-if value="{{c.mid}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" role="img" aria-label="Midnight"><path d="M16 3.5a9 9 0 1 0 4.5 13.5A7 7 0 0 1 16 3.5z" fill="currentColor"/></svg></sc-if>
+            </span>
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; {{c.textStyle}}">
+              <span class="s-feat-name" style="font-size: 18px">{{c.name}}</span>
+              <span class="s-muted" style="font-size: 13px">{{c.meta}}</span>
+            </span>
+            <span style="width: 34px; height: 34px; flex: none; border-radius: 50%; border: 2px solid var(--ink); display: inline-flex; align-items: center; justify-content: center; {{c.textStyle}}" role="img" aria-label="Recall cost {{c.rc}}"><span class="s-num" style="font-size: 15px">{{c.rc}}</span><svg width="8" height="12" viewBox="0 0 10 14" aria-hidden="true"><path d="M6 0L0 8h4l-1 6 7-9H6z" fill="currentColor"/></svg></span>
+            <sc-if value="{{c.canAct}}" hint-placeholder-val="{{ false }}">
+              <button class="s-mini {{c.btnCls}}" style="min-width: 92px; {{c.btnStyle}}" onClick="{{c.act}}" aria-label="{{c.cta}}: {{c.name}}">{{c.cta}}</button>
+            </sc-if>
+            <sc-if value="{{c.noAct}}" hint-placeholder-val="{{ true }}">
+              <span class="s-label s-muted" style="min-width: 92px; text-align: center; font-size: 11px">{{c.status}}</span>
+            </sc-if>
+          </div>
+        </sc-for>
+      </section>
+    </sc-for>
+
+    <sc-if value="{{full}}" hint-placeholder-val="{{ false }}"><span class="s-muted" style="font-size: 14px">Loadout is full — move a card to the vault first (free).</span></sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"level":{"editor":"int","min":1,"max":10,"default":5,"section":"Preview"},"$preview":{"width":390,"height":2900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    // [id, name, domain, level, type, recall]
+    this.ALL = [
+      ['rw', 'Rune Ward', 'A', 1, 'Spell', 0], ['uc', 'Unleash Chaos', 'A', 1, 'Spell', 1], ['ww', 'Wall Walk', 'A', 1, 'Spell', 1],
+      ['pp', 'Pick and Pull', 'M', 1, 'Ability', 0], ['ud', 'Uncanny Disguise', 'M', 1, 'Spell', 0], ['rb', 'Rain of Blades', 'M', 1, 'Spell', 1],
+      ['cg', 'Cinder Grasp', 'A', 2, 'Spell', 1], ['fe', 'Floating Eye', 'A', 2, 'Spell', 0], ['ms', 'Midnight Spirit', 'M', 2, 'Spell', 1], ['sb', 'Shadowbind', 'M', 2, 'Spell', 0],
+      ['cs', 'Counterspell', 'A', 3, 'Spell', 2], ['fl', 'Flight', 'A', 3, 'Spell', 1], ['ch', 'Chokehold', 'M', 3, 'Ability', 1], ['vn', 'Veil of Night', 'M', 3, 'Spell', 1],
+      ['bo', 'Blink Out', 'A', 4, 'Spell', 1], ['pb', 'Preservation Blast', 'A', 4, 'Spell', 2], ['se', 'Stealth Expertise', 'M', 4, 'Ability', 0], ['gn', 'Glyph of Nightfall', 'M', 4, 'Spell', 1],
+      ['cl', 'Chain Lightning', 'A', 5, 'Spell', 1], ['pm', 'Premonition', 'A', 5, 'Spell', 2], ['hu', 'Hush', 'M', 5, 'Spell', 1], ['pr', 'Phantom Retreat', 'M', 5, 'Spell', 2],
+      ['rf', 'Rift Walker', 'A', 6, 'Spell', 2], ['tk', 'Telekinesis', 'A', 6, 'Spell', 0], ['dw', 'Dark Whispers', 'M', 6, 'Spell', 0], ['md', 'Mass Disguise', 'M', 6, 'Spell', 0],
+      ['at', 'Arcana-Touched', 'A', 7, 'Ability', 2], ['cb', 'Cloaking Blast', 'A', 7, 'Spell', 2], ['mt', 'Midnight-Touched', 'M', 7, 'Ability', 2], ['vd', 'Vanishing Dodge', 'M', 7, 'Spell', 1],
+      ['ca', 'Confusing Aura', 'A', 8, 'Spell', 2], ['ar', 'Arcane Reflection', 'A', 8, 'Spell', 1], ['sh', 'Shadowhunter', 'M', 8, 'Ability', 2], ['sc', 'Spellcharge', 'M', 8, 'Spell', 1],
+      ['eq', 'Earthquake', 'A', 9, 'Spell', 2], ['sp', 'Sensory Projection', 'A', 9, 'Spell', 0], ['tt', 'Twilight Toll', 'M', 9, 'Ability', 1], ['nt', 'Night Terror', 'M', 9, 'Spell', 1],
+      ['adj', 'Adjust Reality', 'A', 10, 'Spell', 1], ['fs', 'Falling Sky', 'A', 10, 'Spell', 1], ['ec', 'Eclipse', 'M', 10, 'Spell', 2], ['sd', 'Specter of the Dark', 'M', 10, 'Spell', 1]
+    ];
+    this.state = { load: ['uc', 'rb', 'cs', 'bo', 'cl'], vault: ['ms'], resting: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const lvl = Math.max(1, Math.min(10, this.props.level || 5));
+    const byId = {}; this.ALL.forEach((c) => { byId[c[0]] = c; });
+    const okLvl = (id) => byId[id][3] <= lvl;
+    const load = s.load.filter(okLvl), vault = s.vault.filter(okLvl);
+    const full = load.length >= 5;
+    const strip = Array.from({ length: 5 }, (_, i) => {
+      const id = load[i];
+      if (!id) return { name: 'Empty', arc: false, mid: false, border: '#DCDAD6' };
+      return { name: byId[id][1], arc: byId[id][2] === 'A', mid: byId[id][2] === 'M', border: '#141414' };
+    });
+    const levels = Array.from({ length: 10 }, (_, k) => {
+      const n = k + 1, locked = n > lvl;
+      return {
+        n, locked, style: locked ? 'opacity: .4' : '',
+        cards: this.ALL.filter((c) => c[3] === n).map(([id, name, dom, lv, type, rc]) => {
+          const inL = load.indexOf(id) >= 0, inV = vault.indexOf(id) >= 0;
+          const owned = inL || inV;
+          const free = s.resting || rc === 0;
+          return {
+            name, rc, arc: dom === 'A', mid: dom === 'M',
+            meta: (dom === 'A' ? 'Arcana' : 'Midnight') + ' · ' + type,
+            iconBg: inL ? '#141414' : '#FFFFFF', iconFg: inL ? '#FFFFFF' : '#141414',
+            textStyle: owned ? '' : 'opacity: .5',
+            canAct: owned && !locked, noAct: !(owned && !locked),
+            status: locked ? 'Locked' : 'Not learned',
+            cta: inL ? 'To vault' : free ? 'To loadout' : 'Mark ' + rc + ' Stress',
+            btnCls: inL ? '' : 'solid', btnStyle: inV && full ? 'opacity: .4' : '',
+            act: () => {
+              if (inL) this.setState({ load: s.load.filter((x) => x !== id), vault: s.vault.concat(id) });
+              else if (!full) this.setState({ vault: s.vault.filter((x) => x !== id), load: s.load.concat(id) });
+            }
+          };
+        })
+      };
+    });
+    return {
+      restCls: s.resting ? 'on' : '', sceneCls: s.resting ? '' : 'on',
+      restSel: s.resting ? 'true' : 'false', sceneSel: s.resting ? 'false' : 'true',
+      setRest: () => this.setState({ resting: true }), setScene: () => this.setState({ resting: false }),
+      ruleText: s.resting ? 'Start of a rest: move cards freely between loadout and vault (max 5 in loadout).' : 'Moving a vault card into your loadout marks Stress equal to its Recall Cost. Moving a card to the vault is free.',
+      loadCount: load.length, strip, levels, full: full && vault.length > 0
+    };
+  }
+}
+</script>
+</body>
+</html>

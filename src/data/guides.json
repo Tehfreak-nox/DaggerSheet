@@ -1,0 +1,1207 @@
+{
+  "assassin": {
+    "source": "guide",
+    "traits": {
+      "agility": 2,
+      "strength": -1,
+      "finesse": 1,
+      "instinct": 0,
+      "presence": 0,
+      "knowledge": 1
+    },
+    "primary": {
+      "id": "katana",
+      "name": "Katana"
+    },
+    "secondary": null,
+    "armor": {
+      "id": "brigandine-armor",
+      "name": "Brigandine Armor"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "A list of names with several marked off",
+        "A rusted blade inscribed with an insignia"
+      ],
+      "spellCarrier": [],
+      "spellCarrierPrompt": ""
+    },
+    "description": {
+      "clothes": [
+        "finely tailored",
+        "hooded",
+        "incognito",
+        "padded for silence",
+        "sinister",
+        "weathered"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "a butcher",
+        "a coiled viper",
+        "a hidden razor",
+        "a hunter",
+        "a judge",
+        "a merchant",
+        "an owl"
+      ]
+    }
+  },
+  "bard": {
+    "source": "guide",
+    "traits": {
+      "agility": 0,
+      "strength": -1,
+      "finesse": 1,
+      "instinct": 0,
+      "presence": 2,
+      "knowledge": 1
+    },
+    "primary": {
+      "id": "rapier",
+      "name": "Rapier"
+    },
+    "secondary": {
+      "id": "small-dagger",
+      "name": "Small Dagger"
+    },
+    "armor": {
+      "id": "gambeson-armor",
+      "name": "Gambeson Armor"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "A romance novel",
+        "A letter never opened"
+      ],
+      "spellCarrier": [
+        "songbook",
+        "journal"
+      ],
+      "spellCarrierPrompt": "What you carry your spells in"
+    },
+    "description": {
+      "clothes": [
+        "extravagant",
+        "fancy",
+        "loud",
+        "oversized",
+        "ragged",
+        "sleek",
+        "wild"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "a barkeep",
+        "a magician",
+        "a ringmaster",
+        "a rock star",
+        "a swashbuckler"
+      ]
+    }
+  },
+  "brawler": {
+    "source": "guide",
+    "traits": {
+      "agility": 1,
+      "strength": 1,
+      "finesse": 0,
+      "instinct": 2,
+      "presence": 0,
+      "knowledge": -1
+    },
+    "primary": {
+      "id": null,
+      "name": "Brawler’s Strike",
+      "trait": "instinct",
+      "range": "melee",
+      "damage": "d8+d6",
+      "type": "phy"
+    },
+    "secondary": null,
+    "armor": {
+      "id": "brigandine-armor",
+      "name": "Brigandine Armor"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "Hand wraps from a mentor",
+        "A book about your secret hobby"
+      ],
+      "spellCarrier": [],
+      "spellCarrierPrompt": ""
+    },
+    "description": {
+      "clothes": [
+        "bright",
+        "haphazard",
+        "practical",
+        "pristine",
+        "someone else’s",
+        "standard-issue"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "a flowing river",
+        "a golden retriever",
+        "a loose cannon",
+        "a parent",
+        "a protector",
+        "a veteran"
+      ]
+    }
+  },
+  "druid": {
+    "source": "guide",
+    "traits": {
+      "agility": 1,
+      "strength": 0,
+      "finesse": 1,
+      "instinct": 2,
+      "presence": -1,
+      "knowledge": 0
+    },
+    "primary": {
+      "id": "shortstaff",
+      "name": "Shortstaff"
+    },
+    "secondary": {
+      "id": "round-shield",
+      "name": "Round Shield"
+    },
+    "armor": {
+      "id": "leather-armor",
+      "name": "Leather Armor"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "A small bag of rocks and bones",
+        "A strange pendant found in the dirt"
+      ],
+      "spellCarrier": [],
+      "spellCarrierPrompt": ""
+    },
+    "description": {
+      "clothes": [
+        "camouflaged",
+        "grown",
+        "loose",
+        "natural",
+        "patchwork",
+        "regal",
+        "scraps"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "a firecracker",
+        "a fox",
+        "a guide",
+        "a hippie",
+        "a witch"
+      ]
+    }
+  },
+  "guardian": {
+    "source": "guide",
+    "traits": {
+      "agility": 1,
+      "strength": 2,
+      "finesse": -1,
+      "instinct": 0,
+      "presence": 1,
+      "knowledge": 0
+    },
+    "primary": {
+      "id": "battleaxe",
+      "name": "Battleaxe"
+    },
+    "secondary": null,
+    "armor": {
+      "id": "chainmail-armor",
+      "name": "Chainmail Armor"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "A totem from your mentor",
+        "A secret key"
+      ],
+      "spellCarrier": [],
+      "spellCarrierPrompt": ""
+    },
+    "description": {
+      "clothes": [
+        "casual",
+        "intricate",
+        "loose",
+        "padded",
+        "royal",
+        "tactical",
+        "weathered"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "a captain",
+        "a caretaker",
+        "an elephant",
+        "a general",
+        "a wrestler"
+      ]
+    }
+  },
+  "ranger": {
+    "source": "guide",
+    "traits": {
+      "agility": 2,
+      "strength": 0,
+      "finesse": 1,
+      "instinct": 1,
+      "presence": -1,
+      "knowledge": 0
+    },
+    "primary": {
+      "id": "shortbow",
+      "name": "Shortbow"
+    },
+    "secondary": null,
+    "armor": {
+      "id": "leather-armor",
+      "name": "Leather Armor"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "A trophy from your first kill",
+        "A seemingly broken compass"
+      ],
+      "spellCarrier": [],
+      "spellCarrierPrompt": ""
+    },
+    "description": {
+      "clothes": [
+        "flowing",
+        "muted",
+        "natural",
+        "stained",
+        "tactical",
+        "tight",
+        "woven"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "a child",
+        "a ghost",
+        "a survivalist",
+        "a teacher",
+        "a watchdog"
+      ]
+    }
+  },
+  "rogue": {
+    "source": "guide",
+    "traits": {
+      "agility": 1,
+      "strength": -1,
+      "finesse": 2,
+      "instinct": 0,
+      "presence": 1,
+      "knowledge": 0
+    },
+    "primary": {
+      "id": "dagger",
+      "name": "Dagger"
+    },
+    "secondary": {
+      "id": "small-dagger",
+      "name": "Small Dagger"
+    },
+    "armor": {
+      "id": "gambeson-armor",
+      "name": "Gambeson Armor"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "A set of forgery tools",
+        "A grappling hook"
+      ],
+      "spellCarrier": [],
+      "spellCarrierPrompt": ""
+    },
+    "description": {
+      "clothes": [
+        "clean",
+        "dark",
+        "inconspicuous",
+        "leather",
+        "scary",
+        "tactical",
+        "tight"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "a bandit",
+        "a con artist",
+        "a gambler",
+        "a mob boss",
+        "a pirate"
+      ]
+    }
+  },
+  "seraph": {
+    "source": "guide",
+    "traits": {
+      "agility": 0,
+      "strength": 2,
+      "finesse": 0,
+      "instinct": 1,
+      "presence": 1,
+      "knowledge": -1
+    },
+    "primary": {
+      "id": "hallowed-axe",
+      "name": "Hallowed Axe"
+    },
+    "secondary": {
+      "id": "round-shield",
+      "name": "Round Shield"
+    },
+    "armor": {
+      "id": "chainmail-armor",
+      "name": "Chainmail Armor"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "A bundle of offerings",
+        "A sigil of your god"
+      ],
+      "spellCarrier": [],
+      "spellCarrierPrompt": ""
+    },
+    "description": {
+      "clothes": [
+        "glowing",
+        "rippling",
+        "ornate",
+        "tight",
+        "modest",
+        "strange",
+        "natural"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "an angel",
+        "a doctor",
+        "an evangelist",
+        "a monk",
+        "a priest"
+      ]
+    }
+  },
+  "sorcerer": {
+    "source": "guide",
+    "traits": {
+      "agility": 0,
+      "strength": -1,
+      "finesse": 1,
+      "instinct": 2,
+      "presence": 1,
+      "knowledge": 0
+    },
+    "primary": {
+      "id": "dualstaff",
+      "name": "Dualstaff"
+    },
+    "secondary": null,
+    "armor": {
+      "id": "gambeson-armor",
+      "name": "Gambeson Armor"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "A whispering orb",
+        "A family heirloom"
+      ],
+      "spellCarrier": [],
+      "spellCarrierPrompt": ""
+    },
+    "description": {
+      "clothes": [
+        "always moving",
+        "flamboyant",
+        "inconspicuous",
+        "layered",
+        "ornate",
+        "tight"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "a celebrity",
+        "a commander",
+        "a politician",
+        "a prankster",
+        "a wolf in sheep’s clothing"
+      ]
+    }
+  },
+  "warlock": {
+    "source": "guide",
+    "traits": {
+      "agility": 1,
+      "strength": -1,
+      "finesse": 0,
+      "instinct": 1,
+      "presence": 2,
+      "knowledge": 0
+    },
+    "primary": {
+      "id": "scimitar",
+      "name": "Scimitar"
+    },
+    "secondary": {
+      "id": "fighting-cloak",
+      "name": "Fighting Cloak"
+    },
+    "armor": {
+      "id": "mage-robes",
+      "name": "Mage Robes"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "A carving that symbolizes your patron",
+        "A ring you can’t remove"
+      ],
+      "spellCarrier": [],
+      "spellCarrierPrompt": ""
+    },
+    "description": {
+      "clothes": [
+        "billowing",
+        "lavish",
+        "luminous",
+        "mended",
+        "neat",
+        "sacred",
+        "shadowy",
+        "smoking"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "a coming storm",
+        "a devotee",
+        "a hot mess",
+        "a jester",
+        "a live wire",
+        "a monarch",
+        "a soothsayer"
+      ]
+    }
+  },
+  "warrior": {
+    "source": "guide",
+    "traits": {
+      "agility": 2,
+      "strength": 1,
+      "finesse": 0,
+      "instinct": 1,
+      "presence": -1,
+      "knowledge": 0
+    },
+    "primary": {
+      "id": "longsword",
+      "name": "Longsword"
+    },
+    "secondary": null,
+    "armor": {
+      "id": "chainmail-armor",
+      "name": "Chainmail Armor"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "The drawing of a lover",
+        "A sharpening stone"
+      ],
+      "spellCarrier": [],
+      "spellCarrierPrompt": ""
+    },
+    "description": {
+      "clothes": [
+        "bold",
+        "patched",
+        "reinforced",
+        "royal",
+        "sleek",
+        "sparing",
+        "weathered"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "a bull",
+        "a dedicated soldier",
+        "a gladiator",
+        "a hero",
+        "a hired hand"
+      ]
+    }
+  },
+  "witch": {
+    "source": "guide",
+    "traits": {
+      "agility": 0,
+      "strength": -1,
+      "finesse": 0,
+      "instinct": 2,
+      "presence": 1,
+      "knowledge": 1
+    },
+    "primary": {
+      "id": "casting-dagger",
+      "name": "Casting Dagger"
+    },
+    "secondary": {
+      "id": "rune-shield",
+      "name": "Rune Shield"
+    },
+    "armor": {
+      "id": "mage-robes",
+      "name": "Mage Robes"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "A small, harmless pet",
+        "A scrying stone"
+      ],
+      "spellCarrier": [
+        "a handwritten journal",
+        "runestones"
+      ],
+      "spellCarrierPrompt": "What you use for your craft"
+    },
+    "description": {
+      "clothes": [
+        "diaphanous",
+        "flowing",
+        "foreboding",
+        "ragged",
+        "stately",
+        "uniquely patterned"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "a candle flame",
+        "a cat",
+        "a doctor",
+        "an old tree",
+        "an oracle",
+        "a spider",
+        "a sunny day"
+      ]
+    }
+  },
+  "wizard": {
+    "source": "guide",
+    "traits": {
+      "agility": -1,
+      "strength": 0,
+      "finesse": 0,
+      "instinct": 1,
+      "presence": 1,
+      "knowledge": 2
+    },
+    "primary": {
+      "id": "greatstaff",
+      "name": "Greatstaff"
+    },
+    "secondary": null,
+    "armor": {
+      "id": "leather-armor",
+      "name": "Leather Armor"
+    },
+    "inventory": {
+      "take": [
+        "A torch",
+        "50 feet of rope",
+        "Basic supplies",
+        "A handful of gold"
+      ],
+      "chooseOne": [
+        "A Minor Health Potion",
+        "A Minor Stamina Potion"
+      ],
+      "classItem": [
+        "A book you’re trying to translate",
+        "A tiny, harmless elemental pet"
+      ],
+      "spellCarrier": [
+        "large tomes",
+        "tarot cards"
+      ],
+      "spellCarrierPrompt": "What you carry your spells in"
+    },
+    "description": {
+      "clothes": [
+        "beautiful",
+        "clean",
+        "common",
+        "flowing",
+        "layered",
+        "patchwork",
+        "tight"
+      ],
+      "eyes": [
+        "carnations",
+        "earth",
+        "endless ocean",
+        "fire",
+        "ivy",
+        "lilacs",
+        "night",
+        "seafoam",
+        "winter"
+      ],
+      "body": [
+        "broad",
+        "carved",
+        "curvy",
+        "lanky",
+        "rotund",
+        "short",
+        "stocky",
+        "tall",
+        "thin",
+        "tiny",
+        "toned"
+      ],
+      "skin": [
+        "ashes",
+        "clover",
+        "falling snow",
+        "fine sand",
+        "obsidian",
+        "rose",
+        "sapphire",
+        "wisteria"
+      ],
+      "attitude": [
+        "an eccentric",
+        "a librarian",
+        "a lit fuse",
+        "a philosopher",
+        "a professor"
+      ]
+    }
+  }
+}

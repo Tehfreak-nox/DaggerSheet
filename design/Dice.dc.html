@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dice roller — set up roll</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cinzel:wght@600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="dh" data-theme="{{theme}}" style="width: 390px; height: 980px; display: flex; flex-direction: column; overflow: hidden">
+
+  <header class="topbar">
+    <a href="Main.dc.html" class="iconbtn press" aria-label="Close roller"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></a>
+    <div class="lbl lbl-ink" style="font-size: 15px">Action roll</div>
+    <span style="width: 44px"></span>
+  </header>
+
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 4px 16px 16px">
+
+    <!-- Trait -->
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 class="lbl" style="margin: 0">1 · Trait</h2>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{traits}}" as="t" hint-placeholder-count="6">
+          <button class="pill press {{t.cls}}" style="min-height: 48px; justify-content: space-between; border-radius: var(--radius-chip); padding: 0 12px" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}">
+            <span style="font-size: 14px; font-weight: 600">{{t.name}}</span>
+            <span class="num" style="font-size: 20px">{{t.mod}}</span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- Hope budget + experiences -->
+    <section class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <h2 class="lbl" style="margin: 0">2 · Experiences <span class="muted" style="text-transform: none; letter-spacing: 0">(1 Hope each)</span></h2>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <div style="display: flex; gap: 2px" aria-hidden="true">
+          <sc-for list="{{hopeView}}" as="h" hint-placeholder-count="6"><span class="hope {{h.cls}}" style="{{h.style}}"></span></sc-for>
+        </div>
+        <span class="num" style="font-size: 16px; color: var(--hope-ink)">{{hopeLeft}} Hope left</span>
+      </div>
+      <sc-for list="{{exps}}" as="e" hint-placeholder-count="2">
+        <button class="press" style="min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-radius: var(--radius-btn); text-align: left; {{e.style}}" aria-pressed="{{e.pressed}}" onClick="{{e.toggle}}">
+          <span style="width: 24px; height: 24px; flex: none; border-radius: 6px; border: 2px solid currentColor; display: inline-flex; align-items: center; justify-content: center">
+            <sc-if value="{{e.on}}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></sc-if>
+          </span>
+          <span style="flex: 1; font-size: 15px; font-weight: 600">{{e.name}}</span>
+          <span class="num" style="font-size: 22px">+2</span>
+        </button>
+      </sc-for>
+    </section>
+
+    <!-- Advantage + modifiers -->
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 class="lbl" style="margin: 0">3 · Advantage &amp; modifiers</h2>
+      <div class="seg" role="group" aria-label="Advantage">
+        <sc-for list="{{advOpts}}" as="o" hint-placeholder-count="3">
+          <button class="seg-i {{o.cls}}" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}">{{o.label}}</button>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <div class="card" style="padding: 8px; display: flex; align-items: center; justify-content: space-between">
+          <button class="iconbtn press" aria-label="Lower modifier" onClick="{{modDown}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+          <div style="display: flex; flex-direction: column; align-items: center"><span class="num" style="font-size: 24px">{{modLabel}}</span><span class="lbl" style="font-size: 10px">Other</span></div>
+          <button class="iconbtn press" aria-label="Raise modifier" onClick="{{modUp}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
+        <div class="card" style="padding: 8px; display: flex; align-items: center; justify-content: space-between">
+          <button class="iconbtn press" aria-label="Lower difficulty" onClick="{{dcDown}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+          <div style="display: flex; flex-direction: column; align-items: center"><span class="num" style="font-size: 24px">{{dcLabel}}</span><span class="lbl" style="font-size: 10px">Difficulty</span></div>
+          <button class="iconbtn press" aria-label="Raise difficulty" onClick="{{dcUp}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Summary + roll -->
+    <section class="card lift" style="margin-top: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div class="die die-hope" style="width: 46px; height: 46px"><span class="num" style="font-size: 15px">d12</span></div>
+        <div class="die die-fear" style="width: 46px; height: 46px"><span class="num" style="font-size: 15px">d12</span></div>
+        <div style="flex: 1; min-width: 0">
+          <div class="num" style="font-size: 22px">{{formula}}</div>
+          <div class="muted" style="font-size: 12px">{{breakdown}}</div>
+        </div>
+      </div>
+      <a href="DiceResult.dc.html" class="btn btn-primary press" style="min-height: 56px; font-size: 17px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8.5 5v10L12 22l-8.5-5V7z"/><path d="M12 8l-5 9h10z"/></svg>
+        {{rollLabel}}
+      </a>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["neutral","parchment","midnight"],"default":"neutral","section":"Theme"},"$preview":{"width":390,"height":980}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { trait: 'Presence', exps: { 0: true }, adv: 0, mod: 0, dc: 14 };
+  }
+  renderVals() {
+    const HOPE = 3;
+    const T = [['Agility', 0], ['Strength', -1], ['Finesse', 1], ['Instinct', 0], ['Presence', 2], ['Knowledge', 1]];
+    const fmt = (n) => (n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '+0');
+    const s = this.state;
+    const names = ['Travelling Troupe Player', 'Reads a Room'];
+    const spent = names.filter((_, i) => s.exps[i]).length;
+    const traitMod = T.find((t) => t[0] === s.trait)[1];
+    const total = traitMod + spent * 2 + s.mod;
+    const parts = [s.trait + ' ' + fmt(traitMod)];
+    if (spent) parts.push(spent + ' Experience ' + fmt(spent * 2));
+    if (s.mod) parts.push('Other ' + fmt(s.mod));
+    if (s.adv === 1) parts.push('Advantage +d6');
+    if (s.adv === -1) parts.push('Disadvantage −d6');
+    return {
+      theme: this.props.theme ?? 'neutral',
+      traits: T.map(([name, m]) => ({
+        name, mod: fmt(m), cls: s.trait === name ? 'on' : '', pressed: s.trait === name ? 'true' : 'false',
+        pick: () => this.setState({ trait: name })
+      })),
+      hopeView: Array.from({ length: 6 }, (_, i) => ({
+        cls: i < HOPE - spent ? 'on' : '',
+        style: i >= HOPE - spent && i < HOPE ? 'border-style: dashed; opacity: .8' : (i >= HOPE ? 'opacity: .35' : '')
+      })),
+      hopeLeft: HOPE - spent,
+      exps: names.map((name, i) => {
+        const on = !!s.exps[i];
+        const can = on || spent < HOPE;
+        return {
+          name, on, pressed: on ? 'true' : 'false',
+          style: on ? 'background: var(--hope); color: #1B1205; border: var(--border-w) solid var(--hope)' : 'background: var(--card-2); border: var(--border-w) solid var(--line);' + (can ? '' : ' opacity: .45'),
+          toggle: () => { if (can) this.setState({ exps: Object.assign({}, s.exps, { [i]: !on }) }); }
+        };
+      }),
+      advOpts: [[-1, 'Disadvantage'], [0, 'None'], [1, 'Advantage']].map(([v, label]) => ({
+        label, cls: s.adv === v ? 'on' : '', pressed: s.adv === v ? 'true' : 'false', pick: () => this.setState({ adv: v })
+      })),
+      modLabel: fmt(s.mod),
+      modUp: () => this.setState({ mod: s.mod + 1 }),
+      modDown: () => this.setState({ mod: s.mod - 1 }),
+      dcLabel: s.dc || '—',
+      dcUp: () => this.setState({ dc: (s.dc || 9) + 1 }),
+      dcDown: () => this.setState({ dc: s.dc > 10 ? s.dc - 1 : 0 }),
+      formula: '2d12 ' + fmt(total).replace('+', '+ ').replace('−', '− ') + (s.adv === 1 ? ' + d6' : s.adv === -1 ? ' − d6' : ''),
+      breakdown: parts.join(' · '),
+      rollLabel: spent ? 'Spend ' + spent + ' Hope & roll' : 'Roll'
+    };
+  }
+}
+</script>
+</body>
+</html>

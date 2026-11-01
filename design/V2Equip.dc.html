@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Equipment — page 2</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./sheet.css">
+<link rel="stylesheet" href="./persona.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700;800&amp;family=Barlow:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="s" data-root="1" data-cls="{{cls}}" data-sub="{{sub}}" style="position: relative; width: 390px; height: 2100px; display: flex; flex-direction: column; overflow: hidden">
+
+  <header class="s-band">
+    <svg width="210" height="210" viewBox="-5 -5 34 34" fill="none" stroke="#FFFFFF" stroke-width=".6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute; right: -44px; top: -24px; opacity: .17"><path d="{{emblem}}"/><path d="{{emFrame}}"/></svg>
+    <div style="position: relative; display: flex; flex-direction: column; gap: 6px; padding-right: 40px">
+      <h1 class="s-name">{{charName}}</h1>
+      <span class="s-sub">{{sentence}}</span>
+      <span class="s-sub" style="font-size: 15px; color: rgba(255,255,255,.65)">Level 1 · {{pronouns}}</span>
+    </div>
+    <nav aria-label="Pages" style="position: relative; display: flex; margin: 16px -20px 0">
+      <span class="orn" aria-hidden="true"><svg width="48" height="36" viewBox="0 0 60 44" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="{{ornL.f}}" fill="currentColor" fill-opacity=".85" stroke="none"/><path d="{{ornL.s}}"/></svg></span>
+      <a href="V2Sheet.dc.html" class="s-navtab">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.5"/><path d="M12 8v7M8 21l4-6 4 6M6 11l6-2 6 2"/></svg>
+        Character
+      </a>
+      <a href="V2Equip.dc.html" class="s-navtab on" aria-current="page">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 3.5l6 6-9 9-4-0-2-2v-4z"/><path d="M4 20l3-3"/></svg>
+        Equipment
+      </a>
+      <span class="orn r" aria-hidden="true"><svg width="48" height="36" viewBox="0 0 60 44" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="{{ornR.f}}" fill="currentColor" fill-opacity=".85" stroke="none"/><path d="{{ornR.s}}"/></svg></span>
+    </nav>
+  </header>
+
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 30px; padding: 26px 20px 40px">
+
+    <!-- Weapons -->
+    <section style="display: flex; flex-direction: column; gap: 22px">
+      <div class="s-title"><i></i><span>Weapons</span><i></i></div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 14px" role="img" aria-label="Proficiency 1 of 6">
+        <span class="s-label">Proficiency</span>
+        <span style="display: flex; gap: 6px"><span class="s-dot on"></span><span class="s-dot"></span><span class="s-dot"></span><span class="s-dot"></span><span class="s-dot"></span><span class="s-dot"></span></span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <button class="s-mini {{advCls}}" style="min-width: 60px; min-height: 44px; font-size: 15px" aria-pressed="{{advP}}" onClick="{{advTap}}">Adv</button>
+        <button class="s-mini {{disCls}}" style="min-width: 60px; min-height: 44px; font-size: 15px" aria-pressed="{{disP}}" onClick="{{disTap}}">Dis</button>
+        <span class="s-muted" style="font-size: 13px">{{advHint}}</span>
+      </div>
+
+      <sc-for list="{{weapons}}" as="w" hint-placeholder-count="2">
+        <article style="display: flex; gap: 12px; align-items: flex-start">
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+            <span class="s-label s-muted" style="font-size: 12px">{{w.slot}}</span>
+            <span class="s-feat-name" style="font-size: 22px; margin-top: -4px">{{w.name}}</span>
+            <div class="s-row" style="font-size: 17px">
+              <span style="display: flex; align-items: center; gap: 6px">
+                <span style="display: flex" role="img" aria-label="{{w.handsAria}}">
+                  <sc-if value="{{w.left}}" hint-placeholder-val="{{ true }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: scaleX(-1)"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-2a2 2 0 0 0-4 0"/></svg></sc-if>
+                  <sc-if value="{{w.right}}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8a8 8 0 0 0 16 0v-2a2 2 0 0 0-4 0"/></svg></sc-if>
+                </span>
+                {{w.trait}} {{w.range}}
+              </span>
+              <span>{{w.dmgText}}</span>
+            </div>
+            <span class="s-feat-text"><b>{{w.feat}}</b> {{w.featText}}</span>
+            <sc-if value="{{w.versatile}}" hint-placeholder-val="{{ false }}">
+              <button class="s-mini {{w.vCls}}" style="align-self: flex-start" aria-pressed="{{w.vPressed}}" onClick="{{w.toggleV}}">{{w.vLabel}}</button>
+            </sc-if>
+            <sc-if value="{{w.hasBonus}}" hint-placeholder-val="{{ false }}">
+              <button class="s-mini {{w.bCls}}" style="align-self: flex-start" aria-pressed="{{w.bPressed}}" onClick="{{w.toggleB}}">{{w.bLabel}}</button>
+            </sc-if>
+          </div>
+          <div style="flex: none; width: 84px; display: flex; flex-direction: column; gap: 8px; padding-top: 22px">
+            <button class="s-btn solid s-press" style="min-height: 58px; padding: 0 4px; flex-direction: column; gap: 3px" onClick="{{w.hit}}" aria-label="Hit roll {{w.hitText}}">
+              <span style="font-size: 11px; opacity: .75">Hit</span><span class="s-num" style="font-size: 19px; letter-spacing: 0">{{w.hitText}}</span>
+            </button>
+            <button class="s-btn s-press" style="min-height: 58px; padding: 0 4px; flex-direction: column; gap: 3px; border-color: var(--ink); background: #FFFFFF" onClick="{{w.dmg}}" aria-label="Damage roll {{w.dmgBtn}}">
+              <span style="font-size: 11px; color: var(--ink-2)">Damage</span><span class="s-num" style="font-size: 19px; letter-spacing: 0">{{w.dmgBtn}}</span>
+            </button>
+          </div>
+        </article>
+      </sc-for>
+      <a href="V2Catalog.dc.html" class="s-btn s-press" style="align-self: flex-end">Add weapon</a>
+    </section>
+
+    <!-- Armor -->
+    <section style="display: flex; flex-direction: column; gap: 18px">
+      <div class="s-title"><i></i><span>Armor</span><i></i></div>
+      <article style="display: flex; gap: 14px; align-items: center">
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+          <span class="s-feat-name" style="font-size: 22px">Mage Robes</span>
+          <span class="s-chip" style="align-self: flex-start">Major threshold 7</span>
+          <span class="s-chip" style="align-self: flex-start">Severe threshold 13</span>
+          <span class="s-feat-text" style="font-size: 15px"><b>Enchanted:</b> gain a bonus to your damage thresholds equal to your Spellcast trait. <span class="s-muted">Base 4 / 10 · +1 level · +2 Instinct</span></span>
+        </div>
+        <div class="s-emblem" style="width: 96px; height: 104px" role="img" aria-label="Armor score 2">
+          <svg width="96" height="104" viewBox="0 0 116 124" aria-hidden="true">
+            <path d="M58 6L100 18Q106 60 96 86L58 118 20 86Q10 60 16 18Z" fill="#FFFFFF" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>
+            <path d="M58 14L92 24Q96 60 88 82L58 108 28 82Q20 60 24 24Z" fill="none" stroke="#141414" stroke-width="1"/>
+          </svg>
+          <span class="s-num" style="top: 22px; font-size: 38px">2</span>
+          <span class="s-bar" style="bottom: 16px; height: 22px; font-size: 12px">Armor</span>
+        </div>
+      </article>
+      <a href="V2AddArmor.dc.html" class="s-btn s-press" style="align-self: flex-end">Change armor</a>
+    </section>
+
+    <!-- Gold -->
+    <section style="display: flex; flex-direction: column; gap: 14px">
+      <div class="s-title"><i></i><span>Gold</span><i></i></div>
+      <div style="display: flex; justify-content: flex-end; margin-top: -6px">
+        <button class="s-btn s-press {{safeCls}}" style="min-height: 40px; padding: 0 12px; font-size: 13px" aria-expanded="{{safeOpen}}" onClick="{{toggleSafe}}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="12" cy="12.5" r="3"/></svg>
+          Safe · {{safeSummary}}
+        </button>
+      </div>
+
+      <sc-if value="{{showSafe}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; padding: 4px 0 10px; border-bottom: 1px solid var(--line)">
+          <span class="s-muted" style="font-size: 14px; padding-bottom: 4px">Stored at your base · no limit</span>
+          <sc-for list="{{safeRows}}" as="r" hint-placeholder-count="4">
+            <div class="s-row" style="min-height: 48px">
+              <span class="s-label" style="flex: 1">{{r.label}}</span>
+              <button class="s-mini" onClick="{{r.take}}" aria-label="Take one {{r.unit}} from the safe">Take</button>
+              <span class="s-num" style="width: 34px; text-align: center; font-size: 20px">{{r.val}}</span>
+              <button class="s-mini" onClick="{{r.store}}" aria-label="Store one {{r.unit}} in the safe">Store</button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-for list="{{gold}}" as="g" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <div class="s-row"><span class="s-label">{{g.label}}</span><span class="s-num s-muted" style="font-size: 15px">{{g.val}}</span></div>
+          <div style="display: flex; margin: 0 -3px" role="group" aria-label="{{g.label}}">
+            <sc-for list="{{g.slots}}" as="s" hint-placeholder-count="10">
+              <button class="s-slotbtn" style="width: 35px; height: 38px" onClick="{{s.tap}}" aria-label="{{s.aria}}"><span class="s-sq {{s.cls}}" style="width: 27px; height: 27px"></span></button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+      <span class="s-muted" style="font-size: 13px; text-align: center">{{goldHint}}</span>
+    </section>
+
+    <!-- Items -->
+    <section style="display: flex; flex-direction: column; gap: 4px">
+      <div class="s-title" style="margin-bottom: 10px"><i></i><span>Items</span><i></i></div>
+      <sc-for list="{{items}}" as="i" hint-placeholder-count="5">
+        <div style="display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; {{i.border}}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-label="Drag to reorder" role="img" style="margin-top: 4px; color: var(--ink-2); flex: none"><path d="M5 9h14M5 15h14"/></svg>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <span class="s-feat-name" style="font-size: 19px">{{i.name}}</span>
+            <span class="s-muted" style="font-size: 15px">{{i.note}}</span>
+          </span>
+          <sc-if value="{{i.consumable}}" hint-placeholder-val="{{ false }}">
+            <span style="display: flex; align-items: center; gap: 8px">
+              <span class="s-num s-muted" style="font-size: 16px">×{{i.qty}}</span>
+              <button class="s-btn solid s-press" style="min-height: 40px; padding: 0 14px" disabled="{{i.empty}}" onClick="{{i.use}}">Use</button>
+            </span>
+          </sc-if>
+        </div>
+      </sc-for>
+      <a href="V2AddItem.dc.html" class="s-btn s-press" style="align-self: flex-end; margin-top: 10px">Add item</a>
+    </section>
+  </main>
+
+  <!-- ===== Roll overlay ===== -->
+  <sc-if value="{{hasRoll}}" hint-placeholder-val="{{ false }}">
+    <button class="s-scrim" aria-label="Close roll" onClick="{{closeRoll}}"></button>
+    <div class="s-pop" role="dialog" aria-label="{{r.title}}" style="top: {{r.top}}px">
+      <div class="s-row" style="align-items: baseline"><span class="s-label" style="font-size: 20px">{{r.title}}</span><span class="s-muted" style="font-size: 14px">{{r.sub}}</span></div>
+      <sc-if value="{{r.isAction}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; justify-content: center; align-items: flex-end; gap: 18px">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><div class="s-die {{r.spinA}}"><span>{{r.hope}}</span></div><span class="s-label" style="font-size: 12px">Hope</span></div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><div class="s-die fear {{r.spinB}}"><span>{{r.fear}}</span></div><span class="s-label" style="font-size: 12px">Fear</span></div>
+          <sc-if value="{{r.hasAdv}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><div class="s-die d6 sm {{r.spinA}}"><span>{{r.adv}}</span></div><span class="s-label" style="font-size: 12px">{{r.advLabel}}</span></div>
+          </sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{r.isDamage}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px">
+          <sc-for list="{{r.dice}}" as="d" hint-placeholder-count="1"><div class="s-die sm {{d.cls}} {{r.spinA}}"><span>{{d.v}}</span></div></sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{r.rolling}}" hint-placeholder-val="{{ true }}">
+        <span class="s-label" style="text-align: center; font-size: 16px; letter-spacing: .2em">Rolling…</span>
+      </sc-if>
+      <sc-if value="{{r.done}}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column">
+          <sc-for list="{{r.lines}}" as="l" hint-placeholder-count="3">
+            <div class="s-row" style="min-height: 30px; border-bottom: 1px solid var(--line); font-size: 15px"><span>{{l.label}}</span><span class="s-num" style="font-size: 18px">{{l.val}}</span></div>
+          </sc-for>
+          <div class="s-row" style="padding-top: 8px"><span class="s-label" style="font-size: 16px">Total</span><span class="s-num" style="font-size: 52px; font-weight: 600">{{r.total}}</span></div>
+        </div>
+        <div class="s-outcome {{r.outCls}}">{{r.outcome}}</div>
+        <sc-for list="{{r.effects}}" as="f" hint-placeholder-count="1"><span style="font-size: 14px; text-align: center">{{f.t}}</span></sc-for>
+        <button class="s-btn solid s-press" onClick="{{closeRoll}}">Done</button>
+      </sc-if>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"grip":{"editor":"enum","options":["main + off hand","two-handed"],"default":"main + off hand","section":"Screen"},"name":{"editor":"text","default":"Kaelen Ashdown","section":"Character"},"pronouns":{"editor":"text","default":"He / Him","section":"Character"},"cls":{"editor":"enum","options":["assassin","bard","brawler","druid","guardian","ranger","rogue","seraph","sorcerer","warlock","warrior","witch","wizard"],"default":"sorcerer","section":"Theme"},"sub":{"editor":"enum","options":["a","b"],"default":"a","section":"Theme"},"ancestry":{"editor":"enum","options":["aetheris","clank","drakona","dwarf","earthkin","elf","emberkin","faerie","faun","firbolg","fungril","galapa","giant","gnome","goblin","halfling","human","infernis","katari","orc","ribbet","simiah","skykin","tidekin"],"default":"elf","section":"Theme"},"ancestry2":{"editor":"enum","options":["none","aetheris","clank","drakona","dwarf","earthkin","elf","emberkin","faerie","faun","firbolg","fungril","galapa","giant","gnome","goblin","halfling","human","infernis","katari","orc","ribbet","simiah","skykin","tidekin"],"default":"none","section":"Theme"},"community":{"editor":"enum","options":["duneborne","freeborne","frostborne","hearthborne","highborne","loreborne","orderborne","reborne","ridgeborne","seaborne","slyborne","underborne","warborne","wanderborne","wildborne"],"default":"loreborne","section":"Theme"},"$preview":{"width":390,"height":2100}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { g: { c: 3, h: 1, b: 0, ch: 0 }, safe: 340, safeOpen: false, vers: false, focused: true, potions: 1, roll: null, adv: 0 };
+    this.KEYS = ['c', 'h', 'b', 'ch'];
+    this.CAP = { c: 10, h: 10, b: 10, ch: 1 };
+    this.VAL = { c: 1, h: 10, b: 100, ch: 1000 };
+  }
+  componentWillUnmount() { clearInterval(this._ri); clearTimeout(this._rt); }
+  /* ---------- gold ---------- */
+  normalize(g) {
+    const K = this.KEYS;
+    for (let i = 0; i < 3; i++) {
+      const k = K[i], nx = K[i + 1];
+      if (g[k] >= 10 && g[nx] < this.CAP[nx]) { g[k] = 0; g[nx] += 1; }
+    }
+    return g;
+  }
+  setRow(k, v) { const g = Object.assign({}, this.state.g); g[k] = Math.max(0, Math.min(this.CAP[k], v)); this.setState({ g: this.normalize(g) }); }
+  /* ---------- rolling ---------- */
+  roll(cfg, e) {
+    let top = 160;
+    try {
+      const root = e && e.currentTarget && e.currentTarget.closest('[data-root]');
+      if (root) { const r = root.getBoundingClientRect(); const sc = (r.height / root.offsetHeight) || 1; top = Math.max(16, Math.min(root.offsetHeight - 600, (e.clientY - r.top) / sc - 260)); }
+    } catch (err) {}
+    const d = (n) => 1 + Math.floor(Math.random() * n);
+    const faces = () => ({ hope: d(12), fear: d(12), adv: d(6), dice: Array.from({ length: cfg.count || 0 }, () => d(cfg.sides || 6)) });
+    clearInterval(this._ri); clearTimeout(this._rt);
+    this.setState({ roll: { cfg, top, phase: 'rolling', f: faces() } });
+    this._ri = setInterval(() => { if (this.state.roll) this.setState({ roll: Object.assign({}, this.state.roll, { f: faces() }) }); }, 80);
+    this._rt = setTimeout(() => { clearInterval(this._ri); this.finish(cfg, faces(), top); }, 1000);
+  }
+  finish(cfg, f, top) {
+    let res; const upd = {};
+    if (cfg.kind === 'action') {
+      const total = f.hope + f.fear + cfg.mods.reduce((a, m) => a + m[1], 0) + (cfg.adv ? cfg.adv * f.adv : 0);
+      const crit = f.hope === f.fear;
+      upd.adv = 0;
+      res = { total, outcome: crit ? 'Critical success' : f.hope > f.fear ? 'With Hope' : 'With Fear', outCls: crit || f.hope > f.fear ? 'light' : '',
+        effects: [crit ? '+1 Hope · clear 1 Stress' : f.hope > f.fear ? '+1 Hope' : 'The GM gains a Fear'] };
+    } else {
+      const total = f.dice.reduce((a, b) => a + b, 0) + (cfg.flat || 0);
+      res = { total, outcome: cfg.heal ? 'Clear ' + total + ' HP' : 'Damage', outCls: 'light', effects: [] };
+      if (cfg.consume) Object.assign(upd, cfg.consume);
+    }
+    upd.roll = { cfg, top, phase: 'done', f, res };
+    this.setState(upd);
+  }
+  /* ---------- persona theme ---------- */
+  theme() {
+    const P = this.props, cap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
+    const cls = P.cls || 'sorcerer', sub = P.sub === 'b' ? 'b' : 'a';
+    const anc = P.ancestry || 'elf', anc2 = P.ancestry2 && P.ancestry2 !== 'none' ? P.ancestry2 : anc;
+    const com = P.community || 'loreborne';
+    const T = this._T || (this._T = this.themeTables());
+    const subName = T.SUBS[cls][sub === 'b' ? 1 : 0];
+    const ancName = anc2 !== anc ? cap(anc) + '/' + cap(anc2) : cap(anc);
+    return {
+      cls, sub, community: com,
+      emblem: T.EM[cls], emFrame: sub === 'b' ? 'M12 -3.5L27.5 12 12 27.5-3.5 12z' : 'M12 -3a15 15 0 1 0 .01 0z',
+      ornL: { s: T.ORN[anc][0], f: T.ORN[anc][1] || '' }, ornR: { s: T.ORN[anc2][0], f: T.ORN[anc2][1] || '' },
+      charName: P.name || 'Kaelen Ashdown', pronouns: P.pronouns || 'He / Him',
+      sentence: 'a ' + cap(com) + ' ' + subName + ' ' + cap(cls) + ' ' + ancName
+    };
+  }
+  themeTables() {
+    return {
+      EM: {
+        assassin: 'M4 20c0-9 3-15 8-16 5 1 8 7 8 16M9 13c1.5-1 4.5-1 6 0M12 15v5',
+        bard: 'M9 18V5l10-2v13M9 18a2.5 2.5 0 1 1-5 0a2.5 2.5 0 1 1 5 0M19 16a2.5 2.5 0 1 1-5 0a2.5 2.5 0 1 1 5 0',
+        brawler: 'M6 11V8a2 2 0 0 1 4 0v3M10 10V7a2 2 0 0 1 4 0v3M14 10V8a2 2 0 0 1 4 0v5c0 4-3 7-6 7s-6-2-6-6v-3h5',
+        druid: 'M5 19C5 10 11 5 19 5c0 8-5 14-14 14zM5 19l9-9M10 14h4M12 12V8',
+        guardian: 'M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6zM12 7v10M8 11h8',
+        ranger: 'M7 3c6 3 6 15 0 18M7 3v18M3 12h17M17 9l3 3-3 3',
+        rogue: 'M3 10c3-3 15-3 18 0-1 4-4 6-6 6-1 0-2-2-3-2s-2 2-3 2c-2 0-5-2-6-6zM8 11h2M14 11h2',
+        seraph: 'M8 4a4 1.5 0 1 0 8 0a4 1.5 0 1 0-8 0M12 9v11M12 12c-3-3-7-3-9-1 2 1 4 4 9 4M12 12c3-3 7-3 9-1-2 1-4 4-9 4',
+        sorcerer: 'M12 3c1 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-4 3-6 0 2 1 3 2 3 0-3 1-5 1-8z',
+        warlock: 'M3 12c3-5 15-5 18 0-3 5-15 5-18 0zM9.5 12a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0M12 3v3M12 18v3',
+        warrior: 'M4 4l12 12M20 4L8 16M14 18l4-4M10 18l-4-4M17 17l3 3M7 17l-3 3',
+        witch: 'M5 11h14M6 11c0 5 2 8 6 8s6-3 6-8M8 19l-1 2M16 19l1 2M15 3a3 3 0 1 0 3 4 2.4 2.4 0 0 1-3-4z',
+        wizard: 'M4 19h16M7 19l5-15 5 15M12 10.5l.9 1.8 2 .3-1.4 1.4.3 2-1.8-.9-1.8.9.3-2-1.4-1.4 2-.3z'
+      },
+      SUBS: {
+        assassin: ['Executioners Guild', 'Poisoners Guild'], bard: ['Troubadour', 'Wordsmith'], brawler: ['Juggernaut', 'Martial Artist'],
+        druid: ['Warden of the Elements', 'Warden of Renewal'], guardian: ['Stalwart', 'Vengeance'], ranger: ['Beastbound', 'Wayfinder'],
+        rogue: ['Nightwalker', 'Syndicate'], seraph: ['Divine Wielder', 'Winged Sentinel'], sorcerer: ['Elemental Origin', 'Primal Origin'],
+        warlock: ['Pact of the Endless', 'Pact of the Wrathful'], warrior: ['Call of the Brave', 'Call of the Slayer'], witch: ['Hedge', 'Moon'],
+        wizard: ['School of Knowledge', 'School of War']
+      },
+      ORN: {
+        aetheris: ['M30 6v8M30 30v8M10 22h8M42 22h8M16 8l6 6M38 30l6 6M44 8l-6 6M16 36l6-6', 'M30 15l2.5 4.5 5 .9-3.6 3.5.8 5-4.7-2.4-4.7 2.4.8-5-3.6-3.5 5-.9z'],
+        clank: ['M30 6v6M30 32v6M16 22h-6M50 22h-6M20 12l-4-4M44 36l-4-4M40 12l4-4M16 36l4-4M30 13a9 9 0 1 0 .01 0zM30 19a3 3 0 1 0 .01 0z', ''],
+        drakona: ['M8 38C12 22 26 10 52 6C40 14 32 24 30 38M12 42a5 5 0 0 1 10 0M22 42a5 5 0 0 1 10 0', ''],
+        dwarf: ['M20 4v28M30 4v32M40 4v28', 'M17 30h6v6h-6zM27 34h6v6h-6zM37 30h6v6h-6zM17 12h6v4h-6zM27 16h6v4h-6zM37 12h6v4h-6z'],
+        earthkin: ['M6 40h48', 'M8 40l6-12 10-2 6 14zM28 40l4-16 12-4 8 20zM22 24l4-12 10 0 4 10z'],
+        elf: ['M22 14v26M36 6v34M47 24v16', 'M18 40l4-26 6 26zM30 40l6-34 6 34zM43 40l4-16 5 16z'],
+        emberkin: ['', 'M30 42c-10 0-14-8-11-16 2 4 5 6 5 6-1-10 4-17 11-22-1 7 7 11 7 20 0 8-4 12-12 12z'],
+        faerie: ['M46 38C24 40 8 26 10 6c14 2 30 14 36 32zM46 38C36 30 24 24 16 14M46 38c-12 2-24 0-30-8', ''],
+        faun: ['M14 40C10 22 22 8 38 10c10 2 12 14 4 18-6 3-12-2-9-7 2-3 6-2 6 1', ''],
+        firbolg: ['M4 40l6-12 4 8 5-14 5 14 5-16 5 16 5-14 5 14 4-8 6 12', ''],
+        fungril: ['M22 24v16M39 30v10M6 40h48', 'M10 24a12 9 0 0 1 24 0zM30 30a9 7 0 0 1 18 0z'],
+        galapa: ['M30 4l14 8v16l-14 8-14-8V12zM30 4v32M16 12l28 16M44 12L16 28M8 40h44', ''],
+        giant: ['M6 6c5 10-5 18 0 34M16 4c5 12-5 20 0 36M26 4c5 12-5 20 0 36M36 4c5 12-5 20 0 36M46 6c5 10-5 18 0 34', ''],
+        gnome: ['M8 40h44', 'M14 38L32 4l12 34z'],
+        goblin: ['M52 32C40 32 14 24 4 8c16 2 32 6 42 14 5 4 7 8 6 10zM44 25C34 21 22 16 14 12', ''],
+        halfling: ['M8 40C20 32 34 22 52 8', 'M20 32c-2-8 4-12 10-12-1 7-4 11-10 12zM32 24c0-7 6-10 12-9-2 6-6 9-12 9zM12 38c-3-5 0-9 5-10 0 5-2 8-5 10z'],
+        human: ['M10 42C14 22 30 10 52 8', 'M16 32c-6-2-8-6-7-10 5 1 8 5 7 10zM23 23c-5-3-6-8-4-11 4 2 6 6 4 11zM33 16c-4-4-4-8-1-11 3 3 4 7 1 11zM43 11c-3-4-2-8 1-10 2 3 2 7-1 10z'],
+        infernis: ['', 'M10 42C8 24 16 10 34 4c-7 8-11 18-9 38zM30 42c2-13 8-21 24-25-7 6-11 14-13 25z'],
+        katari: ['M28 30h28M28 36l26 6M28 24l26-6', 'M10 28L16 4l16 18z'],
+        orc: ['', 'M54 42C38 42 24 32 20 4c7 12 16 22 34 26z'],
+        ribbet: ['M44 4c4 6 6 9 6 12a6 6 0 0 1-12 0c0-3 2-6 6-12z', 'M4 34a24 8 0 1 0 48 0a24 8 0 1 0-48 0z'],
+        simiah: ['M6 40C18 40 22 28 30 24s18 2 22-8c2-6-4-10-8-6', 'M18 36c-2-6 2-9 7-9-1 5-3 8-7 9zM34 24c0-6 4-8 9-7-1 5-4 7-9 7z'],
+        skykin: ['', 'M14 36a8 8 0 0 1 2-16 11 11 0 0 1 21-3 9 9 0 0 1 13 9 6 6 0 0 1-1 10z'],
+        tidekin: ['M4 18c6-6 12-6 18 0s12 6 18 0 12-6 18 0M4 30c6-6 12-6 18 0s12 6 18 0 12-6 18 0', '']
+      }
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const two = (this.props.grip || 'main + off hand') === 'two-handed';
+    const prof = 1;
+    const mkW = (w) => {
+      const parts = w.flat ? [[w.name + ' modifier', w.flat]] : [];
+      if (w.bonus && s.focused) parts.push(['Focus Runes · Focused', 1]);
+      const flat = parts.reduce((a, p) => a + p[1], 0);
+      const dmgBtn = prof + w.die.replace('d', 'd') + (flat ? '+' + flat : '');
+      return Object.assign({ hasBonus: !!w.bonus, versatile: false }, w, {
+        hitText: '2d12+2', dmgBtn: (prof > 1 ? prof : '') + w.die + (flat ? '+' + flat : ''),
+        bCls: s.focused ? 'solid' : '', bPressed: s.focused ? 'true' : 'false',
+        bLabel: s.focused ? '+1 Focused · target in Very Close' : '+1 Focused · off (target farther)',
+        toggleB: () => this.setState({ focused: !s.focused }),
+        hit: (e) => this.roll({ kind: 'action', title: w.name + ' · Hit', sub: '2d12 +2 Instinct' + (s.adv > 0 ? ' · advantage' : s.adv < 0 ? ' · disadvantage' : ''), mods: [['Instinct', 2]], adv: s.adv }, e),
+        dmg: (e) => this.roll({ kind: 'damage', title: w.name + ' · Damage', sub: prof + w.die + (flat ? '+' + flat : '') + ' magic', count: prof, sides: +w.die.slice(1), flat, parts }, e)
+      });
+    };
+    const weapons = two ? [
+      mkW({ slot: 'Two-handed', name: 'Dualstaff', left: true, right: true, handsAria: 'Both hands', trait: 'Instinct', range: 'Far', dmgText: 'd6+3 (mag)', feat: '', featText: 'No feature.', die: 'd6', flat: 3 })
+    ] : [
+      mkW({ slot: 'Main hand', name: 'Casting Dagger', left: true, right: false, handsAria: 'Main hand, left', trait: 'Instinct', range: s.vers ? 'Melee' : 'Close', dmgText: s.vers ? 'd8 (mag)' : 'd6 (mag)', feat: 'Versatile:', featText: 'This weapon can also be used with these statistics — Instinct, Melee, d8.', versatile: true,
+        vCls: s.vers ? 'solid' : '', vPressed: s.vers ? 'true' : 'false', vLabel: s.vers ? 'Using Melee d8 · tap for Close d6' : 'Switch to Melee d8', toggleV: () => this.setState({ vers: !s.vers }),
+        die: s.vers ? 'd8' : 'd6', flat: 0, bonus: true }),
+      mkW({ slot: 'Off hand', name: 'Focus Runes', left: false, right: true, handsAria: 'Off hand, right', trait: 'Instinct', range: 'Very Close', dmgText: 'd6 (mag)', feat: 'Focused:', featText: '+1 to primary weapon damage to targets within Very Close range.', die: 'd6', flat: 0 })
+    ];
+
+    /* gold */
+    const g = s.g;
+    const labels = { c: 'Coins', h: 'Handfuls', b: 'Bags', ch: 'Chest' };
+    const full = g.c >= 10;
+    const sv = s.safe;
+    const sp = { c: sv % 10, h: Math.floor(sv / 10) % 10, b: Math.floor(sv / 100) % 10, ch: Math.floor(sv / 1000) };
+    const sumTxt = [['ch', 'chest'], ['b', 'bag'], ['h', 'handful'], ['c', 'coin']].filter((x) => sp[x[0]]).map((x) => sp[x[0]] + ' ' + x[1] + (sp[x[0]] > 1 ? 's' : '')).slice(0, 2).join(', ') || 'empty';
+
+    /* roll view */
+    let r = { top: 0, dice: [], lines: [], effects: [] };
+    if (s.roll) {
+      const R = s.roll, c = R.cfg, done = R.phase === 'done', f = R.f, lines = [];
+      if (done && c.kind === 'action') {
+        lines.push({ label: 'Hope ' + f.hope + ' + Fear ' + f.fear, val: f.hope + f.fear });
+        c.mods.forEach((m) => lines.push({ label: m[0], val: (m[1] >= 0 ? '+' : '−') + Math.abs(m[1]) }));
+        if (c.adv) lines.push({ label: (c.adv > 0 ? 'Advantage' : 'Disadvantage') + ' d6', val: (c.adv > 0 ? '+' : '−') + f.adv });
+      }
+      if (done && c.kind === 'damage') {
+        lines.push({ label: c.count + 'd' + c.sides + ' [' + f.dice.join(', ') + ']', val: f.dice.reduce((a, b) => a + b, 0) });
+        (c.parts || []).forEach((p) => lines.push({ label: p[0], val: '+' + p[1] }));
+      }
+      r = { top: R.top, title: c.title, sub: c.sub, isAction: c.kind === 'action', isDamage: c.kind === 'damage', rolling: !done, done,
+        spinA: done ? '' : 's-spin', spinB: done ? '' : 's-spin b', hope: f.hope, fear: f.fear, hasAdv: !!c.adv, adv: f.adv, advLabel: c.adv > 0 ? 'Adv' : 'Dis',
+        dice: f.dice.map((v) => ({ v, cls: c.sides === 6 ? 'd6' : '' })), lines,
+        total: done ? R.res.total : '', outcome: done ? R.res.outcome : '', outCls: done ? R.res.outCls : '',
+        effects: done ? R.res.effects.map((t) => ({ t })) : [] };
+    }
+
+    const items = [
+      { name: 'Minor Health Potion', note: 'Clear 1d4 HP.', consumable: true },
+      { name: 'Torch', note: '' }, { name: '50 ft of rope', note: '' }, { name: 'Basic supplies', note: '' },
+      { name: 'Whispering Orb', note: 'Sorcerer class item' }
+    ];
+    return Object.assign(this.theme(), {
+      weapons,
+      advCls: s.adv > 0 ? 'solid' : '', advP: s.adv > 0 ? 'true' : 'false',
+      disCls: s.adv < 0 ? 'solid' : '', disP: s.adv < 0 ? 'true' : 'false',
+      advHint: s.adv > 0 ? 'Next hit roll: advantage (+d6)' : s.adv < 0 ? 'Next hit roll: disadvantage (−d6)' : 'Adv / Dis apply to your next hit roll',
+      advTap: () => this.setState({ adv: s.adv > 0 ? 0 : 1 }),
+      disTap: () => this.setState({ adv: s.adv < 0 ? 0 : -1 }),
+      safeOpen: s.safeOpen ? 'true' : 'false', showSafe: s.safeOpen, safeCls: s.safeOpen ? 'solid' : '',
+      toggleSafe: () => this.setState({ safeOpen: !s.safeOpen }),
+      safeSummary: sumTxt,
+      safeRows: this.KEYS.slice().reverse().map((k) => ({
+        label: k === 'ch' ? 'Chests' : labels[k], unit: labels[k].toLowerCase(), val: sp[k],
+        store: () => { if (this.state.g[k] > 0) { const gg = Object.assign({}, this.state.g); gg[k] -= 1; this.setState({ g: gg, safe: this.state.safe + this.VAL[k] }); } },
+        take: () => {
+          const st = this.state;
+          if (st.safe < this.VAL[k]) return;
+          const gg = this.normalize(Object.assign({}, st.g, { [k]: st.g[k] + 1 }));
+          if (gg[k] > this.CAP[k]) return;
+          this.setState({ g: gg, safe: st.safe - this.VAL[k] });
+        }
+      })),
+      gold: this.KEYS.map((k) => ({
+        label: labels[k], val: g[k],
+        slots: Array.from({ length: this.CAP[k] }, (_, i) => ({
+          cls: i < g[k] ? 'on' : '',
+          aria: labels[k] + ' ' + (i + 1) + (i < g[k] ? ', filled — tap to remove' : ', empty — tap to add'),
+          tap: () => this.setRow(k, i < g[k] ? i : i + 1)
+        }))
+      })),
+      goldHint: full ? 'Purse is full — store gold in your safe to carry more' : 'Tap a square to add · tap a filled square to remove',
+      items: items.map((it, i) => Object.assign({ consumable: false }, it, {
+        qty: s.potions, empty: s.potions <= 0, border: i ? 'border-top: 1px solid var(--line)' : '',
+        use: (e) => { if (s.potions > 0) this.roll({ kind: 'damage', heal: true, title: it.name, sub: '1d4', count: 1, sides: 4, flat: 0, consume: { potions: s.potions - 1 } }, e); }
+      })),
+      hasRoll: !!s.roll, r,
+      closeRoll: () => { if (s.roll && s.roll.phase === 'done') this.setState({ roll: null }); }
+    });
+  }
+}
+</script>
+</body>
+</html>

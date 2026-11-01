@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Character sheet — tablet</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cinzel:wght@600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}a:hover{color:inherit}
+</style>
+</helmet>
+<div class="dh" data-theme="{{theme}}" style="width: 1194px; height: 834px; display: flex; overflow: hidden">
+
+  <!-- Rail -->
+  <nav aria-label="Sections" style="width: 88px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 0; background: var(--card); border-right: var(--border-w) solid var(--line)">
+    <a href="Tablet.dc.html" class="tab on" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Sheet</a>
+    <a href="Combat.dc.html" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M14 4l6 0 0 6-9 9-3 0 0-3z"/><path d="M5 16l3 3M4 20l2-2"/></svg>Combat</a>
+    <a href="Equipment.dc.html" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l1 12H5z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg>Gear</a>
+    <a href="Resources.dc.html" class="tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="8" cy="9" r="4"/><circle cx="16" cy="15" r="4"/></svg>Class</a>
+  </nav>
+
+  <div style="flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 300px; gap: 16px; padding: 20px">
+
+    <!-- Column A -->
+    <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+      <section class="card" style="padding: 14px; display: flex; gap: 14px">
+        <div class="card-inset" style="width: 84px; height: 104px; flex: none; display: flex; align-items: center; justify-content: center; border: var(--border-w) dashed var(--line)"><span class="lbl" style="font-size: 11px">Portrait</span></div>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 5px">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start"><h1 class="h1" style="margin: 0">Seren Vale</h1><span class="num" style="font-size: 18px; padding: 4px 8px; border: var(--border-w) solid var(--line-strong); border-radius: 8px">LV 3</span></div>
+          <div style="font-size: 15px; font-weight: 600">Bard · Troubadour</div>
+          <div class="muted" style="font-size: 14px">Elf · Loreborne</div>
+          <div style="display: flex; gap: 6px; margin-top: auto"><span class="tag dom-grace" style="color: var(--dc)">Grace</span><span class="tag dom-codex" style="color: var(--dc)">Codex</span></div>
+        </div>
+      </section>
+
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <a href="Dice.dc.html" class="trait press"><span class="num">+0</span><span class="lbl lbl-ink">Agility</span></a>
+        <a href="Dice.dc.html" class="trait press"><span class="num">−1</span><span class="lbl lbl-ink">Strength</span></a>
+        <a href="Dice.dc.html" class="trait press"><span class="num">+1</span><span class="lbl lbl-ink">Finesse</span></a>
+        <a href="Dice.dc.html" class="trait press"><span class="num">+0</span><span class="lbl lbl-ink">Instinct</span></a>
+        <a href="Dice.dc.html" class="trait press hi"><span class="num">+2</span><span class="lbl lbl-ink">Presence</span></a>
+        <a href="Dice.dc.html" class="trait press"><span class="num">+1</span><span class="lbl lbl-ink">Knowledge</span></a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px">
+        <div class="card" style="padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px"><span class="num" style="font-size: 44px">10</span><span class="lbl">Evasion</span></div>
+        <div class="card" style="padding: 12px; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; align-items: baseline; gap: 8px"><span class="num" style="font-size: 32px">4</span><span class="lbl">Armor score</span></div>
+          <div style="display: flex; gap: 8px"><span class="slot armor on"></span><span class="slot armor"></span><span class="slot armor"></span><span class="slot armor"></span></div>
+        </div>
+      </div>
+
+      <section class="card" style="padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between; align-items: center"><span class="lbl lbl-ink">Proficiency</span><span class="num" style="font-size: 24px">2</span></div>
+        <div style="height: 1px; background: var(--line)"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; min-height: 36px"><span style="font-size: 14px; font-weight: 500">Travelling Troupe Player</span><span class="num" style="font-size: 20px">+2</span></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; min-height: 36px"><span style="font-size: 14px; font-weight: 500">Reads a Room</span><span class="num" style="font-size: 20px">+2</span></div>
+      </section>
+    </div>
+
+    <!-- Column B -->
+    <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+      <section class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 12px">
+        <h2 class="h2" style="margin: 0">Damage &amp; Health</h2>
+        <div style="display: flex; align-items: center; gap: 2px">
+          <div class="thr"><div class="lbl lbl-ink" style="font-size: 12px">Minor</div><div class="muted" style="font-size: 11px">Mark 1 HP</div></div>
+          <div class="num thr-n">10</div>
+          <div class="thr"><div class="lbl lbl-ink" style="font-size: 12px">Major</div><div class="muted" style="font-size: 11px">Mark 2 HP</div></div>
+          <div class="num thr-n">19</div>
+          <div class="thr"><div class="lbl lbl-ink" style="font-size: 12px">Severe</div><div class="muted" style="font-size: 11px">Mark 3 HP</div></div>
+        </div>
+        <div style="display: flex; justify-content: space-between"><span class="lbl lbl-ink">HP</span><span class="num muted" style="font-size: 16px">2 / 6</span></div>
+        <div style="display: flex; gap: 8px"><span class="slot hp on"></span><span class="slot hp on"></span><span class="slot hp"></span><span class="slot hp"></span><span class="slot hp"></span><span class="slot hp"></span></div>
+        <div style="height: 1px; background: var(--line)"></div>
+        <div style="display: flex; justify-content: space-between"><span class="lbl lbl-ink">Stress</span><span class="num muted" style="font-size: 16px">1 / 6</span></div>
+        <div style="display: flex; gap: 8px"><span class="slot stress on"></span><span class="slot stress"></span><span class="slot stress"></span><span class="slot stress"></span><span class="slot stress"></span><span class="slot stress"></span></div>
+      </section>
+
+      <section class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between"><h2 class="h2" style="margin: 0; color: var(--hope-ink)">Hope</h2><span class="num" style="font-size: 18px; color: var(--hope-ink)">3 / 6</span></div>
+        <div style="display: flex; gap: 6px"><span class="hope on"></span><span class="hope on"></span><span class="hope on"></span><span class="hope"></span><span class="hope"></span><span class="hope"></span></div>
+      </section>
+
+      <section class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 class="lbl" style="margin: 0">Weapons</h2><span class="hint">Tap to roll damage</span></div>
+        <div style="display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 12px; border-radius: var(--radius-btn); border: var(--border-w) solid var(--line-strong); background: var(--card-2)"><span style="font-weight: 600">Improved Rapier</span><span class="num" style="font-size: 26px">2d8+3</span></div>
+        <div style="display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 12px; border-radius: var(--radius-btn); border: var(--border-w) solid var(--line); background: var(--card-2)"><span style="font-weight: 600">Small Dagger</span><span class="num" style="font-size: 26px">2d8</span></div>
+      </section>
+    </div>
+
+    <!-- Column C: dice tray -->
+    <aside class="card lift" style="padding: 16px; display: flex; flex-direction: column; gap: 14px; background: var(--card)">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 class="h2" style="margin: 0">Dice tray</h2><span class="lbl">Last roll</span></div>
+      <div style="padding: 10px 12px; border-radius: 10px; background: var(--hope); color: #1B1205; display: flex; justify-content: space-between; align-items: center"><span class="h2" style="font-size: 18px">With Hope</span><span class="num" style="font-size: 30px">17</span></div>
+      <div style="display: flex; justify-content: space-around">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><div class="die die-hope" style="width: 84px; height: 84px"><span class="num" style="font-size: 38px">9</span></div><span class="lbl lbl-ink" style="font-size: 12px">Hope</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: .5"><div class="die die-fear" style="width: 84px; height: 84px"><span class="num" style="font-size: 38px">4</span></div><span class="lbl lbl-ink" style="font-size: 12px">Fear</span></div>
+      </div>
+      <div class="muted" style="font-size: 13px; text-align: center">Presence +2 · Experience +2 · vs 14</div>
+      <div style="height: 1px; background: var(--line)"></div>
+      <span class="lbl">Recent</span>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; min-height: 28px; align-items: center"><span>Finesse · with Fear</span><span class="num" style="font-size: 18px">11</span></div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; min-height: 28px; align-items: center"><span>Damage 2d8+3</span><span class="num" style="font-size: 18px">12</span></div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; min-height: 28px; align-items: center"><span>Presence · Critical</span><span class="num" style="font-size: 18px">20</span></div>
+      </div>
+      <a href="Dice.dc.html" class="btn btn-primary press" style="margin-top: auto; min-height: 56px">New roll</a>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["neutral","parchment","midnight"],"default":"neutral","section":"Theme"},"$preview":{"width":1194,"height":834}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'neutral' };
+  }
+}
+</script>
+</body>
+</html>
