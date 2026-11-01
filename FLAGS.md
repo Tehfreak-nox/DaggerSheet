@@ -41,6 +41,7 @@ Each of these is a reading of the SRD that the engine currently implements. Each
 - **Risk It All** clears Hope-die points from Hit Points first, then Stress; the sheet then lets you move points between them as the SRD allows.
 - **Evolution with a Hybrid**: Evolution replaces Beastform's own Stress; a Hybrid's "additional Stress" is still marked.
 - **Beastform damage dice**: "add a d8 to your damage roll" (Pack Hunting) is a toggle on the beast attack that rolls with it. Rampage's +1 Proficiency marks its Stress when armed (refunded if you disarm it before rolling); its d10 for each 1, and Deadly Raptor's reroll, are offered on the damage result.
+- **Paired / Focused** (secondary weapons): the primary-weapon damage bonus is always included while the weapon is equipped. The book limits it to targets within Melee (Paired) or Very Close (Focused) range; leave it off by hand against farther targets.
 - **Rest moves on allies** (Tend to Wounds, Repair Armor on an ally) aren't modelled; the engine applies moves to the resting character.
 
 ## Card and feature buttons: outliers

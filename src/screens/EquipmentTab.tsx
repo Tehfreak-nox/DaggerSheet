@@ -48,7 +48,6 @@ function Hands({ burden, slot }: { burden: number; slot: 'primary' | 'secondary'
 }
 
 function Weapons({ ch }: { ch: Character }) {
-  const [off, setOff] = useState<Record<string, boolean>>({});
   const crit = usePlay((s) => !!s.crit[ch.id]);
   const slots: ('primary' | 'secondary')[] = ['primary', 'secondary'];
 
@@ -56,13 +55,14 @@ function Weapons({ ch }: { ch: Character }) {
     const ws = ch[slot];
     const w = ws ? weaponById.get(ws.id) : undefined;
     const vs = w ? versatileStats(w.feature) : null;
-    const conds = a.conditional.filter((m) => !off[m.source + m.condition]);
+    // Secondary-weapon damage bonuses (Paired, Focused) apply while the weapon is equipped.
+    const conds = a.conditional;
     const dmgDice = a.dice.map((x) => `${x.count}d${x.sides}`).join('+');
     const bonus = a.damageBonus + conds.reduce((s, m) => s + m.value, 0);
     const dmgText = `${dmgDice}${bonus ? signed(bonus).replace('−', '-') : ''} ${a.damageType}`;
     const hit = [{ label: cap(a.trait), value: a.traitValue }, ...a.attackModifiers];
     const hitTotal = hit.reduce((s, m) => s + m.value, 0);
-    const rollDamage = (critical: boolean) => weaponDamage(ch.id, slot, { critical }, off);
+    const rollDamage = (critical: boolean) => weaponDamage(ch.id, slot, { critical });
     return (
       <article key={slot} className="weapon">
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -83,14 +83,9 @@ function Weapons({ ch }: { ch: Character }) {
                 Versatile · {cap(vs.trait)} {RANGE_NAMES[vs.range]}
               </button>
             )}
-            {a.conditional.map((m) => {
-              const k = m.source + m.condition;
-              return (
-                <button key={k} className={`s-mini ${off[k] ? '' : 'solid'}`} aria-pressed={!off[k]} onClick={() => setOff({ ...off, [k]: !off[k] })}>
-                  {m.source} {signed(m.value)} · {m.condition}
-                </button>
-              );
-            })}
+            {a.conditional.map((m) => (
+              <span key={m.source + m.condition} className="s-chip" title={m.condition}>{m.source} {signed(m.value)} damage</span>
+            ))}
             {w && (
               <button className="s-mini" onClick={() => updateCharacter(ch.id, (c) => ({ ...c, [slot]: undefined, inventoryWeapons: [...c.inventoryWeapons, c[slot]!].slice(0, 2) }))}>
                 Unequip
@@ -99,7 +94,7 @@ function Weapons({ ch }: { ch: Character }) {
           </span>
         </div>
         <div className="weapon-btns">
-          <button className="s-btn solid s-press" onClick={() => weaponAttack(ch.id, slot, undefined, off)} aria-label={`Hit roll 2d12 ${signed(hitTotal)}`}>
+          <button className="s-btn solid s-press" onClick={() => weaponAttack(ch.id, slot)} aria-label={`Hit roll 2d12 ${signed(hitTotal)}`}>
             <span style={{ fontSize: 11, opacity: 0.75 }}>Hit</span><span className="s-num">{signed(hitTotal)}</span>
           </button>
           <button className={`s-btn s-press ${crit ? 's-armed' : ''}`} style={{ borderColor: 'var(--ink)', background: 'var(--surface)' }}
