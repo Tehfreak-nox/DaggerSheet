@@ -272,7 +272,9 @@ export function actionRoll(id: string, title: string, modifiers: RollModifier[],
   const a = armedFor(id);
   const d = derive(ch);
   const rollArms = a.arms.filter((x) => x.roll && !x.rollDone);
+  const counters = dieCounters(ch, 'action');
   const mods = [
+    ...counters.map((x) => ({ label: x.label, value: x.value })),
     ...modifiers,
     ...a.experiences.map((i) => ({ label: d.experiences[i]?.name ?? 'Experience', value: d.experiences[i]?.value ?? 0 })),
     ...a.extras,
@@ -298,6 +300,12 @@ export function actionRoll(id: string, title: string, modifiers: RollModifier[],
   });
   // Spend what was armed: roll-only arms go; arms with a damage part wait for the damage roll.
   const arms = a.arms.flatMap((x) => (x.persist || !x.roll || x.rollDone ? [x] : x.damage ? [{ ...x, rollDone: true }] : []));
+  // "After you add its value to a roll, increase the die's value by one" (Wild Surge).
+  for (const x of counters) {
+    const next = x.value + 1;
+    updateCharacter(id, (c) => ({ ...c, uses: { ...c.uses, [x.key]: next > x.sides ? 0 : next } }));
+    effects.push(next > x.sides ? `${x.label}: the die would go past ${x.sides}, so it ends.` : `${x.label} goes up to ${next}.`);
+  }
   setArmed(id, { ...EMPTY, arms });
   set({ lastFear: { ...state.lastFear, [id]: result.fear } });
   if (o.attack) set({ crit: { ...state.crit, [id]: result.outcome === 'critical' } });
@@ -407,6 +415,9 @@ export function damage(title: string, req: DamageRequest, sub?: string, effects:
   let double = false;
   if (opts.attack && opts.charId) {
     const ch = getCharacter(opts.charId);
+    // A counting die that adds to damage (Unstoppable).
+    const counters = ch ? dieCounters(ch, 'damage') : [];
+    if (counters.length) rq = { ...rq, modifiers: [...(rq.modifiers ?? []), ...counters.map((x) => ({ label: x.label, value: x.value }))] };
     const a = armedFor(opts.charId);
     const dmgArms = a.arms.filter((x) => x.damage);
     if (ch && dmgArms.length) {
@@ -434,6 +445,22 @@ export function damage(title: string, req: DamageRequest, sub?: string, effects:
     result.rolls = result.rolls.map((g) => ({ ...g }));
   }
   show({ kind: 'damage', title, sub, result, effects: notes, charId: opts.charId, magic: !!opts.magic, attack: !!opts.attack, rerolled: [] });
+}
+
+/** Key a die counter stores its value under in `uses`: "die:damage:6:class:unstoppable". */
+export function dieKey(addsTo: string | undefined, sides: number, featureKey: string): string {
+  return `die:${addsTo ?? 'none'}:${sides}:${featureKey}`;
+}
+
+/** Active die counters that add to a kind of roll. */
+function dieCounters(ch: Character, kind: 'damage' | 'action') {
+  return Object.entries(ch.uses).filter(([k, v]) => k.startsWith(`die:${kind}:`) && v > 0).map(([k, v]) => {
+    const [, , sides, source, id] = k.split(':');
+    // "class:unstoppable" → Unstoppable; "card:sage-wild-surge" → Wild Surge (drop the domain).
+    const words = (id ?? '').split('-').slice(source === 'card' ? 1 : 0);
+    const name = words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return { key: k, value: v, sides: Number(sides), label: `${name} Die` };
+  });
 }
 
 function retotal(r: DamageResult): number {

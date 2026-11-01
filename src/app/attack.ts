@@ -12,12 +12,12 @@ export function weaponDamage(id: string, slot: 'primary' | 'secondary', o: Damag
   const ch = getCharacter(id);
   const a = ch && attackProfile(ch, slot);
   if (!ch || !a) return;
-  const conds = a.conditional.filter((m: Modifier) => !off[m.source + m.condition]);
+  // Equipped secondary-weapon bonuses (Paired, Focused) are part of the weapon's damage.
+  const bonus = a.damageBonus + a.conditional.filter((m: Modifier) => !off[m.source + m.condition]).reduce((s, m) => s + m.value, 0);
   const dice = o.halfProf ? a.dice.map((x) => ({ ...x, count: Math.max(1, Math.ceil(x.count / 2)) })) : a.dice;
-  const text = `${dice.map((x) => `${x.count}d${x.sides}`).join('+')}${a.damageBonus ? signed(a.damageBonus) : ''} ${a.damageType}`;
+  const text = `${dice.map((x) => `${x.count}d${x.sides}`).join('+')}${bonus ? signed(bonus) : ''} ${a.damageType}`;
   damage(`Damage · ${a.name}`, {
-    dice, bonus: a.damageBonus, critical: !!o.critical, extraDieDropLowest: a.extraDieDropLowest,
-    modifiers: conds.map((m) => ({ label: m.source, value: m.value })),
+    dice, bonus, critical: !!o.critical, extraDieDropLowest: a.extraDieDropLowest,
   }, `${text}${o.critical ? ' · critical' : ''}${o.halfProf ? ' · half Proficiency' : ''}`, [], { charId: id, magic: a.damageType === 'mag', attack: true });
   setCrit(id, false);
 }

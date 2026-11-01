@@ -57,7 +57,12 @@ export type Control =
   | { kind: 'uses'; scope: UseScope; max: number; label: string }
   | { kind: 'tokens'; source: TokenSource; label: string }
   /** "roll a d20 as your Hope Die": armed for the next action roll. */
-  | { kind: 'hopeDie'; sides: number; label: string };
+  | { kind: 'hopeDie'; sides: number; label: string }
+  /**
+   * A die kept on the sheet that counts up from 1 (Unstoppable Die, Wild Surge,
+   * Zone of Protection). `addsTo`: its value is added to your damage or action rolls.
+   */
+  | { kind: 'dieCounter'; sides: number; upgrade?: { level: number; sides: number }; addsTo?: 'damage' | 'action'; label: string };
 
 export type TokenSource =
   | { fixed: number }
@@ -206,12 +211,21 @@ export function controlsFor(rawText: string): Control[] {
 
   // A die that grows with level: "At level 1, your Rally Die is a d6 … At level 5, your Rally Die increases to a d8".
   const grows = /\b(?:At level 1, your ([\w ]+?) Die is a d(\d+)[^]*?At level (\d+), your [\w ]+? Die increases to a d(\d+)|Your ([\w ]+?) Die starts at a d(\d+) and increases to a d(\d+) at level (\d+))/i.exec(text);
+  const facing = /with the 1 value facing up/i.exec(text);
+  const addsTo = /add the current value of the [\w ]+? Die to your damage roll/i.test(text) ? 'damage' as const
+    : /add its value to every action roll/i.test(text) ? 'action' as const : undefined;
   if (grows) {
     const name = grows[1] ?? grows[5];
     const [from, lvl, to] = grows[1] ? [grows[2], grows[3], grows[4]] : [grows[6], grows[8], grows[7]];
-    add(grows.index, { kind: 'dice', count: 1, sides: Number(from), bonus: 0, label: `Roll ${name} Die`, upgrade: { level: Number(lvl), sides: Number(to) } });
+    add(grows.index, facing
+      ? { kind: 'dieCounter', sides: Number(from), upgrade: { level: Number(lvl), sides: Number(to) }, addsTo, label: `${name} Die` }
+      : { kind: 'dice', count: 1, sides: Number(from), bonus: 0, label: `Roll ${name} Die`, upgrade: { level: Number(lvl), sides: Number(to) } });
     for (const m of text.matchAll(/\bd\d+\b/g)) if (m.index! >= grows.index && m.index! < grows.index + grows[0].length + 2) take(m.index!, m.index! + m[0].length);
   }
+
+  // A die placed on the card that counts up (Wild Surge, Zone of Protection).
+  const placed = !grows && facing ? /\bplace an? d(\d+) on this card/i.exec(text) : null;
+  if (placed) add(placed.index, { kind: 'dieCounter', sides: Number(placed[1]), addsTo, label: 'Die' });
 
   // Dice stored on the card and later added to a damage roll (Sigil of Retribution).
   const pool = /\bplace a d(\d+) on this card\. You can hold a number of d\d+s equal to your level\.[^.]*?roll the dice on this card and add the total to your damage roll/i.exec(text);

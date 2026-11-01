@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { attackNow } from '../app/attack';
 import {
-  actionRoll, armAmount, armedFor, canPay, damage, dice, pay, toggleArm, toggleHopeDie, usePlay,
+  actionRoll, armAmount, armedFor, canPay, damage, dice, dieKey, pay, toggleArm, toggleHopeDie, usePlay,
 } from '../app/play';
 import { updateCharacter } from '../app/store';
 import { toast } from '../app/toast';
@@ -44,7 +44,8 @@ export function FeatureCard({
       {sections.length === 1 ? (
         <>
           <Rich text={text} />
-          {note && <span className="s-muted" style={{ fontSize: 14, lineHeight: 1.4 }}>{note}</span>}
+          {/* A counting die explains itself; the book's tip on how it counts isn't needed. */}
+          {note && !controlsFor(text).some((c) => c.kind === 'dieCounter') && <span className="s-muted" style={{ fontSize: 14, lineHeight: 1.4 }}>{note}</span>}
           {!ghost && <Controls ch={ch} featureKey={featureKey} name={name} text={text} skip={skip} />}
         </>
       ) : sections.map((s, i) => (
@@ -78,7 +79,8 @@ function Controls({ ch, featureKey, name, text, skip }: { ch: Character; feature
   // A lasting effect: its first cost switches it on.
   const activeDef = ACTIVE[featureKey];
   const activator = activeDef ? controls.find((c) => c.kind === 'hope' || c.kind === 'stress' || c.kind === 'pay') : undefined;
-  const actions = controls.filter((c) => c.kind !== 'uses' && c.kind !== 'tokens' && c !== activator
+  const counter = controls.find((c): c is Extract<Control, { kind: 'dieCounter' }> => c.kind === 'dieCounter');
+  const actions = controls.filter((c) => c.kind !== 'uses' && c.kind !== 'tokens' && c.kind !== 'dieCounter' && c !== activator
     && !(c.kind === 'hopeDie' && uses.length));
   const tokenKey = `tokens:${featureKey}`;
   return (
@@ -87,6 +89,8 @@ function Controls({ ch, featureKey, name, text, skip }: { ch: Character; feature
         use={activator && 'once' in activator && activator.once ? `${activator.once}:${featureKey}` : undefined} />}
       {uses.map((u, i) => <UseBoxes key={u.label} ch={ch} k={`${u.scope}:${featureKey}`} max={u.max} label={u.label} arm={i === 0 && hopeDie ? { sides: hopeDie.sides, source: name } : undefined} />)}
       {tokens && <Tokens ch={ch} k={tokenKey} source={tokens.source} label={tokens.label} />}
+      {counter && <DieCounter ch={ch} c={counter} name={name} featureKey={featureKey}
+        use={uses[0] && !activator ? { key: `${uses[0].scope}:${featureKey}`, max: uses[0].max } : undefined} />}
       {actions.length > 0 && (
         <span className="ctl-row">
           {actions.map((c, i) => <ControlButton key={`${c.kind}-${i}`} ch={ch} c={c} name={name} featureKey={featureKey} tokenKey={tokenKey}
@@ -304,6 +308,43 @@ function Choice({ ch, c, k, name }: { ch: Character; c: Extract<Control, { kind:
         );
       })}
     </span>
+  );
+}
+
+/**
+ * A die kept on the sheet that counts up (Unstoppable): start it at 1, tap + to
+ * count up; past its highest face it ends. Starting it uses the feature's
+ * "once per long rest", which stays used until that rest.
+ */
+function DieCounter({ ch, c, name, featureKey, use }: {
+  ch: Character; c: Extract<Control, { kind: 'dieCounter' }>; name: string; featureKey: string; use?: { key: string; max: number };
+}) {
+  const sides = c.upgrade && ch.level >= c.upgrade.level ? c.upgrade.sides : c.sides;
+  const k = dieKey(c.addsTo, sides, featureKey);
+  const value = ch.uses[k] ?? 0;
+  const spent = !!use && (ch.uses[use.key] ?? 0) >= use.max;
+  const setValue = (v: number, extra: Record<string, number> = {}) =>
+    updateCharacter(ch.id, (x) => ({ ...x, uses: { ...x.uses, ...extra, [k]: v } }));
+  const title = c.label === 'Die' ? name : c.label.replace(/ Die$/, '');
+  if (!value) {
+    return (
+      <button className="s-mini solid" style={{ alignSelf: 'flex-start' }} disabled={spent}
+        onClick={() => setValue(1, use ? { [use.key]: (ch.uses[use.key] ?? 0) + 1 } : {})}>
+        {spent ? `${title} · used until your rest` : `Start ${title} · d${sides}`}
+      </button>
+    );
+  }
+  return (
+    <div className="die-counter">
+      <div className={`s-die sm d${sides}`} role="img" aria-label={`${title} die showing ${value} of ${sides}`}><span>{value}</span></div>
+      <span style={{ flex: 1, fontSize: 14, lineHeight: 1.35 }}>
+        <b>{title}: {value}</b>{c.addsTo === 'damage' ? ` · +${value} to your damage rolls` : c.addsTo === 'action' ? ` · +${value} to your action rolls` : ''}
+        <br /><span className="s-muted">{value >= sides ? 'At its highest: + ends it.' : `Counts up to ${sides}.`}</span>
+      </span>
+      <button className="s-mini solid" aria-label={value >= sides ? `End ${title}` : `Count ${title} up to ${value + 1}`}
+        onClick={() => { setValue(value >= sides ? 0 : value + 1); if (value >= sides) toast(`${title} ends.`); }}>+</button>
+      <button className="s-mini" onClick={() => setValue(0)}>End</button>
+    </div>
   );
 }
 

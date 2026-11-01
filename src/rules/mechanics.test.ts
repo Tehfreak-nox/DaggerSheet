@@ -109,6 +109,11 @@ describe('card and feature controls (reviewed against every card)', () => {
     expect(feature('power-of-the-gods')).toEqual(['arm +1d12 damage']);
     expect(card('splendor-invigoration')).toEqual(['scaled Spend Hope · d6 each']);
     expect(feature('rally')).toEqual(['uses Once per session', 'dice Roll Rally Die']);
+    // A die that counts up on the sheet: a counter, not a roll button.
+    expect(feature('unstoppable')).toEqual(['uses Once per long rest', 'dieCounter Unstoppable Die']);
+    expect(controlsFor(allFeatures().find((f) => f.id === 'unstoppable')!.text).find((c) => c.kind === 'dieCounter'))
+      .toMatchObject({ sides: 4, upgrade: { level: 5, sides: 6 }, addsTo: 'damage' });
+    expect(card('sage-wild-surge')).toContain('dieCounter Die');
   });
 
   it('names damage options and keeps the text order', () => {
