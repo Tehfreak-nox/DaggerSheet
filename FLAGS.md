@@ -59,7 +59,3 @@ Every card and feature text is read by `src/rules/mechanics.ts` with one set of 
 - Transformations (SRD pp. 42–45: Demigod, Ghost, Reanimated, Shapeshifter, Vampire, Werewolf).
 - GM material, adversaries, environments, campaign frames.
 - Background and connection questions come from the SRD class pages. The guides print the same questions; they aren't extracted a second time.
-
-## Planned
-
-- Structured `mechanics` hooks per feature and card (spend Hope, mark Stress, uses per rest, token pools, roll buttons). These will be derived in Milestone 4, when the interactive Features panel is built, so each hook is tested against a UI that uses it.

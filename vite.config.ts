@@ -5,6 +5,8 @@ export default defineConfig({
   // Relative paths: the site is served from /DaggerSheet/ on GitHub Pages.
   base: './',
   plugins: [react()],
+  // One bundle on purpose: the rules data ships with the app so it works offline.
+  build: { chunkSizeWarningLimit: 1200 },
   test: {
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
   },

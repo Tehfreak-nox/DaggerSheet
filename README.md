@@ -1,32 +1,55 @@
 # DaggerSheet
 
-A digital Daggerheart character sheet with cards, tokens and items. It's a
-mobile-first installable web app (React + TypeScript + Vite) and saves
-characters locally.
+A free, fan-made character sheet for **Daggerheart**: create characters,
+roll Duality Dice, track Hope, Stress, Hit Points, armor, gold, items and
+domain cards, rest, and level up from 1 to 10. Mobile-first, tap-only, and
+installable on your phone's home screen.
 
-## Status
+**Open it: https://tehfreak-nox.github.io/DaggerSheet/**
 
-| Milestone | State |
-|---|---|
-| 1. Rules data extracted from the PDFs, with types and tests | done |
-| 2. Rules engine (pure functions and tests) | done |
-| 3. App shell, store, persistence, theme | done |
-| 4. Character page | done |
-| 5. Equipment, pickers, vault | done |
-| 6. Create flow | done |
-| 7. Rests and level up | done |
-| 8. Polish (PWA install, tablet layout, art refinement) | in progress |
+## Using it
 
-Site: https://tehfreak-nox.github.io/DaggerSheet/ (built and published from `main` by
-`.github/workflows/pages.yml`).
+- No account needed. Characters are saved in your browser on that device.
+- To install it: on iPhone, **Share → Add to Home Screen**; on Android,
+  **⋮ → Add to Home screen** (or **Install app**).
+- To move characters to another device or back them up, use **Export** and
+  **Import** on the home screen.
 
-Test build: https://claude.ai/artifact/X1Bozmcjm8Kgr2Jbjexp4u (private to the owner; republished with
-`npm run build:artifact`, which writes `dist-artifact/daggersheet.html`).
+## What it does
+
+- **Character creation** in 11 steps, with the official character guide's
+  suggestions one tap away and a live preview of your sheet.
+- **Your sheet restyles itself**: class colours and emblem, subclass frame,
+  ancestry ornaments, community frame, light and dark mode.
+- **Every card and feature has tap controls** read from its rules text: pay
+  Hope or Stress and roll in one tap, arm bonuses for your next roll or
+  damage roll, track uses per rest and tokens.
+- **Rolls** with Hope and Fear, advantage, Experiences, critical damage, and
+  the rerolls and follow-ups your features allow.
+- **Druid Beastforms**, death moves, rests with downtime moves, the gold
+  tracker, the vault and loadout, and level up with every advancement and
+  multiclassing.
+
+## Development
+
+```sh
+npm install
+npm test          # unit and simulation tests (vitest)
+npm run typecheck
+npm run dev       # local dev server
+npm run build     # production build into dist/
+```
+
+Every push to `main` runs the tests, builds the app and publishes it to
+GitHub Pages (`.github/workflows/pages.yml`). `npm run build:artifact` makes a
+single-file build (`dist-artifact/daggersheet.html`) for a claude.ai artifact.
 
 ## Layout
 
 ```
 design/            Design handoff: interactive mockups (*.dc.html), CSS, HANDOFF.md
+public/            App manifest and icons (home-screen install)
+.github/workflows/ Build, test and publish to GitHub Pages
 sources/           Source PDFs, not in the repo: put the SRD 2.0 PDFs and the official character
                    sheets and guides PDF here to regenerate the data with `npm run data`
 scripts/extract/   Python extraction pipeline: PDFs -> src/data/*.json
@@ -36,7 +59,7 @@ src/app/           Character store (local + account sync), navigation, table-tim
 src/screens/       Home, Create, Character, Equipment, Picker, Vault, Rest, Level up, About
 src/ui/            Header, roll overlay, feature cards with tap controls, shared pieces
 src/styles/        sheet.css and persona.css from the design handoff, app.css for layout
-FLAGS.md           Ambiguities and decisions found while extracting
+FLAGS.md           Rules decisions, ambiguities, and features the app doesn't automate yet
 ```
 
 ## Data
@@ -89,15 +112,6 @@ and returns a new one, and dice take an injectable RNG.
 
 The checker was itself tested by planting bugs (cards one level too high, a
 wrong subclass bonus, missing cross-outs); each made the suite fail.
-
-## Development
-
-```sh
-npm install
-npm test          # vitest
-npm run typecheck
-npm run dev
-```
 
 ## License and attribution
 

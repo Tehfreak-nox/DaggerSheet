@@ -22,9 +22,9 @@ export function About() {
           </p>
           <h2 className="s-label">Your data</h2>
           <p>
-            Characters are saved on this device and, when you open DaggerSheet signed in to your claude.ai account, to your
-            private storage there, so they follow you between devices. Nobody else can read them. Use Export on the home
-            screen for a JSON backup.
+            Characters are saved in this browser on this device; nobody else can read them. Use Export and Import on the
+            home screen to back them up or move them to another device. (Opened from claude.ai while signed in, they're
+            also saved privately to your account there.)
           </p>
         </section>
       </Page>
