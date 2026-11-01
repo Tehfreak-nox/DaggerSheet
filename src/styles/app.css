@@ -82,6 +82,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .home-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 
 /* create */
+.create-com { padding: 12px max(20px, env(safe-area-inset-right, 0px)) 0 max(20px, env(safe-area-inset-left, 0px)); }
+.create-com .fx-in { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .create-progress { padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .create-progress .bar { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 3px; }
 .create-progress .bar span { height: 5px; border-radius: 3px; background: var(--line); }

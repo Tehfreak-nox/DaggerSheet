@@ -3,7 +3,7 @@ import { back } from '../app/nav';
 import { saveCharacter, useStore } from '../app/store';
 import { classById, classes, rules, type Advancement, type DomainId, type TraitId } from '../data';
 import {
-  achievementAt, applyLevelUp, derive, extraCardsFor, legalCards, levelUpProblems, slotFor, STAGES, subclassOf, tierOf, TRAIT_IDS,
+  achievementAt, advancementCapped, applyLevelUp, derive, extraCardsFor, legalCards, levelUpProblems, slotFor, STAGES, subclassOf, tierOf, TRAIT_IDS,
   type AdvancementChoice, type AdvancementMark, type Character, type LevelUpChoices,
 } from '../rules';
 import { themeAttrs } from '../ui/Header';
@@ -98,7 +98,8 @@ export function LevelUp({ id }: { id: string }) {
   const toggle = (a: Advancement) => {
     const mine = picks.filter((p) => p.id === a.id);
     // Tapping a chosen option removes it; otherwise add it if there's room.
-    if (mine.length && (cost + a.cost > 2 || !slotFor(marks, level, a.id))) {
+    if (advancementCapped(ch, a.id, level) && !mine.length) return;
+    if (mine.length && (cost + a.cost > 2 || !slotFor(marks, level, a.id) || a.id === 'subclass' || a.id === 'proficiency' || a.id === 'multiclass')) {
       const i = picks.map((p) => p.id).lastIndexOf(a.id);
       setPicks(picks.filter((_, j) => j !== i));
       return;
@@ -128,7 +129,8 @@ export function LevelUp({ id }: { id: string }) {
           <span className="s-muted" style={{ fontSize: 13 }}>Any option with an unmarked slot from tier {tier} or below. Tap a box to choose, tap again to undo.</span>
           {rules.leveling.advancements.filter((a) => a.minTier <= tier).map((a) => {
             const chosen = picks.filter((p) => p.id === a.id).length;
-            const avail = slotFor(ch.advancements, level, a.id) !== null;
+            const capped = advancementCapped(ch, a.id, level);
+            const avail = slotFor(ch.advancements, level, a.id) !== null && !capped;
             const t = String(tier) as '2' | '3' | '4';
             const total = a.slots[t];
             const usedHere = ch.advancements.filter((m) => m.tier === tier && m.choice.id === a.id).length * a.cost;
@@ -137,7 +139,7 @@ export function LevelUp({ id }: { id: string }) {
                 <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ fontSize: 15, fontWeight: 600 }}>{SHORT[a.id]}</span>
-                    <span className="s-muted" style={{ fontSize: 13, lineHeight: 1.35 }}>{a.text}</span>
+                    <span className="s-muted" style={{ fontSize: 13, lineHeight: 1.35 }}>{capped ? `${capped}.` : a.text}</span>
                   </span>
                   <button className={`adv-boxes ${a.cost === 2 ? 'boxed' : ''}`} disabled={!avail && !chosen}
                     aria-label={`${SHORT[a.id]}: ${chosen ? 'chosen' : avail ? 'available' : 'no slots left'}`} onClick={() => toggle(a)}>

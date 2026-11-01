@@ -138,9 +138,9 @@ export function Create() {
     <div className="s" {...themeAttrs(persona)}>
       <Header persona={persona} preview tab="character" />
       {d.communityId && (
-        <div style={{ padding: '10px 20px 0' }}>
-          <div className={`fx fx-${d.communityId}`} style={{ padding: 8 }}>
-            <div className="fx-in" style={{ padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="create-com">
+          <div className={`fx fx-${d.communityId}`}>
+            <div className="fx-in">
               <span className="s-label">Features panel</span>
               <span className="s-muted" style={{ fontSize: 13 }}>{communities.find((c) => c.id === d.communityId)?.name}</span>
             </div>

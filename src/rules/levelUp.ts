@@ -61,9 +61,22 @@ export function slotFor(marks: AdvancementMark[], level: number, id: Advancement
   return null;
 }
 
-/** Advancement options with an unmarked slot at the given (new) level. */
+/** Why an option can't be taken even with an open slot (a cap), or null. */
+export function advancementCapped(ch: Character, id: Advancement['id'], newLevel = ch.level + 1): string | null {
+  const d = derive(ch);
+  switch (id) {
+    case 'hitPoint': return d.hitPoints >= rules.caps.hitPointSlots ? `Already ${rules.caps.hitPointSlots} Hit Point slots` : null;
+    case 'stress': return d.stressSlots >= rules.caps.stressSlots ? `Already ${rules.caps.stressSlots} Stress slots` : null;
+    case 'proficiency': return d.proficiency >= rules.caps.proficiency ? 'Proficiency is at its maximum' : null;
+    case 'subclass': return ch.subclassStage === 'mastery' ? 'You already have your mastery' : null;
+    case 'multiclass': return newLevel < rules.leveling.multiclass.minLevel ? `From level ${rules.leveling.multiclass.minLevel}` : null;
+    default: return null;
+  }
+}
+
+/** Advancement options with an unmarked slot at the given (new) level that aren't capped. */
 export function availableAdvancements(ch: Character, newLevel = ch.level + 1): Advancement[] {
-  return rules.leveling.advancements.filter((a) => slotFor(ch.advancements, newLevel, a.id) !== null);
+  return rules.leveling.advancements.filter((a) => slotFor(ch.advancements, newLevel, a.id) !== null && !advancementCapped(ch, a.id, newLevel));
 }
 
 /** Domain cards you could take at `level` (class domains at your level or lower; multiclass domain at half). */
@@ -124,7 +137,8 @@ export function levelUpProblems(ch: Character, choices: LevelUpChoices): string[
         break;
       }
       case 'domainCard': {
-        if (!legalCards(sim, level, newCards).some((c) => c.id === choice.card)) p.push(`Can't take ${choice.card} as an advancement.`);
+        if (!choice.card) p.push('Choose the domain card for your advancement.');
+        else if (!legalCards(sim, level, newCards).some((c) => c.id === choice.card)) p.push(`Can't take ${choice.card} as an advancement.`);
         newCards.push(choice.card);
         break;
       }
@@ -151,7 +165,9 @@ export function levelUpProblems(ch: Character, choices: LevelUpChoices): string[
   }
 
   // Step four
-  if (!legalCards(sim, level, newCards).some((c) => c.id === choices.domainCard)) {
+  if (!choices.domainCard) {
+    p.push('Choose your new domain card.');
+  } else if (!legalCards(sim, level, newCards).some((c) => c.id === choices.domainCard)) {
     p.push(`Can't take ${choices.domainCard} at level ${level}.`);
   }
   newCards.push(choices.domainCard);
