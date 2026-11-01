@@ -1,0 +1,293 @@
+// Derived character statistics. Everything shown on the sheet that isn't a
+// player-entered value is computed here from the stored Character.
+import {
+  ancestryById, armorById, cardById, classById, rules, weaponById,
+  type ClassDef, type DomainCard, type DomainId, type Feature, type Subclass, type TraitId, type Weapon,
+} from '../data';
+import { equipmentModifiers, type Modifier, type Stat } from './effects';
+import { TRAIT_IDS, type Character, type SubclassStage } from './model';
+
+export const STAGES: SubclassStage[] = ['foundation', 'specialization', 'mastery'];
+
+export function tierOf(level: number): 1 | 2 | 3 | 4 {
+  return level <= 1 ? 1 : level <= 4 ? 2 : level <= 7 ? 3 : 4;
+}
+
+export function classOf(ch: Character): ClassDef {
+  const c = classById.get(ch.classId);
+  if (!c) throw new Error(`Unknown class ${ch.classId}`);
+  return c;
+}
+
+export function subclassOf(ch: Character): Subclass {
+  const s = classOf(ch).subclasses.find((x) => x.id === ch.subclassId);
+  if (!s) throw new Error(`Unknown subclass ${ch.subclassId} for ${ch.classId}`);
+  return s;
+}
+
+export function multiclassSubclass(ch: Character): Subclass | null {
+  if (!ch.multiclass) return null;
+  return classById.get(ch.multiclass.classId)!.subclasses.find((s) => s.id === ch.multiclass!.subclassId) ?? null;
+}
+
+/** The two ancestry features in effect (mixed ancestry: first of one, second of another). */
+export function ancestryFeatures(ch: Character): [Feature, Feature] {
+  if ('id' in ch.ancestry) {
+    const a = ancestryById.get(ch.ancestry.id);
+    if (!a) throw new Error(`Unknown ancestry ${ch.ancestry.id}`);
+    return a.features;
+  }
+  const first = ancestryById.get(ch.ancestry.mixed.first);
+  const second = ancestryById.get(ch.ancestry.mixed.second);
+  if (!first || !second) throw new Error('Unknown mixed ancestry');
+  return [first.features[0], second.features[1]];
+}
+
+/** Subclass features you have, in order, with their stage. */
+export function subclassFeatures(ch: Character): { stage: SubclassStage; feature: Feature; subclass: Subclass }[] {
+  const s = subclassOf(ch);
+  const upTo = STAGES.indexOf(ch.subclassStage);
+  const out = STAGES.slice(0, upTo + 1).flatMap((stage) => s[stage].map((feature) => ({ stage, feature, subclass: s })));
+  const mc = multiclassSubclass(ch);
+  if (mc) out.push(...mc.foundation.map((feature) => ({ stage: 'foundation' as const, feature, subclass: mc })));
+  return out;
+}
+
+export function spellcastTraits(ch: Character): TraitId[] {
+  const out = [subclassOf(ch).spellcastTrait, multiclassSubclass(ch)?.spellcastTrait]
+    .filter((t): t is TraitId => !!t);
+  return [...new Set(out)];
+}
+
+export function ownedCards(ch: Character): DomainCard[] {
+  return [...ch.cards.loadout, ...ch.cards.vault].map((id) => {
+    const c = cardById.get(id);
+    if (!c) throw new Error(`Unknown card ${id}`);
+    return c;
+  });
+}
+
+export function accessibleDomains(ch: Character): DomainId[] {
+  const out = [...classOf(ch).domains];
+  if (ch.multiclass) out.push(ch.multiclass.domain);
+  return out;
+}
+
+export function equippedWeapons(ch: Character): { slot: 'primary' | 'secondary'; weapon: Weapon }[] {
+  const out: { slot: 'primary' | 'secondary'; weapon: Weapon }[] = [];
+  for (const slot of ['primary', 'secondary'] as const) {
+    const w = ch[slot];
+    if (w) {
+      const weapon = weaponById.get(w.id);
+      if (!weapon) throw new Error(`Unknown weapon ${w.id}`);
+      out.push({ slot, weapon });
+    }
+  }
+  return out;
+}
+
+export interface Derived {
+  tier: 1 | 2 | 3 | 4;
+  traits: Record<TraitId, number>;
+  /** Base trait plus permanent advancements, before equipment and features. */
+  baseTraits: Record<TraitId, number>;
+  evasion: number;
+  armorScore: number;
+  thresholds: { major: number; severe: number };
+  hitPoints: number;
+  stressSlots: number;
+  hopeSlots: number;
+  proficiency: number;
+  spellcastTraits: TraitId[];
+  /** Best Spellcast trait value, or null if the character has none. */
+  spellcast: number | null;
+  experiences: { name: string; value: number }[];
+  /** Situational modifiers (e.g. Paired) the attack UI shows as toggles. */
+  conditional: Modifier[];
+  attackBonus: number;
+  spellcastBonus: number;
+  modifiers: Modifier[];
+  /** Brawler with no other active weapons uses Brawler’s Strike. */
+  brawlersStrike: boolean;
+  ignoresBurden: boolean;
+}
+
+const count = (ch: Character, id: string) => ch.advancements.filter((a) => a.choice.id === id).length;
+
+export function proficiencyOf(ch: Character): number {
+  const achievements = rules.leveling.achievements.filter((a) => ch.level >= a.level).length;
+  return 1 + achievements + count(ch, 'proficiency');
+}
+
+/** Base traits plus "+1 to two traits" advancements. */
+export function baseTraits(ch: Character): Record<TraitId, number> {
+  const t = { ...ch.traits };
+  for (const a of ch.advancements) if (a.choice.id === 'traits') for (const id of a.choice.traits) t[id] += 1;
+  return t;
+}
+
+export function experienceValues(ch: Character): number[] {
+  const base = rules.creation.experiences.modifier;
+  const vals = ch.experiences.map(() => base);
+  for (const a of ch.advancements) if (a.choice.id === 'experiences') for (const i of a.choice.experiences) vals[i] += 1;
+  if (ch.purposefulDesign !== undefined && hasAncestryFeature(ch, 'purposeful-design')) vals[ch.purposefulDesign] += 1;
+  const mc = ch.picks.masterOfTheCraft;
+  if (mc && ownedCards(ch).some((c) => c.id === 'grace-master-of-the-craft')) {
+    const bonus = mc.experiences.length === 1 ? 3 : 2;
+    for (const i of mc.experiences) vals[i] += bonus;
+  }
+  return vals;
+}
+
+export function hasAncestryFeature(ch: Character, featureId: string): boolean {
+  return ancestryFeatures(ch).some((f) => f.id === featureId);
+}
+
+/** Effects from ancestry, subclass and class features, keyed by feature id. */
+type Ctx = { ch: Character; proficiency: number; traits: Record<TraitId, number>; armored: boolean };
+const FEATURE_EFFECTS: Record<string, (ctx: Ctx) => Omit<Modifier, 'source'>[]> = {
+  // Ancestry
+  'stoneskin': () => [{ stat: 'armorScore', value: 1 }, { stat: 'major', value: 1 }, { stat: 'severe', value: 1 }],
+  'endurance': () => [{ stat: 'hitPoints', value: 1 }],
+  'high-stamina': () => [{ stat: 'stress', value: 1 }],
+  'nimble': () => [{ stat: 'evasion', value: 1 }],
+  'shell': ({ proficiency }) => [{ stat: 'major', value: proficiency }, { stat: 'severe', value: proficiency }],
+  // Subclasses
+  'rugged': () => [{ stat: 'severe', value: 3 }],
+  'unwavering': () => [{ stat: 'major', value: 1 }, { stat: 'severe', value: 1 }],
+  'unrelenting': () => [{ stat: 'major', value: 2 }, { stat: 'severe', value: 2 }],
+  'undaunted': () => [{ stat: 'major', value: 3 }, { stat: 'severe', value: 3 }],
+  'at-ease': () => [{ stat: 'stress', value: 1 }],
+  'fleeting-shadow': () => [{ stat: 'evasion', value: 1 }],
+  'ascendant': () => [{ stat: 'severe', value: 4 }],
+  'battlemage': () => [{ stat: 'hitPoints', value: 1 }],
+};
+
+/** Passive domain cards: apply while in the loadout. */
+const CARD_EFFECTS: Record<string, (ctx: Ctx) => Omit<Modifier, 'source'>[]> = {
+  'blade-fortified-armor': ({ armored }) => armored ? [{ stat: 'major', value: 2 }, { stat: 'severe', value: 2 }] : [],
+  'valor-armorer': ({ armored }) => armored ? [{ stat: 'armorScore', value: 1 }] : [],
+  // "half your Agility", rounded up (SRD: round up unless specified); no bonus from a negative Agility.
+  'bone-untouchable': ({ traits }) => [{ stat: 'evasion', value: Math.max(0, Math.ceil(traits.agility / 2)) }],
+  'valor-rise-up': ({ proficiency }) => [{ stat: 'severe', value: proficiency }],
+  'dread-eldritch-flesh': ({ ch }) => [{ stat: 'major', value: ch.stress }, { stat: 'severe', value: ch.stress }],
+};
+
+/** "<Domain>-Touched": active with 4+ cards of that domain in the loadout. */
+const TOUCHED: Partial<Record<DomainId, Omit<Modifier, 'source'>[]>> = {
+  arcana: [{ stat: 'spellcast', value: 1 }],
+  blade: [{ stat: 'attack', value: 2 }, { stat: 'severe', value: 4 }],
+  bone: [{ stat: 'agility', value: 1 }],
+  splendor: [{ stat: 'severe', value: 3 }],
+  valor: [{ stat: 'armorScore', value: 1 }],
+};
+
+export function featureEffectIds(): string[] {
+  return Object.keys(FEATURE_EFFECTS);
+}
+export function cardEffectIds(): string[] {
+  return Object.keys(CARD_EFFECTS);
+}
+
+export function derive(ch: Character): Derived {
+  const cls = classOf(ch);
+  const tier = tierOf(ch.level);
+  const proficiency = Math.min(rules.caps.proficiency, proficiencyOf(ch));
+  const base = baseTraits(ch);
+  const armor = ch.armorId ? armorById.get(ch.armorId) : undefined;
+  if (ch.armorId && !armor) throw new Error(`Unknown armor ${ch.armorId}`);
+  const weapons = equippedWeapons(ch);
+  const mods: Modifier[] = [];
+
+  // Equipment
+  for (const { weapon } of weapons) mods.push(...(equipmentModifiers(weapon.feature, weapon.name) ?? []));
+  if (armor) mods.push(...(equipmentModifiers(armor.feature, armor.name) ?? []));
+
+  // Traits including equipment changes are needed by some feature effects.
+  const sumTraits = (ms: Modifier[]) => {
+    const t = { ...base };
+    for (const m of ms) if ((TRAIT_IDS as string[]).includes(m.stat) && !m.condition) t[m.stat as TraitId] += m.value;
+    return t;
+  };
+  const ctx: Ctx = { ch, proficiency, traits: sumTraits(mods), armored: !!armor };
+
+  // Ancestry and subclass features
+  const feats: Feature[] = [...ancestryFeatures(ch), ...subclassFeatures(ch).map((x) => x.feature)];
+  for (const f of feats) {
+    const fx = FEATURE_EFFECTS[f.id];
+    if (fx) mods.push(...fx(ctx).map((m) => ({ ...m, source: f.name })));
+  }
+
+  // Domain cards in the loadout
+  const loadout = ch.cards.loadout.map((id) => cardById.get(id)!);
+  for (const c of loadout) {
+    const fx = CARD_EFFECTS[c.id];
+    if (fx) mods.push(...fx(ctx).map((m) => ({ ...m, source: c.name })));
+    const touched = /-touched$/.test(c.id) ? TOUCHED[c.domain] : undefined;
+    if (touched && loadout.filter((x) => x.domain === c.domain).length >= 4) {
+      mods.push(...touched.map((m) => ({ ...m, source: c.name })));
+    }
+  }
+
+  // Vitality: permanent picks, card sits in the vault.
+  if (ownedCards(ch).some((c) => c.id === 'blade-vitality')) {
+    for (const p of ch.picks.vitality ?? []) {
+      if (p === 'thresholds') mods.push({ stat: 'major', value: 2, source: 'Vitality' }, { stat: 'severe', value: 2, source: 'Vitality' });
+      else mods.push({ stat: p === 'stress' ? 'stress' : 'hitPoints', value: 1, source: 'Vitality' });
+    }
+  }
+
+  // Armor features based on another stat.
+  const spellTraits = spellcastTraits(ch);
+  const traitsNow = sumTraits(mods);
+  const spellcast = spellTraits.length ? Math.max(...spellTraits.map((t) => traitsNow[t])) : null;
+  if (armor?.feature?.name === 'Enchanted' && spellcast !== null && spellcast > 0) {
+    mods.push({ stat: 'major', value: spellcast, source: armor.name }, { stat: 'severe', value: spellcast, source: armor.name });
+  }
+  if (armor?.feature?.name === 'Magnificent' && traitsNow.presence > 0) {
+    mods.push({ stat: 'armorScore', value: traitsNow.presence, source: armor.name });
+  }
+
+  // Brawler: Brawler’s Strike while no other active weapons, +1 Evasion.
+  const brawlersStrike = cls.id === 'brawler' && weapons.length === 0;
+  if (brawlersStrike) mods.push({ stat: 'evasion', value: 1, source: 'I Am the Weapon' });
+
+  const always = mods.filter((m) => !m.condition);
+  const sum = (stat: Stat) => always.filter((m) => m.stat === stat).reduce((a, m) => a + m.value, 0);
+  const traits = sumTraits(mods);
+
+  const evasion = cls.startingEvasion + count(ch, 'evasion') + sum('evasion');
+  const armorScore = Math.max(0, Math.min(rules.caps.armorScore, (armor?.score ?? 0) + sum('armorScore')));
+  const baseMajor = armor ? armor.thresholds.major : 0;
+  const baseSevere = armor ? armor.thresholds.severe : ch.level; // unarmored: Severe = 2 × level
+  const thresholds = {
+    major: baseMajor + ch.level + sum('major'),
+    severe: baseSevere + ch.level + sum('severe'),
+  };
+  const hitPoints = Math.min(rules.caps.hitPointSlots, cls.startingHitPoints + count(ch, 'hitPoint') + sum('hitPoints'));
+  const stressSlots = Math.min(rules.caps.stressSlots, rules.creation.stress + count(ch, 'stress') + sum('stress'));
+  const exp = experienceValues(ch);
+
+  return {
+    tier,
+    traits,
+    baseTraits: base,
+    evasion,
+    armorScore,
+    thresholds,
+    hitPoints,
+    stressSlots,
+    hopeSlots: rules.caps.hope,
+    proficiency,
+    spellcastTraits: spellTraits,
+    spellcast,
+    experiences: ch.experiences.map((e, i) => ({ name: e.name, value: exp[i] })),
+    conditional: mods.filter((m) => m.condition),
+    attackBonus: sum('attack'),
+    spellcastBonus: sum('spellcast'),
+    modifiers: mods,
+    brawlersStrike,
+    // Combat Training (Warrior). Multiclass "gain its class feature" is ambiguous for two-feature classes: see FLAGS.md.
+    ignoresBurden: cls.id === 'warrior',
+  };
+}

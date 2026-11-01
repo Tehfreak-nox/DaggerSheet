@@ -24,6 +24,19 @@ the SRD text, and the call that was made. Each one is open for review.
 - **Witch** has one guide for both subclasses, and it leads with Instinct (+2 Instinct, +1 Knowledge). That fits Moon (Instinct), but Hedge casts with Knowledge. **Decision needed:** use the official spread for both subclasses, or offer a Hedge variant labelled "App suggestion"?
 - The guide's **Brawler** primary weapon is *Brawler's Strike* from the "I Am the Weapon" class feature. It's not a table weapon, so it's stored with `id: null` and its stats inline.
 
+## Rules engine decisions (src/rules)
+
+Each of these is a reading of the SRD that the engine currently implements. Each is covered by a test, so changing one is a one-line edit plus a test update.
+
+- **Multiclass "gain its class feature"**: Warrior, Brawler, Assassin, Druid, Rogue, Sorcerer, Warlock, Witch and Wizard each have *two or more* class features, so "its class feature" is ambiguous. The engine shows the multiclass class's features as text but doesn't apply their stat effects (e.g. a Bard multiclassing into Warrior doesn't ignore burden). **Decision needed.**
+- **Upgraded subclass card after multiclassing** upgrades your main subclass; the multiclass subclass stays at its foundation.
+- **Advancement slots**: a pick marks the highest tier's slot that has room (your tier first, then lower tiers). Upgrading your subclass crosses out that tier's multiclass option. Multiclassing crosses out every other multiclass option and that tier's subclass upgrade.
+- **Stress overflow**: "must mark Stress but can't → mark 1 HP instead". When only part of the Stress fits, the engine marks what fits plus 1 HP.
+- **"Half your Agility" (Untouchable)** rounds up (SRD: round up unless stated) and gives no bonus below 0. **Enchanted** (Mage Robes) and **Magnificent** likewise add nothing when the trait is 0 or negative, rather than applying a penalty.
+- **Domain card exchange** at level up: the new card must be of the old card's level or lower, and legal for you now.
+- **Unarmored**: Armor Score 0, Major = level, Severe = 2 × level, as the SRD states. Threshold bonuses from features still apply; "while wearing armor" cards (Fortified Armor, Armorer) don't.
+- **Rest moves on allies** (Tend to Wounds, Repair Armor on an ally) aren't modelled; the engine applies moves to the resting character.
+
 ## Not extracted (out of scope for now)
 
 - Transformations (SRD pp. 42–45: Demigod, Ghost, Reanimated, Shapeshifter, Vampire, Werewolf).
