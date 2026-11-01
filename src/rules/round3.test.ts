@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { guides } from '../data';
 import {
   avoidDeath, blazeOfGlory, controlsFor, createCharacter, derive, dropOut, dualityRoll, mustMakeDeathMove,
-  rest, riskItAll, scoreDuality, setHitPoints, splitClear, transform, transformProblem, applyOutcome, activeForm, damageAddOns, availableForms, evolvedRule, hybridRule,
+  rest, riskItAll, scoreDuality, setHitPoints, splitClear, transform, transformProblem, applyOutcome, activeForm, damageAddOns, availableForms, evolvedRule, hybridRule, attackProfile, setActive, inEffect,
   type CreateInput, type Rng,
 } from './index';
 
@@ -197,5 +197,50 @@ describe('every Druid form', () => {
       if (a.trait) expect(derive(t).traits[a.trait], f.name).toBe(derive(ch).traits[a.trait] + a.traitBonus);
       expect(() => damageAddOns(a)).not.toThrow();
     }
+  });
+});
+
+describe('card passives and lasting effects', () => {
+  const guardian = (cards: string[], over: Partial<CreateInput> = {}) => createCharacter({
+    id: 'g', name: 'Tor', classId: 'guardian', subclassId: 'vengeance', ancestry: { id: 'human' }, communityId: 'highborne',
+    traits: { ...guides.guardian.traits }, experiences: ['A', 'B'], primary: { id: guides.guardian.primary.id! },
+    armorId: 'chainmail-armor', potion: 'minor-health-potion', cards, ...over,
+  });
+
+  it('Bare Bones: unarmored Armor Score 3 + Strength and the tier thresholds', () => {
+    const ch = { ...guardian(['valor-bare-bones', 'blade-get-back-up']), armorId: undefined };
+    const d = derive(ch);
+    expect(d.armorScore).toBe(3 + d.traits.strength);
+    expect(d.thresholds).toEqual({ major: 9 + ch.level, severe: 19 + ch.level });
+  });
+
+  it('Body Basher adds Strength to Melee weapon damage; Cruel Precision the better of Finesse and Agility', () => {
+    const plain = guardian(['valor-bare-bones', 'blade-get-back-up']);
+    const base = attackProfile(plain, 'primary')!.damageBonus;
+    const basher = { ...plain, cards: { loadout: [...plain.cards.loadout, 'valor-body-basher'], vault: [] } };
+    const melee = attackProfile(basher, 'primary')!.range === 'melee';
+    expect(attackProfile(basher, 'primary')!.damageBonus).toBe(base + (melee ? derive(basher).traits.strength : 0));
+    const cruel = { ...plain, cards: { loadout: [...plain.cards.loadout, 'bone-cruel-precision'], vault: [] } };
+    const t = derive(cruel).traits;
+    expect(attackProfile(cruel, 'primary')!.damageBonus).toBe(base + Math.max(t.finesse, t.agility));
+  });
+
+  it('Full Surge raises every trait until a rest; Frenzy adds damage and Severe until ended', () => {
+    const ch = guardian(['valor-bare-bones', 'blade-get-back-up']);
+    const surge = setActive(ch, 'card:valor-full-surge', true);
+    for (const t of ['agility', 'strength', 'finesse', 'instinct', 'presence', 'knowledge'] as const) expect(derive(surge).traits[t]).toBe(derive(ch).traits[t] + 2);
+    expect(rest(surge, 'short', []).character.active).toEqual([]);
+    const frenzy = setActive(ch, 'card:blade-frenzy', true);
+    expect(derive(frenzy).thresholds.severe).toBe(derive(ch).thresholds.severe + 8);
+    expect(attackProfile(frenzy, 'primary')!.damageBonus).toBe(attackProfile(ch, 'primary')!.damageBonus + 10);
+    expect(rest(frenzy, 'long', []).character.active).toEqual(['card:blade-frenzy']);
+  });
+
+  it('lists Touched cards only with 4 of their domain in the loadout', () => {
+    const ch = guardian(['valor-bare-bones', 'blade-get-back-up']);
+    const with3 = { ...ch, cards: { loadout: ['arcana-arcana-touched', 'arcana-rune-ward', 'arcana-wall-walk'], vault: [] } };
+    expect(inEffect(with3).some((e) => e.key === 'card:arcana-arcana-touched')).toBe(false);
+    const with4 = { ...ch, cards: { loadout: [...with3.cards.loadout, 'arcana-unleash-chaos'], vault: [] } };
+    expect(inEffect(with4).some((e) => e.key === 'card:arcana-arcana-touched')).toBe(true);
   });
 });

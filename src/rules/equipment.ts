@@ -69,7 +69,7 @@ export function attackProfile(ch: Character, slot: 'primary' | 'secondary'): Att
     return {
       name: 'Brawler’s Strike', trait, traitValue: d.traits[trait], range: 'melee',
       attackModifiers: [], dice: [{ count: d.proficiency, sides: 8 }, { count: d.proficiency, sides: 6 }],
-      damageBonus: 0, damageType: 'phy', conditional: [], feature: null, extraDieDropLowest: false,
+      damageBonus: d.modifiers.filter((m) => m.stat === 'damage' && !m.condition).reduce((a, m) => a + m.value, 0), damageType: 'phy', conditional: [], feature: null, extraDieDropLowest: false,
     };
   }
   const ws = ch[slot];
@@ -92,6 +92,9 @@ export function attackProfile(ch: Character, slot: 'primary' | 'secondary'): Att
   }
   // Combat Training: + level to physical damage.
   if (d.ignoresBurden && w.damage.type !== 'mag') bonus += ch.level;
+  // Damage bonuses from cards and lasting effects (Body Basher: Melee weapons only).
+  const range = alt?.range ?? w.range;
+  for (const m of d.modifiers) if (m.stat === 'damage' && !m.condition && (!m.meleeOnly || range === 'melee')) bonus += m.value;
   const conditional = slot === 'primary' ? d.conditional.filter((m) => m.stat === 'primaryDamage') : [];
   return {
     name: w.name,

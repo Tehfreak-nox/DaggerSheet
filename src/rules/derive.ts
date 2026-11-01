@@ -6,6 +6,7 @@ import {
 } from '../data';
 import { equipmentModifiers, type Modifier, type Stat } from './effects';
 import { activeForm } from './forms';
+import { ACTIVE } from './active';
 import { TRAIT_IDS, type Character, type SubclassStage } from './model';
 
 export const STAGES: SubclassStage[] = ['foundation', 'specialization', 'mastery'];
@@ -177,7 +178,14 @@ const CARD_EFFECTS: Record<string, (ctx: Ctx) => Omit<Modifier, 'source'>[]> = {
   'bone-untouchable': ({ traits }) => [{ stat: 'evasion', value: Math.max(0, Math.ceil(traits.agility / 2)) }],
   'valor-rise-up': ({ proficiency }) => [{ stat: 'severe', value: proficiency }],
   'dread-eldritch-flesh': ({ ch }) => [{ stat: 'major', value: ch.stress }, { stat: 'severe', value: ch.stress }],
+  // "On a successful attack using a weapon with a Melee range, gain a bonus to your damage roll equal to your Strength."
+  'valor-body-basher': ({ traits }) => [{ stat: 'damage', value: traits.strength, meleeOnly: true }],
+  // "gain a bonus to your damage roll equal to either your Finesse or Agility": the higher one.
+  'bone-cruel-precision': ({ traits }) => [{ stat: 'damage', value: Math.max(traits.finesse, traits.agility) }],
 };
+
+/** Bare Bones: unarmored base Armor Score 3 + Strength and these base thresholds by tier. */
+const BARE_BONES: Record<1 | 2 | 3 | 4, [number, number]> = { 1: [9, 19], 2: [11, 24], 3: [13, 31], 4: [15, 38] };
 
 /** "<Domain>-Touched": active with 4+ cards of that domain in the loadout. */
 const TOUCHED: Partial<Record<DomainId, Omit<Modifier, 'source'>[]>> = {
@@ -254,6 +262,16 @@ export function derive(ch: Character): Derived {
     mods.push({ stat: 'armorScore', value: traitsNow.presence, source: armor.name });
   }
 
+  // Lasting effects that are switched on.
+  for (const key of ch.active ?? []) {
+    const def = ACTIVE[key];
+    if (!def) continue;
+    const t = sumTraits(mods);
+    const sp = spellcastTraits(ch);
+    const spellNow = sp.length ? Math.max(...sp.map((x) => t[x])) : null;
+    mods.push(...def.effects({ traits: t, spellcast: spellNow }).map((m) => ({ ...m, source: key.startsWith('card:') ? cardById.get(key.slice(5))?.name ?? key : `${cls.hopeFeature.name}` })));
+  }
+
   // Brawler: Brawler’s Strike while no other active weapons, +1 Evasion.
   const brawlersStrike = cls.id === 'brawler' && weapons.length === 0;
   if (brawlersStrike) mods.push({ stat: 'evasion', value: 1, source: 'I Am the Weapon' });
@@ -272,9 +290,10 @@ export function derive(ch: Character): Derived {
   const traits = sumTraits(mods);
 
   const evasion = cls.startingEvasion + count(ch, 'evasion') + sum('evasion');
-  const armorScore = Math.max(0, Math.min(rules.caps.armorScore, (armor?.score ?? 0) + sum('armorScore')));
-  const baseMajor = armor ? armor.thresholds.major : 0;
-  const baseSevere = armor ? armor.thresholds.severe : ch.level; // unarmored: Severe = 2 × level
+  const bareBones = !armor && ch.cards.loadout.includes('valor-bare-bones');
+  const armorScore = Math.max(0, Math.min(rules.caps.armorScore, (armor?.score ?? (bareBones ? 3 + traits.strength : 0)) + sum('armorScore')));
+  const baseMajor = armor ? armor.thresholds.major : bareBones ? BARE_BONES[tier][0] : 0;
+  const baseSevere = armor ? armor.thresholds.severe : bareBones ? BARE_BONES[tier][1] : ch.level; // unarmored: Severe = 2 × level
   const thresholds = {
     major: baseMajor + ch.level + sum('major'),
     severe: baseSevere + ch.level + sum('severe'),

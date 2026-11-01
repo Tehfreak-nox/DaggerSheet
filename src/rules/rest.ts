@@ -1,4 +1,5 @@
 // Downtime: short and long rests (SRD "Downtime").
+import { endActiveOnRest } from './active';
 import { rules } from '../data';
 import { derive, hasAncestryFeature } from './derive';
 import { defaultRng, roll, type Rng } from './dice';
@@ -91,5 +92,6 @@ export function rest(
   c.shortRestStreak = kind === 'short' ? c.shortRestStreak + 1 : 0;
   // Avoid Death: "They return to consciousness when … the party finishes a long rest."
   if (kind === 'long' && c.death === 'unconscious') c.death = undefined;
+  if (c.active?.length) c = endActiveOnRest(c, kind);
   return { character: c, log };
 }

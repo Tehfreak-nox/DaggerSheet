@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
-import { addDamageDice, closeRoll, rerollDamage, rerollHopeDie, usePlay, type RollView } from '../app/play';
+import {
+  addDamageDice, addDieToRoll, addToDamage, applyFromResult, closeRoll, lastFearDie, makeItHope, maxOneDamageDie, pay,
+  rerollDamage, rerollDuality, rerollFearDie, rerollHopeDie, swapDuality, usePlay, type RollView,
+} from '../app/play';
 import { useStore } from '../app/store';
-import { activeForm, derive, hasAncestryFeature, type Character } from '../rules';
+import { derive, inEffect, strip, type Character, type InEffect } from '../rules';
 import { signed } from './kit';
 
 function useTumble(active: boolean, sides: number) {
@@ -35,63 +38,128 @@ function Die({ value, sides, rolling, fear, small, dropped, picked, onPick }: {
 
 const key = (g: number, i: number) => `${g}:${i}`;
 
-/** Reroll and follow-up buttons the character's features offer on this result. */
+/** Uses tracked by a feature's own text ("Once per rest"): key and how many are left. */
+function usesLeft(ch: Character, e: InEffect): { useKey?: string; left: number } {
+  const m = /\b(once|twice|three times) per (long rest|short rest|rest|session|scene)\b/i.exec(strip(e.text));
+  if (!m) return { left: 99 };
+  const max = /once/i.test(m[1]) ? 1 : /twice/i.test(m[1]) ? 2 : 3;
+  const scope = /long rest/i.test(m[2]) ? 'longRest' : /session/i.test(m[2]) ? 'session' : /scene/i.test(m[2]) ? 'scene' : 'rest';
+  const useKey = `${scope}:${e.key}`;
+  return { useKey, left: max - (ch.uses[useKey] ?? 0) };
+}
+
+/** Reroll and follow-up buttons the character's features and cards offer on this result. */
 function Followups({ r, ch, picked, setPicked, picking, setPicking }: {
   r: RollView; ch?: Character; picked: Set<string>; setPicked: (s: Set<string>) => void; picking: boolean; setPicking: (b: boolean) => void;
 }) {
-  if (!ch) return null;
+  if (!ch || r.kind === 'dice') return null;
   const out: React.ReactNode[] = [];
+  const used = (l: string) => r.rerolled.includes(l);
+  const btn = (key: string, label: string, onClick: () => void, opts: { disabled?: boolean; solid?: boolean } = {}) =>
+    out.push(<button key={key} className={`s-btn s-press ${opts.solid ? 'solid' : ''}`} disabled={opts.disabled} onClick={onClick}>{label}</button>);
+  const effects = inEffect(ch).map((e) => ({ ...e, t: strip(e.text) }));
+  const n = (w: string) => ({ a: 1, an: 1, one: 1, two: 2, three: 3 } as Record<string, number>)[w.toLowerCase()] ?? Number(w);
+
   if (r.kind === 'action') {
-    const used = (l: string) => r.rerolled.includes(l);
-    const spare = ch.hope;
-    if (hasAncestryFeature(ch, 'internal-compass') && r.result.hope === 1 && !used('Internal Compass')) {
-      out.push(<button key="ic" className="s-btn s-press" onClick={() => rerollHopeDie('Internal Compass')}>Reroll your 1 · Internal Compass</button>);
+    const x = r.result;
+    const fear = x.outcome === 'fear' && !r.reaction;
+    const crit = x.outcome === 'critical';
+    for (const e of effects) {
+      const u = usesLeft(ch, e);
+      const spent = u.left <= 0 || used(e.name);
+      let m: RegExpExecArray | null;
+      if (/When you roll a 1 on your Hope Die, you can reroll it/i.test(e.t) && x.hope === 1 && !spent) {
+        btn(e.key, `Reroll your 1 · ${e.name}`, () => rerollHopeDie(e.name));
+      }
+      if ((m = /When you make an? (\w+) Roll, you can spend (\w+) Hope to reroll your Hope Die/i.exec(e.t)) && r.trait === m[1].toLowerCase() && !spent) {
+        const cost = n(m[2]);
+        btn(e.key, `Reroll Hope Die · ${cost} Hope (${e.name})`, () => rerollHopeDie(e.name, cost), { disabled: ch.hope < cost });
+      }
+      if (fear && !spent && !/\ban ally\b[^.]*rolls with Fear/i.test(e.t)
+        && (m = /roll with Fear[^.]*?, you can (?:mark (\w+) Stress to )?(?:change it into a roll with Hope|roll with Hope instead)/i.exec(e.t))) {
+        const cost = m[1] ? { stress: n(m[1]) } : undefined;
+        btn(e.key, `Make it a roll with Hope${cost ? ` · ${cost.stress} Stress` : ''} (${e.name})`, () => makeItHope(e.name, cost, u.useKey));
+      }
+      if (/spend 3 Hope to reroll the Duality Dice/i.test(e.t) && !spent) {
+        btn(e.key, `Reroll the Duality Dice · 3 Hope (${e.name})`, () => rerollDuality(e.name, { hope: 3 }, u.useKey), { disabled: ch.hope < 3 });
+      }
+      if (/spend a Hope to reroll the Hope or Fear Die/i.test(e.t) && !spent) {
+        btn(`${e.key}-h`, `Reroll Hope Die · 1 Hope (${e.name})`, () => rerollHopeDie(e.name, 1), { disabled: ch.hope < 1 });
+        btn(`${e.key}-f`, `Reroll Fear Die · 1 Hope (${e.name})`, () => rerollFearDie(e.name, { hope: 1 }), { disabled: ch.hope < 1 });
+      }
+      if ((m = /After you make an action roll[^.]*, you can spend a Hope to add a d(\d+) to the roll/i.exec(e.t)) && !spent) {
+        const sides = Number(m[1]);
+        btn(e.key, `Add a d${sides} · 1 Hope (${e.name})`, () => addDieToRoll(e.name, sides, { hope: 1 }), { disabled: ch.hope < 1 });
+      }
+      if (/When you fail a roll, you can spend 3 Hope to reroll with advantage/i.test(e.t) && !spent) {
+        btn(e.key, `Failed? Reroll with advantage · 3 Hope (${e.name})`, () => rerollDuality(e.name, { hope: 3 }, undefined, true), { disabled: ch.hope < 3 });
+      }
+      if (/fail a roll that utilized one of your Experiences, you can mark a Stress to reroll/i.test(e.t) && r.experience && !spent) {
+        btn(e.key, `Failed? Reroll · 1 Stress (${e.name})`, () => rerollDuality(e.name, { stress: 1 }));
+      }
+      if ((/you can switch the results of your Hope and Fear Dice/i.test(e.t) || (r.attack && /you can swap the results of your Hope and Fear Dice/i.test(e.t))) && !spent && x.hope !== x.fear) {
+        btn(e.key, `Swap Hope and Fear (${e.name})`, () => swapDuality(e.name, u.useKey));
+      }
+      if (r.attack && r.damageFn && /When you fail an attack, you can mark a Stress to deal weapon damage using half your Proficiency/i.test(e.t) && !crit && !spent) {
+        btn(e.key, `Missed? ${e.name} · 1 Stress, half damage`, () => { if (pay(ch.id, { stress: 1 })) { closeRoll(); r.damageFn!({ halfProf: true }); } });
+      }
+      if (r.attack && crit && /When you critically succeed on a weapon attack, gain an additional Hope or clear an additional Stress/i.test(e.t) && !used(e.name)) {
+        btn(`${e.key}-h`, `${e.name} · +1 Hope`, () => applyFromResult(e.name, (c) => ({ ...c, hope: Math.min(derive(c).hopeSlots, c.hope + 1) }), undefined, `${e.name}: +1 Hope.`));
+        btn(`${e.key}-s`, `${e.name} · clear a Stress`, () => applyFromResult(e.name, (c) => ({ ...c, stress: Math.max(0, c.stress - 1) }), undefined, `${e.name}: cleared a Stress.`));
+      }
+      if (r.attack && crit && /When you critically succeed on a Melee weapon attack, you gain an additional Hope, clear an additional Stress/i.test(e.t) && !used(e.name)) {
+        btn(e.key, `${e.name} · +1 Hope, clear a Stress`, () => applyFromResult(e.name, (c) => ({ ...c, hope: Math.min(derive(c).hopeSlots, c.hope + 1), stress: Math.max(0, c.stress - 1) }), undefined, `${e.name}: +1 Hope, cleared a Stress (and +1 Proficiency on this damage).`));
+      }
+      if (r.attack && crit && /When you critically succeed on an attack, you can spend up to 3 Hope/i.test(e.t)) {
+        const opt = (k: string, label: string, fn: (c: Character) => Character) => {
+          const l = `${e.name}: ${label}`;
+          if (!used(l)) btn(`${e.key}-${k}`, `${label} · 1 Hope`, () => applyFromResult(l, fn, { hope: 1 }, `${l}.`), { disabled: ch.hope < 1 });
+        };
+        opt('hp', 'Clear a Hit Point', (c) => ({ ...c, hp: Math.max(0, c.hp - 1) }));
+        opt('ar', 'Clear an Armor Slot', (c) => ({ ...c, armorMarked: Math.max(0, c.armorMarked - 1) }));
+        opt('tg', 'Target marks +1 HP', (c) => c);
+      }
     }
-    if (hasAncestryFeature(ch, 'nimble-fingers') && r.trait === 'finesse' && !used('Nimble Fingers')) {
-      out.push(<button key="nf" className="s-btn s-press" disabled={spare < 2} onClick={() => rerollHopeDie('Nimble Fingers', 2)}>Reroll Hope Die · 2 Hope (Nimble Fingers)</button>);
-    }
-    if (hasAncestryFeature(ch, 'feline-instincts') && r.trait === 'agility' && !used('Feline Instincts')) {
-      out.push(<button key="fi" className="s-btn s-press" disabled={spare < 2} onClick={() => rerollHopeDie('Feline Instincts', 2)}>Reroll Hope Die · 2 Hope (Feline Instincts)</button>);
-    }
-    if (r.critDamage && r.result.outcome === 'critical') {
-      out.push(<button key="cd" className="s-btn solid s-press" onClick={() => { closeRoll(); r.critDamage!(); }}>Roll critical damage</button>);
-    }
+    if (r.damageFn && crit) btn('cd', 'Roll critical damage', () => { closeRoll(); r.damageFn!({ critical: true }); }, { solid: true });
   } else if (r.kind === 'damage') {
-    const used = (l: string) => r.rerolled.includes(l);
-    const low = r.result.rolls.some((g) => g.values.some((v) => v <= 2));
-    if (ch.cards.loadout.includes('blade-not-good-enough') && low && !used('Not Good Enough')) {
-      out.push(<button key="ng" className="s-btn s-press" onClick={() => rerollDamage('Not Good Enough', (v) => v <= 2)}>Reroll 1s and 2s · Not Good Enough</button>);
-    }
-    // Beastform features that act on the damage dice.
-    const form = r.attack ? activeForm(ch) : undefined;
-    for (const { feature } of form?.features ?? []) {
-      const t = feature.text.replace(/\*\*/g, '');
-      const ones = r.result.rolls.reduce((n, g) => n + g.values.filter((v) => v === 1).length, 0);
-      const extra = /When you roll a 1 on a damage die, you can roll a d(\d+) and add the result/.exec(t);
-      if (extra && ones && !used(feature.name)) {
-        out.push(<button key={feature.id} className="s-btn s-press" onClick={() => addDamageDice(feature.name, ones, Number(extra[1]))}>{feature.name} · +d{extra[1]} for {ones === 1 ? 'your 1' : `each 1 (${ones})`}</button>);
+    const ones = r.result.rolls.reduce((k, g) => k + g.values.filter((v) => v === 1).length, 0);
+    for (const e of effects) {
+      const spent = usesLeft(ch, e).left <= 0 || used(e.name);
+      let m: RegExpExecArray | null;
+      if (/When you roll your damage dice, you can reroll any 1s or 2s/i.test(e.t) && !spent && r.result.rolls.some((g) => g.values.some((v) => v <= 2))) {
+        btn(e.key, `Reroll 1s and 2s · ${e.name}`, () => rerollDamage(e.name, (v) => v <= 2));
       }
-      if (/reroll all damage dice that rolled a result lower than your Proficiency/.test(t) && !used(feature.name)) {
+      if (!r.attack) continue;
+      if ((m = /When you roll a 1 on a damage die, you can roll a d(\d+) and add the result/i.exec(e.t)) && ones && !spent) {
+        const sides = Number(m[1]);
+        btn(e.key, `${e.name} · +d${sides} for ${ones === 1 ? 'your 1' : `each 1 (${ones})`}`, () => addDamageDice(e.name, ones, sides));
+      }
+      if (/reroll all damage dice that rolled a result lower than your Proficiency/i.test(e.t) && !spent) {
         const prof = derive(ch).proficiency;
-        if (r.result.rolls.some((g) => g.values.some((v) => v < prof))) {
-          out.push(<button key={feature.id} className="s-btn s-press" onClick={() => rerollDamage(feature.name, (v) => v < prof)}>{feature.name} · reroll dice under {prof}</button>);
-        }
+        if (r.result.rolls.some((g) => g.values.some((v) => v < prof))) btn(e.key, `${e.name} · reroll dice under ${prof}`, () => rerollDamage(e.name, (v) => v < prof));
       }
-    }
-    if (ch.classId === 'sorcerer' && r.magic && r.attack) {
-      if (!picking) {
-        out.push(<button key="vm" className="s-btn s-press" disabled={ch.hope < 3} onClick={() => setPicking(true)}>Volatile Magic · reroll dice for 3 Hope</button>);
-      } else {
-        out.push(
-          <span key="vm-hint" className="s-muted" style={{ fontSize: 14, textAlign: 'center' }}>Tap the dice to reroll.</span>,
-          <span key="vm" style={{ display: 'flex', gap: 8 }}>
-            <button className="s-btn s-press" style={{ flex: 1 }} onClick={() => { setPicking(false); setPicked(new Set()); }}>Cancel</button>
-            <button className="s-btn solid s-press" style={{ flex: 2 }} disabled={!picked.size || ch.hope < 3}
-              onClick={() => { const p = new Set(picked); setPicking(false); setPicked(new Set()); rerollDamage('Volatile Magic', (_, g, i) => p.has(key(g, i)), 3); }}>
-              Reroll {picked.size || ''} · 3 Hope
-            </button>
-          </span>,
-        );
+      if (/mark a Stress to use the maximum result of one of your damage dice/i.test(e.t) && !spent) {
+        btn(e.key, `${e.name} · max one die (1 Stress)`, () => maxOneDamageDie(e.name, { stress: 1 }));
+      }
+      const fearDie = lastFearDie(ch.id);
+      if (/mark a Stress to add the result of your Fear Die to your damage roll/i.test(e.t) && fearDie && !spent) {
+        btn(e.key, `${e.name} · +${fearDie} (Fear Die, 1 Stress)`, () => addToDamage(`${e.name} (Fear Die)`, fearDie, { stress: 1 }));
+      }
+      if (/Spend 3 Hope to reroll any number of your damage dice on an attack that deals magic damage/i.test(e.t) && r.magic) {
+        if (!picking) {
+          btn(e.key, `${e.name} · reroll dice for 3 Hope`, () => setPicking(true), { disabled: ch.hope < 3 });
+        } else {
+          out.push(
+            <span key="vm-hint" className="s-muted" style={{ fontSize: 14, textAlign: 'center' }}>Tap the dice to reroll.</span>,
+            <span key="vm" style={{ display: 'flex', gap: 8 }}>
+              <button className="s-btn s-press" style={{ flex: 1 }} onClick={() => { setPicking(false); setPicked(new Set()); }}>Cancel</button>
+              <button className="s-btn solid s-press" style={{ flex: 2 }} disabled={!picked.size || ch.hope < 3}
+                onClick={() => { const p = new Set(picked); setPicking(false); setPicked(new Set()); rerollDamage(e.name, (_, g, i) => p.has(key(g, i)), 3); }}>
+                Reroll {picked.size || ''} · 3 Hope
+              </button>
+            </span>,
+          );
+        }
       }
     }
   }
@@ -191,7 +259,7 @@ export function RollOverlay() {
             {outcome && <div className={`s-outcome ${outcome.light ? 'light' : ''}`}>{outcome.text}</div>}
             {r.effects.map((e, i) => <span key={i} style={{ fontSize: 14, textAlign: 'center' }}>{e}</span>)}
             <Followups r={r} ch={ch} picked={picked} setPicked={setPicked} picking={picking} setPicking={setPicking} />
-            <button className={`s-btn s-press ${r.kind === 'action' && r.critDamage && r.result.outcome === 'critical' ? '' : 'solid'}`} onClick={closeRoll} autoFocus>Done</button>
+            <button className={`s-btn s-press ${r.kind === 'action' && r.damageFn && r.result.outcome === 'critical' ? '' : 'solid'}`} onClick={closeRoll} autoFocus>Done</button>
           </>
         )}
       </div>

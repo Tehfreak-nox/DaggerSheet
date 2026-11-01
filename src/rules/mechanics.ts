@@ -1,24 +1,63 @@
 // Tap controls derived from a feature's or card's rules text. The text stays
-// the source of truth; these are shortcuts for what it tells you to do
-// (spend Hope, mark Stress, roll, track uses and tokens).
+// the source of truth; these are shortcuts for what it tells you to do.
+//
+// The rules applied to every text:
+// 1. A cost you pay (Spend Hope / Mark Stress) and the roll, dice or damage it
+//    pays for become one button that pays and rolls. That's a cost and a roll in
+//    the same sentence ("Mark 2 Stress to make a Spellcast Roll"), or a cost
+//    followed in the next sentence by the damage it causes or "When you do, roll".
+// 2. A roll is a button only when the text tells you to make it, not when it's a
+//    condition ("before you make a Spellcast Roll"). Reaction rolls using your
+//    Spellcast trait are buttons too.
+// 3. Anything that changes your next roll or damage is armed and spent by it:
+//    "+2 to the roll", advantage, "add a d6 to your damage roll", a d20 Hope Die.
+// 4. "Any number of" costs and tokens get an amount picker; uses get boxes.
+// Only costs you pay count: "force them to mark a Stress" is not your Stress.
 import type { TraitId } from '../data';
 
 export type UseScope = 'rest' | 'longRest' | 'session' | 'scene';
 
+/** How many dice: a number, or one of your stats. */
+export type Count = number | 'proficiency' | 'spellcast' | TraitId;
+
+export type Cost = { hope: number } | { stress: number };
+
+export type RollControl = { kind: 'roll'; trait: TraitId | 'spellcast'; difficulty?: number; reaction?: boolean; label: string };
+export type DiceControl = { kind: 'dice'; count: Count; sides: number; bonus: number; label: string; upgrade?: { level: number; sides: number } };
+export type DamageControl = { kind: 'damage'; count: Count; sides: number; bonus: number; type: 'magic' | 'physical' | null; label: string };
+/** "make an attack (with your primary weapon)": rolls your weapon attack. */
+export type AttackControl = { kind: 'attack'; primary?: boolean; label: string };
+
+/** What an armed effect does to your next roll or damage roll. */
+export type ArmEffect =
+  | { roll: number }
+  | { rollStat: TraitId | 'proficiency' }
+  | { advantage: true; damageDice?: { count: number; sides: number } }
+  | { damageDice: { count: number | 'tier'; sides: number } }
+  | { damageBonus: number }
+  | { damageStat: TraitId; times: number }
+  | { proficiency: number }
+  | { doubleDamage: true };
+
 export type Control =
-  | { kind: 'hope'; n: number | 'any'; label: string }
-  | { kind: 'stress'; n: number; label: string }
-  | { kind: 'roll'; trait: TraitId | 'spellcast'; difficulty?: number; label: string }
-  | { kind: 'damage'; count: number | 'proficiency'; sides: number; bonus: number; type: 'magic' | 'physical' | null; label: string }
-  | { kind: 'dice'; count: number; sides: number; bonus: number; label: string }
+  | { kind: 'hope'; n: number; label: string; once?: UseScope }
+  | { kind: 'stress'; n: number; label: string; once?: UseScope }
+  | RollControl
+  | DiceControl
+  | DamageControl
+  | AttackControl
+  /** Rule 1: pay and roll in one tap. */
+  | { kind: 'pay'; cost: Cost; then: RollControl | DiceControl | DamageControl | AttackControl; label: string; once?: UseScope }
+  /** Rule 3: armed for the next roll (paid now, refunded if disarmed). */
+  | { kind: 'arm'; cost?: Cost; effect: ArmEffect; max?: number; persist?: boolean; label: string; once?: UseScope }
+  /** Rule 4: choose an amount; pay that much (Hope, Stress or tokens) and roll that many dice. */
+  | { kind: 'scaled'; unit: 'hope' | 'stress' | 'tokens' | 'count'; min: number; max?: number; per?: { sides: number; bonus: number; damage: boolean; type: 'magic' | 'physical' | null; toDamageRoll?: boolean }; flat?: number; toRoll?: boolean; label: string; once?: UseScope }
+  /** Choose one bonus for the roll (Teleport). */
+  | { kind: 'choice'; options: { label: string; value: number }[]; label: string }
   | { kind: 'uses'; scope: UseScope; max: number; label: string }
   | { kind: 'tokens'; source: TokenSource; label: string }
   /** "roll a d20 as your Hope Die": armed for the next action roll. */
-  | { kind: 'hopeDie'; sides: number; label: string }
-  /** A Hope cost and the dice it pays for, in the same sentence: one button. */
-  | { kind: 'hopeRoll'; n: number; roll: Extract<Control, { kind: 'dice' | 'damage' }>; label: string }
-  /** "spend a Hope to gain a +2 bonus to the roll": armed for the next roll. */
-  | { kind: 'hopeBonus'; n: number; bonus: number; label: string };
+  | { kind: 'hopeDie'; sides: number; label: string };
 
 export type TokenSource =
   | { fixed: number }
@@ -31,12 +70,14 @@ const TRAITS: Record<string, TraitId> = {
   agility: 'agility', strength: 'strength', finesse: 'finesse',
   instinct: 'instinct', presence: 'presence', knowledge: 'knowledge',
 };
+const TRAIT_RE = 'Agility|Strength|Finesse|Instinct|Presence|Knowledge';
 
-const WORD_NUM: Record<string, number> = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5 };
+const WORD_NUM: Record<string, number> = { a: 1, an: 1, one: 1, another: 1, 'an additional': 1, two: 2, three: 3, four: 4, five: 5 };
 
-const strip = (s: string) => s.replace(/\*\*|__/g, '').replace(/(^|[^\w])_|_(?=[^\w]|$)/g, '$1');
+export const strip = (s: string) => s.replace(/\*\*|__/g, '').replace(/(^|[^\w])_|_(?=[^\w]|$)/g, '$1');
 
 const n = (w: string) => WORD_NUM[w.toLowerCase()] ?? Number(w);
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
 const SCOPES: [RegExp, UseScope][] = [
   [/long rest/i, 'longRest'],
@@ -44,127 +85,369 @@ const SCOPES: [RegExp, UseScope][] = [
   [/session/i, 'session'],
   [/scene/i, 'scene'],
 ];
-
-function scopeOf(s: string): UseScope | null {
+function scopeOf(s: string): UseScope {
   for (const [re, sc] of SCOPES) if (re.test(s)) return sc;
-  return null;
+  return 'rest';
+}
+
+function countOf(word: string | undefined, using: string | undefined): Count {
+  if (word) return Number(word);
+  if (!using) return 1;
+  if (/Proficiency/i.test(using)) return 'proficiency';
+  if (/Spellcast/i.test(using)) return 'spellcast';
+  return TRAITS[using.toLowerCase()] ?? 1;
+}
+
+export function diceText(count: Count, sides: number, bonus: number): string {
+  const c = typeof count === 'number' ? String(count) : '';
+  return `${c}d${sides}${bonus ? `+${bonus}` : ''}`;
+}
+
+export function costLabel(c: Cost): string {
+  return 'hope' in c ? `${c.hope} Hope` : `${c.stress} Stress`;
+}
+
+interface Sentence { text: string; at: number; para: number }
+
+function sentencesOf(text: string): Sentence[] {
+  const out: Sentence[] = [];
+  let para = 0;
+  const re = /[^.!?\n]+(?:[.!?]+|$)|\n/gm;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    if (m[0] === '\n') { if (text[m.index + 1] === '\n') para++; continue; }
+    if (m[0].trim()) out.push({ text: m[0], at: m.index, para });
+  }
+  return out;
+}
+
+/** The text sits inside "( … )" at this point. */
+function inParens(text: string, at: number): boolean {
+  const before = text.slice(0, at);
+  return before.lastIndexOf('(') > before.lastIndexOf(')');
+}
+
+/** Words just before a match that make it a condition, not an instruction. */
+const CONDITION_LEAD = /\b(before|when|whenever|after|if|would|each time|the next time)\b(\s+(you|they|an? \w+|the \w+))?(\s+(would|can|could))?(\s+\w+ly)?\s*$/i;
+/** Still inside an opening condition: "When you would mark a Stress, …", "After you cast a spell or make an attack …". */
+function inCondition(text: string, at: number): boolean {
+  const start = Math.max(text.lastIndexOf('.', at - 1), text.lastIndexOf('\n', at - 1), text.lastIndexOf('◦', at - 1)) + 1;
+  const prefix = text.slice(start, at);
+  return /^\s*(?:Additionally,\s*|Once per [\w ]+?,?\s*)?(when|whenever|after|before|if|each time)\b/i.test(prefix) && !prefix.includes(',');
+}
+
+/** Someone else marks it: "force them to mark", "they must mark", "the target marks". */
+const OTHER_SUBJECT = /\b(force|forces|forced|forcing|must|they|them|target|targets|adversary|adversaries|ally|allies|companion|creature|creatures|attacker|it|each|the dome)\b[^.,;]{0,40}?\s*$/i;
+
+/**
+ * Card text in sections: paragraphs that start with a bold name ("**Power Push:**")
+ * are separate spells or options with their own controls.
+ */
+export function sectionsOf(raw: string): { title?: string; text: string }[] {
+  const paras = raw.split(/\n\n/);
+  const named = paras.filter((p) => /^\*\*[^*]+:\*\*/.test(p));
+  if (named.length < 2) return [{ text: raw }];
+  const out: { title?: string; text: string }[] = [];
+  for (const p of paras) {
+    const m = /^\*\*([^*]+):\*\*\s*/.exec(p);
+    if (m) out.push({ title: m[1], text: p.slice(m[0].length) });
+    else if (out.length) out[out.length - 1].text += `\n\n${p}`;
+    else out.push({ text: p });
+  }
+  return out;
 }
 
 export function controlsFor(rawText: string): Control[] {
   const text = strip(rawText);
-  const out: Control[] = [];
+  const found: { at: number; c: Control }[] = [];
   const seen = new Set<string>();
-  const add = (c: Control) => {
+  const add = (at: number, c: Control) => {
     const key = JSON.stringify(c);
-    if (!seen.has(key)) { seen.add(key); out.push(c); }
+    if (seen.has(key)) return;
+    seen.add(key);
+    found.push({ at, c });
   };
-  /** Text already turned into a combined control, skipped by the single-control passes. */
+  /** Text spans already turned into a control; later passes skip them. */
   const used: [number, number][] = [];
-  const isUsed = (at: number) => used.some(([a, b]) => at >= a && at < b);
+  const isUsed = (a: number, b = a + 1) => used.some(([x, y]) => a < y && b > x);
+  const take = (a: number, b: number) => used.push([a, b]);
+  const sentences = sentencesOf(text);
 
-  // Hope that buys a bonus to the roll: arm it like an Experience.
-  for (const m of text.matchAll(/\bspend (a|an|one|two|\d+) Hope to gain a \+(\d+) bonus to (?:the|that|your) (?:roll|[A-Z]\w+ Roll)/gi)) {
-    const cost = n(m[1]);
-    add({ kind: 'hopeBonus', n: cost, bonus: Number(m[2]), label: `Spend ${cost} Hope · +${m[2]} to the roll` });
-    used.push([m.index!, m.index! + m[0].length]);
-  }
-
-  // A Hope cost and dice in the same sentence ("spend a Hope to … 1d8"): one button that pays and rolls.
-  for (const sm of text.matchAll(/[^.!?\n]+[.!?]?/g)) {
-    const sentence = sm[0];
-    const h = /\bspend (a|an|one|two|three|\d+) Hope\b/i.exec(sentence);
-    const dm = /\b(\d*)d(\d+)(?:\s*\+\s*(\d+))?(?:\s+(magic|physical)\s+damage(?: using your (Proficiency))?|\s+(?:magic|physical)?\s*damage)?/i.exec(sentence);
-    if (!h || !dm || isUsed(sm.index! + h.index)) continue;
-    const dmg = /damage/i.test(dm[0]) || /\bdeal|damage/i.test(sentence.slice(dm.index));
-    const count = dm[5] || (!dm[1] && /Proficiency/.test(dm[0])) ? 'proficiency' : dm[1] ? Number(dm[1]) : 1;
-    const bonus = dm[3] ? Number(dm[3]) : 0;
-    const roll: Extract<Control, { kind: 'dice' | 'damage' }> = dmg && /damage/i.test(sentence)
-      ? { kind: 'damage', count, sides: Number(dm[2]), bonus, type: (dm[4]?.toLowerCase() as 'magic' | 'physical') ?? null, label: `${dm[0].trim()}` }
-      : { kind: 'dice', count: count === 'proficiency' ? 1 : count, sides: Number(dm[2]), bonus, label: `Roll ${dm[0].trim()}` };
-    const cost = n(h[1]);
-    add({ kind: 'hopeRoll', n: cost, roll, label: `Use · ${cost} Hope · ${dm[1] || ''}d${dm[2]}${bonus ? `+${bonus}` : ''}` });
-    used.push([sm.index! + h.index, sm.index! + h.index + h[0].length], [sm.index! + dm.index, sm.index! + dm.index + dm[0].length]);
-  }
-
-  // Uses: "Once per long rest", "twice per session", "three times per rest".
+  // Uses: "Once per long rest", "twice per session" (not examples in parentheses).
   for (const m of text.matchAll(/\b(once|twice|three times) per (long rest|short rest|rest|session|scene)\b/gi)) {
+    if (inParens(text, m.index!)) continue;
     const max = m[1].toLowerCase() === 'once' ? 1 : m[1].toLowerCase() === 'twice' ? 2 : 3;
-    const scope = scopeOf(m[2])!;
-    add({ kind: 'uses', scope, max, label: `${cap(m[1])} per ${m[2].toLowerCase()}` });
-  }
-
-  // Costs you pay: "Spend 3 Hope", "spend a Hope", "spend any number of Hope".
-  for (const m of text.matchAll(/\bspend (a|an|one|two|three|\d+|any number of) Hope\b/gi)) {
-    if (isUsed(m.index!)) continue;
-    const amount = /any/i.test(m[1]) ? 'any' : n(m[1]);
-    add({ kind: 'hope', n: amount, label: amount === 'any' ? 'Spend Hope' : `Spend ${amount} Hope` });
-  }
-  // "mark a Stress" / "Mark 2 Stress" when you're the one marking it.
-  for (const m of text.matchAll(/(^|[.:;!?]\s+|you can |, |and |\bto |or )mark (a|one|two|three|\d+) Stress\b/gi)) {
-    const before = text.slice(Math.max(0, (m.index ?? 0) - 20), (m.index ?? 0) + m[1].length);
-    if (/(must|they|target|adversary|ally|companion)\s*$/i.test(before)) continue;
-    const amount = n(m[2]);
-    add({ kind: 'stress', n: amount, label: `Mark ${amount} Stress` });
-  }
-
-  // Rolls: "make a Spellcast Roll (15)", "make an Instinct Roll".
-  for (const m of text.matchAll(/\bmake an? (Spellcast|Agility|Strength|Finesse|Instinct|Presence|Knowledge) Roll(?: \((\d+)\))?/gi)) {
-    // "before you make a Spellcast Roll", "when you make a Presence Roll": a condition, not an instruction.
-    const lead = text.slice(Math.max(0, m.index! - 24), m.index!);
-    if (/\b(before|when|whenever|after|if|would|each time)\b(\s+you)?(\s+would)?\s*$/i.test(lead)) continue;
-    const trait = m[1].toLowerCase() === 'spellcast' ? 'spellcast' : TRAITS[m[1].toLowerCase()];
-    const difficulty = m[2] ? Number(m[2]) : undefined;
-    add({ kind: 'roll', trait, difficulty, label: `${cap(m[1])} Roll${difficulty ? ` (${difficulty})` : ''}` });
-  }
-
-  // Damage: "d8+2 magic damage using your Proficiency", "1d20+3 magic damage".
-  const damageSpans: [number, number][] = [];
-  for (const m of text.matchAll(/\b(\d*)d(\d+)(?:\s*\+\s*(\d+))?\s+(magic|physical)?\s*damage(?: using your (Proficiency))?/gi)) {
-    if (isUsed(m.index!)) continue;
-    const count = m[5] || !m[1] ? 'proficiency' : Number(m[1]);
-    const bonus = m[3] ? Number(m[3]) : 0;
-    const label = `${count === 'proficiency' ? '' : count}d${m[2]}${bonus ? `+${bonus}` : ''} ${m[4] ? m[4].toLowerCase() + ' ' : ''}damage`;
-    add({ kind: 'damage', count, sides: Number(m[2]), bonus, type: (m[4]?.toLowerCase() as 'magic' | 'physical') ?? null, label });
-    damageSpans.push([m.index!, m.index! + m[0].length]);
+    add(-2, { kind: 'uses', scope: scopeOf(m[2]), max, label: `${cap(m[1])} per ${m[2].toLowerCase()}` });
   }
 
   // Tokens.
-  const tok = /\bplace (?:a number of )?(?:(\d+d\d+(?:\+\d+)?|\d+) )?tokens(?: equal to (?:your |the )?(Spellcast trait|Agility|Strength|Finesse|Instinct|Presence|Knowledge|tier|Proficiency|level))?(?:[^.]*\(minimum (\d+)\))?/i.exec(text);
-  if (tok) {
+  const tok = /\bplace (?:a number of |a )?(?:(\d+d\d+(?:\+\d+)?|\d+) )?tokens?\b(?:[^.]*?(?:equal to (?:your |the )?(Spellcast trait|Agility|Strength|Finesse|Instinct|Presence|Knowledge|tier|Proficiency|level)))?(?:[^.]*\(minimum (\d+)\))?/i.exec(text);
+  if (tok && !/would place|Place tokens on this card to represent/i.test(tok[0]) || /Place tokens on this card to represent/i.test(text)) {
     let source: TokenSource = { manual: true };
-    if (tok[1] && /d/.test(tok[1])) {
+    if (tok?.[1] && /d/.test(tok[1])) {
       const [, c, s, b] = /(\d+)d(\d+)(?:\+(\d+))?/.exec(tok[1])!;
       source = { roll: { count: Number(c), sides: Number(s), bonus: Number(b ?? 0) } };
-    } else if (tok[1]) {
+    } else if (tok?.[1]) {
       source = { fixed: Number(tok[1]) };
-    } else if (tok[2]) {
+    } else if (tok?.[2] && /equal to (?:your |the )?\w/.test(tok[0]) && !/equal to the number of/i.test(tok[0])) {
       const w = tok[2].toLowerCase();
       source = w === 'spellcast trait' ? { trait: 'spellcast', min: tok[3] ? Number(tok[3]) : undefined }
         : w === 'tier' || w === 'proficiency' || w === 'level' ? { stat: w }
         : { trait: TRAITS[w], min: tok[3] ? Number(tok[3]) : undefined };
     }
-    add({ kind: 'tokens', source, label: 'Tokens' });
+    add(-1, { kind: 'tokens', source, label: 'Tokens' });
   }
 
   // A bigger Hope Die: "you can roll a d20 as your Hope Die".
-  const hopeDie = /\broll a d(\d+) as your Hope Die\b/i.exec(text);
-  if (hopeDie) {
-    add({ kind: 'hopeDie', sides: Number(hopeDie[1]), label: `d${hopeDie[1]} Hope Die` });
-    damageSpans.push([hopeDie.index, hopeDie.index + hopeDie[0].length]);
+  for (const m of text.matchAll(/\broll a d(\d+) as your Hope Die\b/gi)) {
+    add(m.index!, { kind: 'hopeDie', sides: Number(m[1]), label: `d${m[1]} Hope Die` });
+    take(m.index!, m.index! + m[0].length);
   }
 
-  // Other dice: "roll a d6", "clear 1d4 Hit Points", "a d8 to your damage roll".
+  // A die that grows with level: "At level 1, your Rally Die is a d6 … At level 5, your Rally Die increases to a d8".
+  const grows = /\b(?:At level 1, your ([\w ]+?) Die is a d(\d+)[^]*?At level (\d+), your [\w ]+? Die increases to a d(\d+)|Your ([\w ]+?) Die starts at a d(\d+) and increases to a d(\d+) at level (\d+))/i.exec(text);
+  if (grows) {
+    const name = grows[1] ?? grows[5];
+    const [from, lvl, to] = grows[1] ? [grows[2], grows[3], grows[4]] : [grows[6], grows[8], grows[7]];
+    add(grows.index, { kind: 'dice', count: 1, sides: Number(from), bonus: 0, label: `Roll ${name} Die`, upgrade: { level: Number(lvl), sides: Number(to) } });
+    for (const m of text.matchAll(/\bd\d+\b/g)) if (m.index! >= grows.index && m.index! < grows.index + grows[0].length + 2) take(m.index!, m.index! + m[0].length);
+  }
+
+  // Dice stored on the card and later added to a damage roll (Sigil of Retribution).
+  const pool = /\bplace a d(\d+) on this card\. You can hold a number of d\d+s equal to your level\.[^.]*?roll the dice on this card and add the total to your damage roll/i.exec(text);
+  if (pool) {
+    add(-1, { kind: 'tokens', source: { manual: true }, label: `d${pool[1]}s on this card` });
+    add(pool.index + 1, { kind: 'scaled', unit: 'tokens', min: 1, per: { sides: Number(pool[1]), bonus: 0, damage: false, type: null, toDamageRoll: true }, label: `Add the d${pool[1]}s to your damage` });
+    take(pool.index, pool.index + pool[0].length);
+  }
+
+  // Dice that are trackers, not rolls: "place a d6 on this card", "hold a number of d8s",
+  // and "a 1d6 bonus to your damage rolls".
+  for (const m of text.matchAll(/\bplace an? d\d+ on this card|\bhold a number of d\d+s|\b\d*d\d+ bonus to (?:your )?damage rolls?(?: with that weapon)?|\b\d*d\d+s? instead of (?:a )?\d*d\d+s?|\binstead of (?:a )?\d*d\d+s?|\bincreases? to (?:a )?\d*d\d+|\bd\d+\+d\d+|\buses \d*d\d+s/gi)) take(m.index!, m.index! + m[0].length);
+  for (const m of text.matchAll(/\([^)]*\)/g)) if (/\bd\d+/.test(m[0])) take(m.index!, m.index! + m[0].length);
+
+  // ---- Rule 3: arms -------------------------------------------------------
+  const armAt = (re: RegExp, make: (m: RegExpExecArray) => Extract<Control, { kind: 'arm' }>) => {
+    for (const m of text.matchAll(new RegExp(re.source, 'gi'))) {
+      if (isUsed(m.index!)) continue;
+      add(m.index!, make(m as RegExpExecArray));
+      take(m.index!, m.index! + m[0].length);
+    }
+  };
+  const costOf = (verb: string, amount: string): Cost => (/spend/i.test(verb) ? { hope: n(amount) } : { stress: n(amount) });
+  armAt(/\b(spend|mark) (a|an|one|two|\d+) (?:Hope|Stress)(?: before you roll)? to gain a \+(\d+) bonus to (?:the|that|your|the result)[^.]*?(?:roll|result)\b/, (m) => {
+    const cost = costOf(m[1], m[2]);
+    return { kind: 'arm', cost, effect: { roll: Number(m[3]) }, label: `+${m[3]} to the roll · ${costLabel(cost)}` };
+  });
+  armAt(/\b(mark|spend) (a|an) (Stress|Hope) before you roll to gain a \+(\d+) bonus to the result/, (m) => {
+    const cost = costOf(m[1], m[2]);
+    return { kind: 'arm', cost, effect: { roll: Number(m[4]) }, label: `+${m[4]} to the roll · ${costLabel(cost)}` };
+  });
+  armAt(new RegExp(`\\b(spend|mark) (a|an) (?:Hope|Stress) to add your (${TRAIT_RE}|Proficiency) to (?:the|a|your) [^.]*?roll`), (m) => {
+    const cost = costOf(m[1], m[2]);
+    const stat = (m[3] === 'Proficiency' ? 'proficiency' : TRAITS[m[3].toLowerCase()]) as TraitId | 'proficiency';
+    return { kind: 'arm', cost, effect: { rollStat: stat }, label: `+${m[3]} to the roll · ${costLabel(cost)}` };
+  });
+  armAt(/\b(spend|mark) (a|an) (?:Hope|Stress) to gain advantage on (?:a|an|the) (?:roll|attack)/, (m) => {
+    const cost = costOf(m[1], m[2]);
+    return { kind: 'arm', cost, effect: { advantage: true }, label: `Advantage · ${costLabel(cost)}` };
+  });
+  armAt(new RegExp(`\\bmark a Stress to gain a bonus to your damage roll equal to twice your (${TRAIT_RE})`), (m) => {
+    const twice = /twice per attack/i.test(text);
+    return { kind: 'arm', cost: { stress: 1 }, effect: { damageStat: TRAITS[m[1].toLowerCase()], times: 2 }, max: twice ? 2 : 1, label: `+2× ${m[1]} damage · 1 Stress` };
+  });
+  armAt(/\bmark a Stress to make the next successful attack against that same target deal an extra (\d+)d(\d+) damage/, (m) => (
+    { kind: 'arm', cost: { stress: 1 }, effect: { damageDice: { count: Number(m[1]), sides: Number(m[2]) } }, label: `+${m[1]}d${m[2]} next hit · 1 Stress` }));
+  armAt(/\bYou have advantage on the attack, add a d(\d+) to the damage roll/, (m) => {
+    // Boost: the Stress that buys it is the sentence before.
+    const s = sentences.find((x) => x.at < m.index! && /^\s*Mark a Stress to\b/i.test(x.text));
+    if (s) take(s.at, s.at + 16);
+    return { kind: 'arm', cost: s ? { stress: 1 } : undefined, effect: { advantage: true, damageDice: { count: 1, sides: Number(m[1]) } }, label: `Advantage +d${m[1]} damage${s ? ' · 1 Stress' : ''}` };
+  });
+  const costBefore = (at: number): Cost | undefined => {
+    const start = Math.max(text.lastIndexOf('.', at - 1), text.lastIndexOf('\n', at - 1)) + 1;
+    const c = /\b(spend|mark) (a|an|one|two|\d+) (Hope|Stress)\b/i.exec(text.slice(start, at));
+    if (!c) return undefined;
+    take(start + c.index, start + c.index + c[0].length);
+    return /spend/i.test(c[1]) ? { hope: n(c[2]) } : { stress: n(c[2]) };
+  };
+  armAt(/\b(?:deal|dealing|deals) an extra (\d+)d(\d+) (?:(magic|physical) )?damage/, (m) => {
+    const cost = costBefore(m.index!);
+    return { kind: 'arm', cost, effect: { damageDice: { count: Number(m[1]), sides: Number(m[2]) } }, label: `+${m[1]}d${m[2]} damage${cost ? ' · ' + costLabel(cost) : ''}` };
+  });
+  armAt(/\badding (\d+)d(\d+) to your damage roll/, (m) => (
+    { kind: 'arm', effect: { damageDice: { count: Number(m[1]), sides: Number(m[2]) } }, label: `+${m[1]}d${m[2]} damage` }));
+  armAt(/\badd a number of d(\d+)s equal to your tier to (?:your|the) damage roll/, (m) => (
+    { kind: 'arm', effect: { damageDice: { count: 'tier', sides: Number(m[1]) } }, persist: true, label: `+d${m[1]} × tier damage` }));
+  armAt(/\bgain a (\d*)d(\d+) bonus to damage rolls with that weapon/, (m) => {
+    // Ignition: the Stress that lights the weapon opens the paragraph.
+    const para = text.lastIndexOf('\n', m.index!) + 1;
+    const cost = costBefore(m.index!) ?? (/^Mark a Stress\b/i.test(text.slice(para)) ? (take(para, para + 13), { stress: 1 }) : undefined);
+    return { kind: 'arm', cost, effect: { damageDice: { count: Number(m[1] || 1), sides: Number(m[2]) } }, persist: true, label: `+${m[1] || 1}d${m[2]} damage${cost ? ' · ' + costLabel(cost) : ''}` };
+  });
+  armAt(/\bmark a Stress to gain a \+1 bonus to your Proficiency(?: for that attack)?/, () => (
+    { kind: 'arm', cost: { stress: 1 }, effect: { proficiency: 1 }, label: '+1 Proficiency · 1 Stress' }));
+  armAt(/\bspend a Hope and describe [^.]*?then either gain a \+(\d+) bonus to the roll or a \+(\d+) bonus to the roll’s damage/, (m) => {
+    add(m.index! + 1, { kind: 'arm', cost: { hope: 1 }, effect: { damageBonus: Number(m[2]) }, label: `+${m[2]} damage · 1 Hope` });
+    return { kind: 'arm', cost: { hope: 1 }, effect: { roll: Number(m[1]) }, label: `+${m[1]} to the roll · 1 Hope` };
+  });
+  armAt(/\badd a d(\d+) to (?:your|the) damage roll/, (m) => (
+    { kind: 'arm', effect: { damageDice: { count: 1, sides: Number(m[1]) } }, label: `+d${m[1]} to damage` }));
+  armAt(/\b(spend|mark) (\d+|a|an) (Hope|Stress) to charge [^.]*\.\s*When you next successfully attack with a weapon, double the result of your damage roll/, (m) => {
+    const cost = costOf(m[1], m[2]);
+    return { kind: 'arm', cost, effect: { doubleDamage: true }, label: `Double next weapon damage · ${costLabel(cost)}` };
+  });
+
+  // ---- Rule 4: amounts ----------------------------------------------------
+  const scaled = (at: number, end: number, c: Extract<Control, { kind: 'scaled' }>) => { add(at, c); take(at, end); };
+  for (const m of text.matchAll(/\b(spend|mark) any number of (Hope|Stress)(?: and| to)?([^.]*?)\b(?:roll (?:that many|an equal number of|that number of) d(\d+)s)/gi)) {
+    const unit = /hope/i.test(m[2]) ? 'hope' : 'stress';
+    const rest = text.slice(m.index! + m[0].length, m.index! + m[0].length + 60);
+    const damage = /^,? dealing (magic|physical)? ?damage|deal that much (magic|physical)? ?damage/i.exec(rest);
+    scaled(m.index!, m.index! + m[0].length, { kind: 'scaled', unit, min: 1, per: { sides: Number(m[4]), bonus: 0, damage: !!damage, type: (damage?.[1] ?? damage?.[2])?.toLowerCase() as 'magic' | 'physical' ?? null }, label: `${unit === 'hope' ? 'Spend Hope' : 'Mark Stress'} · d${m[4]} each` });
+  }
+  for (const m of text.matchAll(/\bspend any number of Hope\b[^.]*\.\s*Roll a number of d(\d+)s equal to the Hope spent and deal that much (magic|physical)? ?damage/gi)) {
+    scaled(m.index!, m.index! + m[0].length, { kind: 'scaled', unit: 'hope', min: 1, per: { sides: Number(m[1]), bonus: 0, damage: true, type: (m[2]?.toLowerCase() as 'magic') ?? null }, label: 'Spend Hope · d' + m[1] + ' damage each' });
+  }
+  for (const m of text.matchAll(/\bMark any number of Stress\b[^.]*\.\s*[^.]*?take (\d*)d(\d+)(?:\+(\d+))? (magic|physical) damage for each Stress marked/gi)) {
+    scaled(m.index!, m.index! + m[0].length, { kind: 'scaled', unit: 'stress', min: 1, per: { sides: Number(m[2]), bonus: Number(m[3] ?? 0), damage: true, type: m[4].toLowerCase() as 'magic' }, label: `Mark Stress · d${m[2]}${m[3] ? '+' + m[3] : ''} damage each` });
+  }
+  for (const m of text.matchAll(/\broll a number of d(\d+)s equal to the tokens you spent and deal that much (magic|physical)? ?damage/gi)) {
+    scaled(m.index!, m.index! + m[0].length, { kind: 'scaled', unit: 'tokens', min: 1, per: { sides: Number(m[1]), bonus: 0, damage: true, type: (m[2]?.toLowerCase() as 'magic') ?? null }, label: `Spend tokens · d${m[1]} damage each` });
+  }
+  for (const m of text.matchAll(/\bspend any number of tokens to add (?:a |1)?d(\d+) for each token spent to your damage roll/gi)) {
+    scaled(m.index!, m.index! + m[0].length, { kind: 'scaled', unit: 'tokens', min: 1, per: { sides: Number(m[1]), bonus: 0, damage: false, type: null, toDamageRoll: true }, label: `Spend tokens · +d${m[1]} damage each` });
+  }
+  for (const m of text.matchAll(/\bspend any number of tokens to (?:roll that number of |reduce the damage by 1?)d(\d+)s?/gi)) {
+    scaled(m.index!, m.index! + m[0].length, { kind: 'scaled', unit: 'tokens', min: 1, per: { sides: Number(m[1]), bonus: 0, damage: false, type: null }, label: `Spend tokens · roll d${m[1]} each` });
+  }
+  for (const m of text.matchAll(/\bspend any number of these tokens to gain a \+(\d+) bonus to the roll for each token spent/gi)) {
+    scaled(m.index!, m.index! + m[0].length, { kind: 'scaled', unit: 'tokens', min: 1, flat: Number(m[1]), toRoll: true, label: `Spend tokens · +${m[1]} to the roll each` });
+  }
+  for (const m of text.matchAll(/\bgain a \+(\d+) bonus to your damage roll for each token on this card/gi)) {
+    scaled(m.index!, m.index! + m[0].length, { kind: 'scaled', unit: 'tokens', min: 1, flat: Number(m[1]), label: `Spend tokens · +${m[1]} damage each` });
+  }
+  for (const m of text.matchAll(/\broll a number of d(\d+)s equal to the number of [^.]*?(layers|stolen Fear)/gi)) {
+    scaled(m.index!, m.index! + m[0].length, { kind: 'scaled', unit: 'count', min: 1, per: { sides: Number(m[1]), bonus: 0, damage: /damage/i.test(text.slice(m.index!, m.index! + 160)), type: null }, label: `Roll d${m[1]}s (${m[2]})` });
+  }
+  for (const m of text.matchAll(/\b(spend|mark) (any number of|(\d+) or more|up to (\d+)) (Hope|Stress)/gi)) {
+    if (isUsed(m.index!)) continue;
+    const unit = /hope/i.test(m[5]) ? 'hope' : 'stress';
+    scaled(m.index!, m.index! + m[0].length, { kind: 'scaled', unit, min: m[3] ? Number(m[3]) : 1, max: m[4] ? Number(m[4]) : undefined, label: unit === 'hope' ? 'Spend Hope' : 'Mark Stress' });
+  }
+
+  // Choose-one bonuses ("If you know the place very well, gain a +3 bonus.").
+  const choices = [...text.matchAll(/◦ If ([^,]+), gain (?:a ([+−-]\d+) (?:bonus|penalty)|no modifier)/g)];
+  if (choices.length >= 2) {
+    add(choices[0].index!, { kind: 'choice', options: choices.map((m) => ({ label: cap(m[1]), value: m[2] ? Number(m[2].replace('−', '-')) : 0 })), label: 'Choose one' });
+    take(choices[0].index!, choices[choices.length - 1].index! + choices[choices.length - 1][0].length);
+  }
+
+  // ---- singles --------------------------------------------------------------
+  const costs: { at: number; end: number; cost: Cost }[] = [];
+  for (const m of text.matchAll(/\b(spend|mark) (a|an|one|two|three|four|five|\d+|another|an additional) (Hope|Stress)\b/gi)) {
+    if (isUsed(m.index!)) continue;
+    const lead = text.slice(Math.max(0, m.index! - 50), m.index!);
+    if (OTHER_SUBJECT.test(lead) && !/\byou(?: can| must)?\s*$|\b(?:and|or)\s*$|^\s*$|[.:]\s*$/i.test(lead.slice(-12))) continue;
+    if (/\b(you can both|can choose who marks)/i.test(lead)) continue;
+    if (CONDITION_LEAD.test(lead) || (inCondition(text, m.index!) && !/\byou can\s*$/i.test(lead))) continue;
+    const amount = n(m[2]);
+    costs.push({ at: m.index!, end: m.index! + m[0].length, cost: /hope/i.test(m[3]) ? { hope: amount } : { stress: amount } });
+  }
+
+  const rolls: { at: number; end: number; c: RollControl | AttackControl }[] = [];
+  for (const m of text.matchAll(new RegExp(`\\bmake an? (Spellcast|${TRAIT_RE}) Roll(?: \\((\\d+)\\))?`, 'gi'))) {
+    const lead = text.slice(Math.max(0, m.index! - 30), m.index!);
+    if (CONDITION_LEAD.test(lead) || inCondition(text, m.index!)) continue;
+    const trait = m[1].toLowerCase() === 'spellcast' ? 'spellcast' : TRAITS[m[1].toLowerCase()];
+    const difficulty = m[2] ? Number(m[2]) : undefined;
+    rolls.push({ at: m.index!, end: m.index! + m[0].length, c: { kind: 'roll', trait, difficulty, label: `${cap(m[1])} Roll${difficulty ? ` (${difficulty})` : ''}` } });
+  }
+  for (const m of text.matchAll(new RegExp(`\\bby succeeding on an? (${TRAIT_RE}) Roll`, 'gi'))) {
+    rolls.push({ at: m.index!, end: m.index! + m[0].length, c: { kind: 'roll', trait: TRAITS[m[1].toLowerCase()], label: `${cap(m[1])} Roll` } });
+  }
+  for (const m of text.matchAll(/\bmak(?:e|ing) a reaction roll (?:against [^.]*? )?using your Spellcast trait/gi)) {
+    rolls.push({ at: m.index!, end: m.index! + m[0].length, c: { kind: 'roll', trait: 'spellcast', reaction: true, label: 'Spellcast reaction roll' } });
+  }
+  for (const m of text.matchAll(/\bmak(?:e|ing) an attack(?: roll)?(?: with your (primary) weapon)?/gi)) {
+    const lead = text.slice(Math.max(0, m.index! - 40), m.index!);
+    if (CONDITION_LEAD.test(lead) || inCondition(text, m.index!) || /\b(must|they|the target|creature|adversary|PC|PCs|ally)\s+(\w+\s+)?$/i.test(lead)) continue;
+    if (/^ against another adversary/i.test(text.slice(m.index! + m[0].length))) continue;
+    rolls.push({ at: m.index!, end: m.index! + m[0].length, c: { kind: 'attack', primary: !!m[1], label: m[1] ? 'Attack · primary weapon' : 'Attack' } });
+  }
+
+  const dice: { at: number; end: number; c: DiceControl | DamageControl }[] = [];
+  const DMG = new RegExp(`\\b(\\d*)d(\\d+)(?:\\s*\\+\\s*(\\d+))?\\s+(?:(?:direct )?(magic|physical) )?damage(?:(?: to [^.,]*?)? using your (Proficiency|Spellcast trait|${TRAIT_RE}))?`, 'gi');
+  for (const m of text.matchAll(DMG)) {
+    if (isUsed(m.index!)) continue;
+    const count = countOf(m[1] || undefined, m[5]);
+    const bonus = m[3] ? Number(m[3]) : 0;
+    const before = text.slice(Math.max(0, m.index! - 120), m.index!);
+    const named = /◦ ([A-Z][\w’' ]+): [^◦]*$/.exec(before)?.[1];
+    const outcome = /On a roll with (Hope|Fear), deal\s*$/.exec(before)?.[1];
+    const label = `${named ? named + ' · ' : outcome ? `With ${outcome} · ` : ''}${diceText(count, Number(m[2]), bonus)}${m[4] ? ' ' + m[4].toLowerCase() : ''}`;
+    dice.push({ at: m.index!, end: m.index! + m[0].length, c: { kind: 'damage', count, sides: Number(m[2]), bonus, type: (m[4]?.toLowerCase() as 'magic' | 'physical') ?? null, label } });
+  }
+  for (const m of text.matchAll(new RegExp(`\\broll a number of d(\\d+)s equal to your (?:subclass’s )?(Proficiency|Spellcast trait|${TRAIT_RE})`, 'gi'))) {
+    const count = countOf(undefined, m[2]);
+    const dealt = /^ and deal that much (magic|physical)? ?damage/i.exec(text.slice(m.index! + m[0].length));
+    const c: DiceControl | DamageControl = dealt
+      ? { kind: 'damage', count, sides: Number(m[1]), bonus: 0, type: (dealt[1]?.toLowerCase() as 'magic') ?? null, label: `d${m[1]} × ${m[2]}` }
+      : { kind: 'dice', count, sides: Number(m[1]), bonus: 0, label: `Roll d${m[1]} × ${m[2]}` };
+    dice.push({ at: m.index!, end: m.index! + m[0].length + (dealt?.[0].length ?? 0), c });
+    take(m.index!, m.index! + m[0].length + (dealt?.[0].length ?? 0));
+  }
   for (const m of text.matchAll(/\b(\d*)d(\d+)(?:\s*\+\s*(\d+))?\b/gi)) {
     const at = m.index!;
-    if (damageSpans.some(([a, b]) => at >= a && at < b) || isUsed(at)) continue;
-    if (tok && tok[1] && text.indexOf(tok[1]) === at) continue;
+    if (isUsed(at) || dice.some((x) => at >= x.at && at < x.end)) continue;
+    if (tok?.[1] && text.indexOf(tok[1]) === at) continue;
     const count = m[1] ? Number(m[1]) : 1;
     const bonus = m[3] ? Number(m[3]) : 0;
-    add({ kind: 'dice', count, sides: Number(m[2]), bonus, label: `Roll ${count}d${m[2]}${bonus ? `+${bonus}` : ''}` });
+    dice.push({ at, end: at + m[0].length, c: { kind: 'dice', count, sides: Number(m[2]), bonus, label: `Roll ${count}d${m[2]}${bonus ? `+${bonus}` : ''}` } });
   }
-  return out.slice(0, 8);
-}
 
-function cap(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  // ---- Rule 1: a cost and what it pays for -----------------------------------
+  const sentenceOf = (at: number) => sentences.findIndex((s) => at >= s.at && at < s.at + s.text.length);
+  const paid = new Set<number>();
+  for (const k of costs) {
+    const si = sentenceOf(k.at);
+    const s = sentences[si];
+    const after = (x: { at: number }) => x.at > k.at && sentenceOf(x.at) === si;
+    // Same sentence: a roll or attack ("Mark 2 Stress to make a Spellcast Roll"), else dice it buys.
+    let then: RollControl | DiceControl | DamageControl | AttackControl | undefined;
+    let pick: { at: number } | undefined = rolls.find((r) => after(r) && /^\s*(to|and)\b/i.test(text.slice(k.end, r.at)));
+    if (pick) then = (pick as typeof rolls[number]).c;
+    if (!then) {
+      const d = dice.find((x) => after(x) && !rolls.some((r) => r.at > k.at && r.at < x.at));
+      if (d) { pick = d; then = d.c; }
+    }
+    // Next sentence: the damage it causes, "When you do, roll a d6", or "Make a … Roll" after "to use this spell as an attack".
+    const next = sentences[si + 1];
+    if (!then && next && next.para === s.para) {
+      const inNext = (x: { at: number }) => sentenceOf(x.at) === si + 1;
+      const r = rolls.find(inNext);
+      const d = dice.find(inNext);
+      if (/to use this spell as an attack/i.test(s.text) && r) { pick = r; then = r.c; }
+      else if (d && (/^\s*When you do, roll/i.test(next.text)
+        || (!/^\s*(◦|•|When|If|Whenever|Additionally)/i.test(next.text) && /\b(take|takes|clear|clears|deal|deals)\b/i.test(next.text) && !rolls.some(inNext)))) { pick = d; then = d.c; }
+    }
+    if (then && pick) {
+      paid.add(pick.at);
+      const what = then.kind === 'roll' ? (then.trait === 'spellcast' ? 'Spellcast' : then.label) : then.kind === 'attack' ? 'Attack' : diceText(then.count, then.sides, then.bonus);
+      add(k.at, { kind: 'pay', cost: k.cost, then, label: `${costLabel(k.cost)} · ${what}` });
+    } else {
+      add(k.at, 'hope' in k.cost ? { kind: 'hope', n: k.cost.hope, label: `Spend ${k.cost.hope} Hope` } : { kind: 'stress', n: k.cost.stress, label: `Mark ${k.cost.stress} Stress` });
+    }
+  }
+  for (const r of rolls) if (!paid.has(r.at)) add(r.at, r.c);
+  for (const d of dice) if (!paid.has(d.at)) add(d.at, d.c);
+
+  // "Once per rest, spend 3 Hope to …": paying uses up the feature for the rest.
+  for (const f of found) {
+    if (f.at < 0 || !['hope', 'stress', 'pay', 'arm', 'scaled'].includes(f.c.kind)) continue;
+    const st = sentences.find((x) => f.at >= x.at && f.at < x.at + x.text.length);
+    const once = st && /^\s*Once per (long rest|rest|session|scene),/i.exec(st.text);
+    if (once) (f.c as { once?: UseScope }).once = scopeOf(once[1]);
+  }
+  return found.sort((a, b) => a.at - b.at).map((x) => x.c).slice(0, 10);
 }

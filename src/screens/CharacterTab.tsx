@@ -5,7 +5,7 @@ import { updateCharacter } from '../app/store';
 import { go } from '../app/nav';
 import { cardById, classById, communityById, rules, type TraitId } from '../data';
 import {
-  activeForm, ancestryFeatures, avoidDeath, blazeOfGlory, derive, dropOut, hasBeastform, multiclassSubclass,
+  ACTIVE, activeForm, ancestryFeatures, avoidDeath, blazeOfGlory, derive, dropOut, hasBeastform, multiclassSubclass,
   mustMakeDeathMove, riskItAll, setHitPoints, splitClear, STAGES, subclassOf, TRAIT_IDS, wake,
   type Character,
 } from '../rules';
@@ -21,7 +21,7 @@ export function CharacterTab({ ch }: { ch: Character }) {
   const armed = usePlay((s) => s.armed[ch.id]) ?? armedFor(ch.id);
   const set = (fn: (c: Character) => Character) => updateCharacter(ch.id, fn);
   const cls = classById.get(ch.classId)!;
-  const hasArmed = armed.advantage !== 'none' || armed.experiences.length > 0 || armed.extras.length > 0 || !!armed.hopeDie || ch.death === 'blaze';
+  const hasArmed = armed.advantage !== 'none' || armed.experiences.length > 0 || armed.extras.length > 0 || armed.arms.length > 0 || !!armed.hopeDie || ch.death === 'blaze';
   const deathMove = mustMakeDeathMove(ch) || !!ch.death;
   const hopeFull = d.hopeSlots > 0 && ch.hope >= d.hopeSlots;
 
@@ -42,7 +42,7 @@ export function CharacterTab({ ch }: { ch: Character }) {
         </div>
         <ArmorShield score={d.armorScore} />
         <div className="stack-4" style={{ alignItems: 'center' }}>
-          <Track label="Armor slots" value={ch.armorMarked} max={d.armorScore} total={rules.caps.armorScore} columns={3} countdown
+          <Track label="Armor slots" value={ch.armorMarked} max={(ch.active ?? []).some((k) => ACTIVE[k]?.noArmorSlots) ? 0 : d.armorScore} total={rules.caps.armorScore} columns={3} countdown
             onChange={(v) => set((c) => ({ ...c, armorMarked: v }))} />
           <span className="s-label s-muted" style={{ fontSize: 11 }}>{d.armorScore - ch.armorMarked} / {d.armorScore} left</span>
         </div>
@@ -379,8 +379,28 @@ function DeathPanel({ ch }: { ch: Character }) {
       </div>
     );
   }
+  const hardened = ch.cards.loadout.includes('blade-battle-hardened');
+  const hardenedKey = 'longRest:card:blade-battle-hardened';
+  const unbreakable = ch.cards.loadout.includes('valor-unbreakable');
   return (
     <div className="death stack-14">
+      {(hardened || unbreakable) && (
+        <div className="stack-6 callout">
+          {hardened && (
+            <button className="s-btn s-press" disabled={ch.hope < 1 || (ch.uses[hardenedKey] ?? 0) >= 1}
+              onClick={() => set({ ...ch, hope: ch.hope - 1, hp: Math.max(0, ch.hp - 1), uses: { ...ch.uses, [hardenedKey]: 1 } })}>
+              Battle-Hardened · spend a Hope to clear a Hit Point instead
+            </button>
+          )}
+          {unbreakable && (
+            <button className="s-btn s-press" onClick={() => {
+              const v = 1 + Math.floor(Math.random() * 6);
+              set({ ...ch, hp: Math.max(0, ch.hp - v), cards: { loadout: ch.cards.loadout.filter((x) => x !== 'valor-unbreakable'), vault: [...ch.cards.vault, 'valor-unbreakable'] } });
+              showDice('Unbreakable', [v], ['d6'], [`You clear ${v} Hit Point${v === 1 ? '' : 's'} instead of making a death move. Unbreakable goes to your vault.`]);
+            }}>Unbreakable · roll a d6 and clear that many Hit Points</button>
+          )}
+        </div>
+      )}
       <span className="s-feat-text" style={{ fontWeight: 700 }}>{death.intro}</span>
       <div className="stack-6">
         <span className="s-feat-name">{move('blaze-of-glory').name}</span>

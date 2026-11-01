@@ -43,6 +43,17 @@ Each of these is a reading of the SRD that the engine currently implements. Each
 - **Beastform damage dice**: "add a d8 to your damage roll" (Pack Hunting) is a toggle on the beast attack that rolls with it. Rampage's +1 Proficiency marks its Stress when armed (refunded if you disarm it before rolling); its d10 for each 1, and Deadly Raptor's reroll, are offered on the damage result.
 - **Rest moves on allies** (Tend to Wounds, Repair Armor on an ally) aren't modelled; the engine applies moves to the resting character.
 
+## Card and feature buttons: outliers
+
+Every card and feature text is read by `src/rules/mechanics.ts` with one set of rules (see the comment at its top; `mechanics.test.ts` pins the result for the cards reviewed). These don't fit the rules and are handled partly or left to you:
+
+- **Need the GM's Fear count:** Avatar of Terror (+1d6 damage per Fear; the app only takes its Hope before each action roll), Dread-Touched (bonus = Fear), Umbral Veil (tokens = Fear, counted by hand), Night Terror (d6s = stolen Fear, amount picker).
+- **Offered on every result; tap only when it applies:** Glancing Blow (on a missed attack), Endless Charisma and Heart of a Poet (rolls to persuade), Nemesis swap (against your Prioritized target), Fearless / Freeborne / Stealth Expertise (rolls with Fear).
+- **Reminder only:** Champion's Edge "target marks an additional Hit Point"; Splintering Strike and Deathrun damage split between targets.
+- **Not tracked:** Words of Discord (−5 when recast on the same target), Copycat (Hope = half the copied card's level), Wild Surge and Zone of Protection (a die that ticks up), Fane of the Wilds (spend tokens after the roll; token count = your Sage cards), Forager (rolls the d6, doesn't look up the table), Grace-Touched and Splendor-Touched (paying with Armor Slots, Stress or Hope instead), Shadowhunter, Sage-Touched (+2 Spellcast in nature), Voice of Reason (+1 Proficiency with all Stress marked), Inevitable.
+- **Class resources without counters yet:** Focus (Martial Artist), Favor and the Patron Die (Warlock), Prayer Dice (Seraph), Slayer Dice, the Unstoppable Die, the Combo Die, Lunar Phases, Strange Patterns, Elemental Incarnation's Channel, martial stances.
+- **Experience tweaks:** Adept (Stress instead of Hope, double the Experience) and Honed Expertise (d6 to use it free).
+
 ## Not extracted (out of scope for now)
 
 - Transformations (SRD pp. 42–45: Demigod, Ghost, Reanimated, Shapeshifter, Vampire, Werewolf).

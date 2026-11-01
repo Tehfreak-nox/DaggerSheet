@@ -6,7 +6,9 @@ import type { ItemFeature, TraitId } from '../data';
 export type Stat =
   | TraitId
   | 'evasion' | 'armorScore' | 'major' | 'severe' | 'hitPoints' | 'stress'
-  | 'attack' | 'spellcast' | 'primaryDamage';
+  | 'attack' | 'spellcast' | 'primaryDamage'
+  /** Weapon damage rolls (meleeOnly: weapons with Melee range). */
+  | 'damage';
 
 export interface Modifier {
   stat: Stat;
@@ -16,6 +18,7 @@ export interface Modifier {
   condition?: string;
   /** Attack modifiers: only for the weapon that has the feature, only the primary weapon, or every attack. */
   appliesTo?: 'own-weapon' | 'primary' | 'all';
+  meleeOnly?: boolean;
 }
 
 const TRAIT_NAMES: Record<string, TraitId> = {

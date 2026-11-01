@@ -114,6 +114,8 @@ export interface Character {
   beastform?: BeastformChoice;
   /** After marking the last Hit Point: the death move in play. */
   death?: 'unconscious' | 'blaze' | 'dead';
+  /** Lasting effects switched on (feature keys, see active.ts). */
+  active?: string[];
   /** Track coins in the gold section (optional rule). */
   coins?: boolean;
   /** Custom gear created for this character (ids start with "hb-"). */
