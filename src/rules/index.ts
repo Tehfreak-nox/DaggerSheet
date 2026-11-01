@@ -9,3 +9,4 @@ export * from './rest';
 export * from './gold';
 export * from './levelUp';
 export * from './validate';
+export * from './mechanics';

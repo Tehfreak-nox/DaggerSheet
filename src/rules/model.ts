@@ -1,4 +1,4 @@
-import type { AdvancementId, DomainId, TraitId } from '../data';
+import type { AdvancementId, Armor, DomainId, Loot, TraitId, Weapon } from '../data';
 
 export const TRAIT_IDS: TraitId[] = ['agility', 'strength', 'finesse', 'instinct', 'presence', 'knowledge'];
 
@@ -107,6 +107,10 @@ export interface Character {
   uses: Record<string, number>;
   background: Record<string, string>;
   description: Record<string, string>;
+  /** Custom gear created for this character (ids start with "hb-"). */
+  homebrew?: { weapons: Weapon[]; armor: Armor[]; items: Loot[] };
+  /** Last change (ms since epoch); newest copy wins when syncing devices. */
+  updatedAt?: number;
 }
 
 export type { AdvancementId };

@@ -21,19 +21,25 @@ export interface RestLogEntry {
 /** Uses counters are keyed "<per>:<feature>"; rests clear the matching ones. */
 export const USE_SCOPES = { rest: 'rest:', longRest: 'longRest:', session: 'session:', scene: 'scene:' } as const;
 
-export function moveLimit(ch: Character): number {
+export interface RestOptions {
+  /** Elf "Celestial Trance" is optional ("you can drop into a trance"). Default true. */
+  trance?: boolean;
+}
+
+export function moveLimit(ch: Character, opts: RestOptions = {}): number {
   // Elf "Celestial Trance": choose an additional downtime move during a rest.
-  return rules.downtime.movesPerRest + (hasAncestryFeature(ch, 'celestial-trance') ? 1 : 0);
+  const trance = opts.trance !== false && hasAncestryFeature(ch, 'celestial-trance');
+  return rules.downtime.movesPerRest + (trance ? 1 : 0);
 }
 
 export function mustLongRest(ch: Character): boolean {
   return ch.shortRestStreak >= rules.downtime.shortRestsBeforeLong;
 }
 
-export function restProblems(ch: Character, kind: RestKind, moves: RestMove[]): string[] {
+export function restProblems(ch: Character, kind: RestKind, moves: RestMove[], opts: RestOptions = {}): string[] {
   const p: string[] = [];
   if (kind === 'short' && mustLongRest(ch)) p.push('After three short rests in a row, the next rest must be a long rest.');
-  if (moves.length > moveLimit(ch)) p.push(`Choose up to ${moveLimit(ch)} downtime moves.`);
+  if (moves.length > moveLimit(ch, opts)) p.push(`Choose up to ${moveLimit(ch, opts)} downtime moves.`);
   const short = rules.downtime.short.moves.map((m) => m.id);
   const long = rules.downtime.long.moves.map((m) => m.id);
   let longInShort = 0;
@@ -49,8 +55,10 @@ export function restProblems(ch: Character, kind: RestKind, moves: RestMove[]): 
   return p;
 }
 
-export function rest(ch: Character, kind: RestKind, moves: RestMove[], rng: Rng = defaultRng): { character: Character; log: RestLogEntry[] } {
-  const problems = restProblems(ch, kind, moves);
+export function rest(
+  ch: Character, kind: RestKind, moves: RestMove[], rng: Rng = defaultRng, opts: RestOptions = {},
+): { character: Character; log: RestLogEntry[] } {
+  const problems = restProblems(ch, kind, moves, opts);
   if (problems.length) throw new Error(problems.join(' '));
   const d = derive(ch);
   let c: Character = { ...ch };

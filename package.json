@@ -10,7 +10,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "data": "python3 -I scripts/extract/build.py"
+    "data": "python3 -I scripts/extract/build.py",
+    "build:artifact": "vite build && node scripts/artifact.mjs"
   },
   "dependencies": {
     "react": "^19.3.1",

@@ -5,3 +5,4 @@ dev-dist
 __pycache__
 .DS_Store
 scripts/extract/out
+dist-artifact
