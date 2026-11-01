@@ -205,6 +205,18 @@ def _section(lines: list[Line], page: int, head: str) -> list[Line]:
     return out
 
 
+def death(lines: list[Line]) -> dict:
+    """The three death moves (SRD p. 53)."""
+    sec = _section(lines, 53, 'DEATH')
+    t = plain(join(sec))
+    need(r'When a PC marks their last Hit Point, they must make a death', t, 'death trigger')
+    moves = _moves(t)
+    assert [m['name'] for m in moves] == ['Blaze of Glory', 'Avoid Death', 'Risk It All'], moves
+    need(r'If its value is equal to or less than your character’s level', t, 'scar')
+    need(r'If you ever cross out your last Hope slot, your character’s journey ends', t, 'last hope slot')
+    return {'intro': t.split('\n\n')[0].split('•')[0].strip(), 'moves': moves}
+
+
 def gold(lines: list[Line]) -> dict:
     t = _text(lines, range(84, 85), 'R')
     need(r'10 handfuls to 1 bag, and 10 bags to 1 chest', t, 'gold denominations')
@@ -226,4 +238,5 @@ def parse(lines: list[Line], sheet_pdf: str) -> dict:
         'downtime': downtime(lines),
         'leveling': leveling(lines, sheet_pdf),
         'gold': gold(lines),
+        'death': death(lines),
     }

@@ -16,6 +16,10 @@ export interface DualityRequest {
   modifiers: RollModifier[];
   /** Advantage and disadvantage cancel; only one can apply to a roll. */
   advantage?: Advantage;
+  /** Sides of the Hope Die (12; 20 with "roll a d20 as your Hope Die"). */
+  hopeSides?: number;
+  /** Blaze of Glory: the action automatically critically succeeds. */
+  forceCritical?: boolean;
 }
 
 export type Outcome = 'hope' | 'fear' | 'critical';
@@ -24,6 +28,7 @@ export interface DualityResult {
   label: string;
   hope: number;
   fear: number;
+  hopeSides: number;
   advantage: Advantage;
   advantageDie: number | null;
   modifiers: RollModifier[];
@@ -32,14 +37,20 @@ export interface DualityResult {
 }
 
 export function dualityRoll(req: DualityRequest, rng: Rng = defaultRng): DualityResult {
-  const hope = roll(12, rng);
-  const fear = roll(12, rng);
+  const hopeSides = req.hopeSides ?? 12;
+  const hope = roll(hopeSides, rng);
+  const fear = req.forceCritical ? Math.min(hope, 12) : roll(12, rng);
   const advantage = req.advantage ?? 'none';
   const advantageDie = advantage === 'none' ? null : roll(6, rng);
-  const adv = advantageDie === null ? 0 : advantage === 'advantage' ? advantageDie : -advantageDie;
-  const total = hope + fear + adv + req.modifiers.reduce((a, m) => a + m.value, 0);
-  const outcome: Outcome = hope === fear ? 'critical' : hope > fear ? 'hope' : 'fear';
-  return { label: req.label, hope, fear, advantage, advantageDie, modifiers: req.modifiers, total, outcome };
+  return scoreDuality({ label: req.label, hope, fear, hopeSides, advantage, advantageDie, modifiers: req.modifiers }, req.forceCritical);
+}
+
+/** Total and outcome for a set of duality dice (also used after a reroll). */
+export function scoreDuality(r: Omit<DualityResult, 'total' | 'outcome'>, forceCritical = false): DualityResult {
+  const adv = r.advantageDie === null ? 0 : r.advantage === 'advantage' ? r.advantageDie : -r.advantageDie;
+  const total = r.hope + r.fear + adv + r.modifiers.reduce((a, m) => a + m.value, 0);
+  const outcome: Outcome = forceCritical || r.hope === r.fear ? 'critical' : r.hope > r.fear ? 'hope' : 'fear';
+  return { ...r, total, outcome };
 }
 
 /** With Hope: gain a Hope. Critical: gain a Hope and clear a Stress. With Fear: the GM gains a Fear. */
@@ -47,7 +58,7 @@ export function applyOutcome(ch: Character, result: Pick<DualityResult, 'outcome
   if (result.outcome === 'fear') return ch;
   return {
     ...ch,
-    hope: Math.min(rules.caps.hope, ch.hope + 1),
+    hope: Math.min(rules.caps.hope - (ch.scars ?? 0), ch.hope + 1),
     stress: result.outcome === 'critical' ? Math.max(0, ch.stress - 1) : ch.stress,
   };
 }

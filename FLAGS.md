@@ -35,6 +35,10 @@ Each of these is a reading of the SRD that the engine currently implements. Each
 - **"Half your Agility" (Untouchable)** rounds up (SRD: round up unless stated) and gives no bonus below 0. **Enchanted** (Mage Robes) and **Magnificent** likewise add nothing when the trait is 0 or negative, rather than applying a penalty.
 - **Domain card exchange** at level up: the new card must be of the old card's level or lower, and legal for you now.
 - **Unarmored**: Armor Score 0, Major = level, Severe = 2 × level, as the SRD states. Threshold bonuses from features still apply; "while wearing armor" cards (Fortified Armor, Armorer) don't.
+- **Armor weight icons** (creation): the SRD gives no light/medium/heavy category. The app reads it from Armor Score minus tier (1 light, 2 medium, 3+ heavy), which matches the robes / gambeson / chainmail pattern in every tier.
+- **Domain icons** are the app's own drawings. The official Daggerheart domain symbols aren't part of the SRD licence, so they aren't used.
+- **Blaze of Glory** arms an automatic critical success for the next action roll; after that roll the character is marked as having crossed the veil. "With GM approval" is left to the table.
+- **Risk It All** clears Hope-die points from Hit Points first, then Stress; the sheet then lets you move points between them as the SRD allows.
 - **Rest moves on allies** (Tend to Wounds, Repair Armor on an ally) aren't modelled; the engine applies moves to the resting character.
 
 ## Not extracted (out of scope for now)

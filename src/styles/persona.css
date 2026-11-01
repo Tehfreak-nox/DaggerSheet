@@ -32,7 +32,7 @@
 
 /* ---------- community frames ---------- */
 .fx { position: relative; padding: 12px; border-radius: 14px; }
-.fx-in { position: relative; background: #FFFFFF; border-radius: 8px; padding: 18px 16px; }
+.fx-in { position: relative; background: var(--surface); border-radius: 8px; padding: 18px 16px; }
 
 /* Loreborne — scroll */
 .fx-loreborne { padding: 22px 10px; background: transparent; }

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { actionRoll, damage, dice } from '../app/play';
+import { actionRoll, armedFor, damage, dice, toggleHopeDie, usePlay } from '../app/play';
 import { updateCharacter } from '../app/store';
 import type { TraitId } from '../data';
 import { canPayStress, controlsFor, derive, type Character, type Control, type TokenSource } from '../rules';
@@ -22,8 +22,12 @@ export function FeatureCard({
   extra?: ReactNode;
 }) {
   const controls = ghost ? [] : controlsFor(text);
-  const actions = controls.filter((c) => c.kind !== 'uses' && c.kind !== 'tokens');
   const uses = controls.filter((c): c is Extract<Control, { kind: 'uses' }> => c.kind === 'uses');
+  // A Hope cost followed by dice ("Spend 3 Hope to clear 1d4 Hit Points") is one button that pays and rolls.
+  const hopeCost = controls.find((c): c is Extract<Control, { kind: 'hope' }> => c.kind === 'hope' && c.n !== 'any');
+  const rolled = hopeCost && controls.find((c) => c.kind === 'dice' || c.kind === 'damage');
+  const combo = hopeCost && rolled ? { cost: hopeCost.n as number, roll: rolled } : null;
+  const actions = controls.filter((c) => c.kind !== 'uses' && c.kind !== 'tokens' && !(combo && (c === hopeCost || c === rolled)));
   const tokens = controls.find((c): c is Extract<Control, { kind: 'tokens' }> => c.kind === 'tokens');
   return (
     <article className={`feat ${ghost ? 's-ghost' : ''}`}>
@@ -39,13 +43,61 @@ export function FeatureCard({
       {note && <span className="s-muted" style={{ fontSize: 14, lineHeight: 1.4 }}>{note}</span>}
       {uses.map((u) => <UseBoxes key={u.label} ch={ch} k={`${u.scope}:${featureKey}`} max={u.max} label={u.label} />)}
       {tokens && <Tokens ch={ch} k={`tokens:${featureKey}`} source={tokens.source} />}
-      {actions.length > 0 && (
+      {(actions.length > 0 || combo) && (
         <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {actions.map((c) => <ActionButton key={c.label} ch={ch} c={c} name={name} />)}
+          {combo && <ComboButton ch={ch} cost={combo.cost} roll={combo.roll} name={name} />}
+          {actions.map((c) => c.kind === 'hopeDie'
+            ? <HopeDieToggle key={c.label} ch={ch} c={c} name={name} useKey={uses[0] ? `${uses[0].scope}:${featureKey}` : ''} max={uses[0]?.max ?? 0} />
+            : <ActionButton key={c.label} ch={ch} c={c} name={name} />)}
         </span>
       )}
       {extra}
     </article>
+  );
+}
+
+/** Pay the Hope and roll the dice in one tap. */
+function ComboButton({ ch, cost, roll, name }: { ch: Character; cost: number; roll: Control; name: string }) {
+  const [asking, setAsking] = useState(false);
+  const d = derive(ch);
+  const count = roll.kind === 'damage' ? (roll.count === 'proficiency' ? d.proficiency : roll.count) : roll.kind === 'dice' ? roll.count : 1;
+  const sides = roll.kind === 'damage' || roll.kind === 'dice' ? roll.sides : 6;
+  const bonus = roll.kind === 'damage' || roll.kind === 'dice' ? roll.bonus : 0;
+  const diceText = `${count}d${sides}${bonus ? `+${bonus}` : ''}`;
+  const go = () => {
+    updateCharacter(ch.id, (x) => ({ ...x, hope: Math.max(0, x.hope - cost) }));
+    if (roll.kind === 'damage') damage(name, { dice: [{ count, sides }], bonus }, `${diceText}${roll.type ? ` ${roll.type}` : ''} · ${cost} Hope spent`, [], { charId: ch.id, magic: roll.type === 'magic' });
+    else dice(name, count, sides, bonus, `${cost} Hope spent`);
+    setAsking(false);
+  };
+  if (asking) {
+    return (
+      <span className="s-row confirm">
+        <span style={{ fontSize: 14 }}>Spend {cost} of your {ch.hope} Hope and roll {diceText}?</span>
+        <span style={{ display: 'flex', gap: 6 }}>
+          <button className="s-mini" onClick={() => setAsking(false)}>Cancel</button>
+          <button className="s-mini solid" onClick={go}>Roll</button>
+        </span>
+      </span>
+    );
+  }
+  return (
+    <button className="s-mini solid" disabled={ch.hope < cost} onClick={() => (cost >= 2 ? setAsking(true) : go())}>
+      Use · {cost} Hope · {diceText}
+    </button>
+  );
+}
+
+/** "Roll a d20 as your Hope Die": arm it for the next action roll, like an Experience. */
+function HopeDieToggle({ ch, c, name, useKey, max }: { ch: Character; c: Extract<Control, { kind: 'hopeDie' }>; name: string; useKey: string; max: number }) {
+  const armed = usePlay((s) => s.armed[ch.id]) ?? armedFor(ch.id);
+  const on = !!armed.hopeDie && armed.hopeDie.source === name;
+  const spent = !!useKey && max > 0 && (ch.uses[useKey] ?? 0) >= max;
+  return (
+    <button className={`s-mini ${on ? 'solid' : ''}`} aria-pressed={on} disabled={!on && spent}
+      onClick={() => toggleHopeDie(ch.id, c.sides, useKey, name)}>
+      {on ? `d${c.sides} Hope Die armed` : spent ? 'Used' : `Arm d${c.sides} Hope Die`}
+    </button>
   );
 }
 
@@ -85,15 +137,15 @@ function ActionButton({ ch, c, name }: { ch: Character; c: Control; name: string
       if (!trait) return <button className="s-mini" disabled>{c.label} · no Spellcast trait</button>;
       const mods = [{ label: cap(trait), value: d.traits[trait] }, ...(spell && d.spellcastBonus ? [{ label: 'Spellcast bonus', value: d.spellcastBonus }] : [])];
       return (
-        <button className="s-mini solid" onClick={() => actionRoll(ch.id, spell ? 'Spellcast Roll' : `${cap(trait)} Roll`, mods, c.difficulty ? `${name} · Difficulty ${c.difficulty}` : name)}>
-          Roll {c.label.replace(/ Roll/, '')}
+        <button className="s-mini solid" onClick={() => actionRoll(ch.id, spell ? `Spellcast · ${cap(trait)}` : `${cap(trait)} Roll`, mods, c.difficulty ? `${name} · Difficulty ${c.difficulty}` : name, { trait })}>
+          {spell ? `Spellcast · ${cap(trait)}` : `${cap(trait)} Roll`}{c.difficulty ? ` (${c.difficulty})` : ''}
         </button>
       );
     }
     case 'damage': {
       const count = c.count === 'proficiency' ? d.proficiency : c.count;
       return (
-        <button className="s-mini" onClick={() => damage(name, { dice: [{ count, sides: c.sides }], bonus: c.bonus }, `${count}d${c.sides}${c.bonus ? `+${c.bonus}` : ''}${c.type ? ` ${c.type}` : ''}`)}>
+        <button className="s-mini" onClick={() => damage(name, { dice: [{ count, sides: c.sides }], bonus: c.bonus }, `${count}d${c.sides}${c.bonus ? `+${c.bonus}` : ''}${c.type ? ` ${c.type}` : ''}`, [], { charId: ch.id, magic: c.type === 'magic', attack: true })}>
           Damage {count}d{c.sides}{c.bonus ? `+${c.bonus}` : ''}
         </button>
       );
@@ -115,7 +167,7 @@ function UseBoxes({ ch, k, max, label }: { ch: Character; k: string; max: number
           aria-label={`${label}: use ${i + 1} ${i < used ? 'used' : 'available'}`}
           onClick={() => updateCharacter(ch.id, (x) => ({ ...x, uses: { ...x.uses, [k]: i < used ? i : i + 1 } }))} />
       ))}
-      <span className="s-muted" style={{ fontSize: 12 }}>{used >= max ? 'Used' : 'Refreshes on ' + (k.startsWith('longRest') ? 'a long rest' : k.startsWith('rest') ? 'any rest' : k.startsWith('session') ? 'a new session' : 'a new scene')}</span>
+      {used >= max && <span className="s-muted" style={{ fontSize: 12 }}>Used</span>}
     </span>
   );
 }

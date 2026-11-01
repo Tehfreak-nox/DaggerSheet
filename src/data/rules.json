@@ -374,5 +374,25 @@
     "maxChests": 1,
     "coinsOptional": true,
     "text": "GOLD Gold is an abstract measurement of how much wealth a character has, and is measured in handfuls, bags, and chests, with 10 handfuls to 1 bag, and 10 bags to 1 chest. When you have marked all of the slots in a category and you gain another gold reward in that category, mark a slot in the following category and clear all the slots in the current one.\n\nFor example, if you have 9 handfuls and gain another, you instead mark 1 bag and erase all handfuls. If you have 9 bags and gain another, you mark 1 chest and erase all bags.\n\nYou can’t have more than 1 chest, so if all your Gold slots are marked, you’ll need to spend some of your gold or store it somewhere else before you can acquire more.\n\nOptional Rule: Gold Coins If your group wants to track gold with more granularity, you can add coins as your lowest denomination. Following the established pattern, 10 coins equal 1 handful."
+  },
+  "death": {
+    "intro": "When a PC marks their last Hit Point, they must make a death move by choosing one of the following options:",
+    "moves": [
+      {
+        "id": "blaze-of-glory",
+        "name": "Blaze of Glory",
+        "text": "Your character embraces death and goes out in a blaze of glory. Take one final action. It automatically critically succeeds (with GM approval), and then you cross through the veil of death."
+      },
+      {
+        "id": "avoid-death",
+        "name": "Avoid Death",
+        "text": "Your character avoids death and faces the consequences. They temporarily drop unconscious, and then you work with the GM to describe how the situation worsens. While unconscious, your character can’t move or act, and they can’t be targeted by an attack. They return to consciousness when an ally clears 1 or more of their marked Hit Points or when the party finishes a long rest. After your character falls unconscious, roll your Hope Die. If its value is equal to or less than your character’s level, they gain a scar: permanently cross out a Hope slot and work with the GM to determine its lasting narrative impact and how, if possible, it can be restored. If you ever cross out your last Hope slot, your character’s journey ends."
+      },
+      {
+        "id": "risk-it-all",
+        "name": "Risk It All",
+        "text": "Roll your Duality Dice. If the Hope Die is higher, your character stays on their feet and clears a number of Hit Points or Stress equal to the value of the Hope Die (you can divide the Hope Die value between Hit Points and Stress however you’d prefer). If the Fear Die is higher, your character crosses through the veil of death. If the Duality Dice show matching results, your character stays up and clears all Hit Points and Stress."
+      }
+    ]
   }
 }

@@ -5,16 +5,27 @@ import { actionRoll, damage, dice, setCrit, usePlay } from '../app/play';
 import { updateCharacter } from '../app/store';
 import { armorById, lootById, rules, weaponById } from '../data';
 import {
-  addGold, attackProfile, DENOMS, derive, equipWeapon, removeGold, ROW_SLOTS, store, take, versatileStats,
+  addGold, attackProfile, beastformOf, DENOMS, derive, dropOut, equipWeapon, removeGold, ROW_SLOTS, store, take, versatileStats,
   type AttackProfile, type Character, type Denom,
 } from '../rules';
 import { AdvDis, ArmorShield } from './CharacterTab';
+import { FeatureCard } from '../ui/FeatureCard';
 import { cap, Icon, ICONS, RANGE_NAMES, signed, Title } from '../ui/kit';
 
 export function EquipmentTab({ ch }: { ch: Character }) {
   const d = derive(ch);
   return (
     <main className="sheet-main">
+      <section className="prof-bar">
+        <div className="prof" role="img" aria-label={`Proficiency ${d.proficiency} of ${rules.caps.proficiency}`}>
+          <span className="s-label">Proficiency</span>
+          <span style={{ display: 'flex', gap: 6 }}>
+            {Array.from({ length: rules.caps.proficiency }, (_, i) => <span key={i} className={`s-dot ${i < d.proficiency ? 'on' : ''}`} />)}
+          </span>
+        </div>
+        <AdvDis id={ch.id} compact />
+      </section>
+      <BeastAttack ch={ch} />
       <Weapons ch={ch} />
       <ArmorSection ch={ch} />
       <GoldSection ch={ch} />
@@ -36,7 +47,6 @@ function Hands({ burden, slot }: { burden: number; slot: 'primary' | 'secondary'
 }
 
 function Weapons({ ch }: { ch: Character }) {
-  const d = derive(ch);
   const [off, setOff] = useState<Record<string, boolean>>({});
   const crit = usePlay((s) => !!s.crit[ch.id]);
   const slots: ('primary' | 'secondary')[] = ['primary', 'secondary'];
@@ -51,6 +61,13 @@ function Weapons({ ch }: { ch: Character }) {
     const dmgText = `${dmgDice}${bonus ? signed(bonus).replace('−', '-') : ''} ${a.damageType}`;
     const hit = [{ label: cap(a.trait), value: a.traitValue }, ...a.attackModifiers];
     const hitTotal = hit.reduce((s, m) => s + m.value, 0);
+    const rollDamage = (critical: boolean) => {
+      damage(`Damage · ${a.name}`, {
+        dice: a.dice, bonus: a.damageBonus, critical, extraDieDropLowest: a.extraDieDropLowest,
+        modifiers: conds.map((m) => ({ label: m.source, value: m.value })),
+      }, critical ? `${dmgText} · critical` : dmgText, [], { charId: ch.id, magic: a.damageType === 'mag', attack: true });
+      setCrit(ch.id, false);
+    };
     return (
       <article key={slot} className="weapon">
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -87,17 +104,11 @@ function Weapons({ ch }: { ch: Character }) {
           </span>
         </div>
         <div className="weapon-btns">
-          <button className="s-btn solid s-press" onClick={() => actionRoll(ch.id, `Attack · ${a.name}`, hit, `2d12 ${signed(hitTotal)}`, true)} aria-label={`Hit roll 2d12 ${signed(hitTotal)}`}>
+          <button className="s-btn solid s-press" onClick={() => actionRoll(ch.id, `Attack · ${a.name}`, hit, `2d12 ${signed(hitTotal)}`, { attack: true, trait: a.trait, critDamage: () => rollDamage(true) })} aria-label={`Hit roll 2d12 ${signed(hitTotal)}`}>
             <span style={{ fontSize: 11, opacity: 0.75 }}>Hit</span><span className="s-num">{signed(hitTotal)}</span>
           </button>
-          <button className={`s-btn s-press ${crit ? 's-armed' : ''}`} style={{ borderColor: 'var(--ink)', background: '#FFFFFF' }}
-            onClick={() => {
-              damage(`Damage · ${a.name}`, {
-                dice: a.dice, bonus: a.damageBonus, critical: crit, extraDieDropLowest: a.extraDieDropLowest,
-                modifiers: conds.map((m) => ({ label: m.source, value: m.value })),
-              }, crit ? `${dmgText} · critical` : dmgText);
-              setCrit(ch.id, false);
-            }}
+          <button className={`s-btn s-press ${crit ? 's-armed' : ''}`} style={{ borderColor: 'var(--ink)', background: 'var(--surface)' }}
+            onClick={() => rollDamage(crit)}
             aria-label={`Damage roll ${dmgText}${crit ? ', critical' : ''}`}>
             <span style={{ fontSize: 11 }}>{crit ? 'Crit dmg' : 'Damage'}</span><span className="s-num" style={{ fontSize: dmgText.length > 12 ? 15 : 19 }}>{dmgDice}{bonus ? signed(bonus).replace('−', '-') : ''}</span>
           </button>
@@ -109,13 +120,7 @@ function Weapons({ ch }: { ch: Character }) {
   return (
     <section className="stack-22">
       <Title>Weapons</Title>
-      <div className="prof" role="img" aria-label={`Proficiency ${d.proficiency} of ${rules.caps.proficiency}`}>
-        <span className="s-label">Proficiency</span>
-        <span style={{ display: 'flex', gap: 6 }}>
-          {Array.from({ length: rules.caps.proficiency }, (_, i) => <span key={i} className={`s-dot ${i < d.proficiency ? 'on' : ''}`} />)}
-        </span>
-      </div>
-      <AdvDis id={ch.id} />
+      {ch.beastform && <span className="callout">While transformed you can’t use weapons or cast spells from domain cards.</span>}
       {slots.map((slot) => {
         const a = attackProfile(ch, slot);
         return a ? row(slot, a) : null;
@@ -145,6 +150,52 @@ function Weapons({ ch }: { ch: Character }) {
         </div>
       )}
       <button className="s-btn s-press" style={{ alignSelf: 'flex-end' }} onClick={() => go({ name: 'picker', id: ch.id, kind: 'weapon' })}>Add weapon</button>
+    </section>
+  );
+}
+
+/** The Beastform's attack and features, while transformed. */
+function BeastAttack({ ch }: { ch: Character }) {
+  const d = derive(ch);
+  const f = beastformOf(ch);
+  const crit = usePlay((s) => !!s.crit[ch.id]);
+  if (!f) return null;
+  const at = f.attack;
+  const m = at ? /^d(\d+)(?:\+(\d+))?$/.exec(at.damage) : null;
+  const traitVal = at ? d.traits[at.trait] : 0;
+  const dmgText = m ? `${d.proficiency}d${m[1]}${m[2] ? `+${m[2]}` : ''} ${at!.type}` : '';
+  const rollDamage = (critical: boolean) => {
+    if (!m) return;
+    damage(`Damage · ${f.name}`, { dice: [{ count: d.proficiency, sides: Number(m[1]) }], bonus: Number(m[2] ?? 0), critical },
+      critical ? `${dmgText} · critical` : dmgText, [], { charId: ch.id, magic: at!.type === 'mag', attack: true });
+    setCrit(ch.id, false);
+  };
+  return (
+    <section className="stack-14">
+      <Title>Beastform</Title>
+      <article className="weapon">
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span className="s-label s-muted" style={{ fontSize: 12 }}>Tier {f.tier} · {f.examples}</span>
+          <span className="s-feat-name" style={{ fontSize: 22, marginTop: -4 }}>{f.name}</span>
+          {at && <span style={{ fontSize: 17 }}>{cap(at.trait)} {RANGE_NAMES[at.range] ?? at.range} · {at.damage} {at.type} using your Proficiency</span>}
+          {f.advantages.length > 0 && <span className="s-feat-text">Advantage on rolls to {f.advantages.join(', ')}.</span>}
+          <button className="s-mini" style={{ alignSelf: 'flex-start' }} onClick={() => updateCharacter(ch.id, dropOut)}>Drop out</button>
+        </div>
+        {at && m && (
+          <div className="weapon-btns">
+            <button className="s-btn solid s-press" aria-label={`Hit roll 2d12 ${signed(traitVal)}`}
+              onClick={() => actionRoll(ch.id, `Attack · ${f.name}`, [{ label: cap(at.trait), value: traitVal }], `2d12 ${signed(traitVal)}`, { attack: true, trait: at.trait, critDamage: () => rollDamage(true) })}>
+              <span style={{ fontSize: 11, opacity: 0.75 }}>Hit</span><span className="s-num">{signed(traitVal)}</span>
+            </button>
+            <button className={`s-btn s-press ${crit ? 's-armed' : ''}`} style={{ borderColor: 'var(--ink)', background: 'var(--surface)' }} onClick={() => rollDamage(crit)}
+              aria-label={`Damage roll ${dmgText}${crit ? ', critical' : ''}`}>
+              <span style={{ fontSize: 11 }}>{crit ? 'Crit dmg' : 'Damage'}</span><span className="s-num" style={{ fontSize: 17 }}>{d.proficiency}{at.damage}</span>
+            </button>
+          </div>
+        )}
+      </article>
+      {f.features.map((x) => <FeatureCard key={x.id} ch={ch} featureKey={`beast:${f.id}:${x.id}`} name={x.name} text={x.text} />)}
+      {f.text && <span className="s-feat-text">{f.text}</span>}
     </section>
   );
 }
@@ -208,7 +259,11 @@ function GoldSection({ ch }: { ch: Character }) {
       {safeOpen && (
         <div className="stack-6 safe">
           <span className="s-muted" style={{ fontSize: 14 }}>Stored at your base, no limit.</span>
-          {DENOMS.map((x) => (
+          <button className={`s-mini ${ch.coins ? 'solid' : ''}`} style={{ alignSelf: 'flex-start' }} aria-pressed={!!ch.coins}
+            onClick={() => updateCharacter(ch.id, (c) => ({ ...c, coins: !c.coins }))}>
+            {ch.coins ? 'Coins on · tap to hide' : 'Track coins (optional rule)'}
+          </button>
+          {DENOMS.filter((x) => ch.coins || x !== 'coins').map((x) => (
             <div key={x} className="s-row" style={{ minHeight: 48 }}>
               <span className="s-label" style={{ flex: 1 }}>{GOLD_LABEL[x]}</span>
               <button className="s-mini" disabled={!ch.safe[x]} aria-label={`Take one ${x} from the safe`}
@@ -220,9 +275,9 @@ function GoldSection({ ch }: { ch: Character }) {
           ))}
         </div>
       )}
-      {DENOMS.map((x) => (
+      {DENOMS.filter((x) => ch.coins || x !== 'coins').map((x) => (
         <div key={x} className="stack-2">
-          <div className="s-row"><span className="s-label">{GOLD_LABEL[x]}{x === 'coins' ? <span className="s-muted" style={{ fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}> · optional</span> : null}</span><span className="s-num s-muted" style={{ fontSize: 15 }}>{g[x]}</span></div>
+          <div className="s-row"><span className="s-label">{GOLD_LABEL[x]}</span><span className="s-num s-muted" style={{ fontSize: 15 }}>{g[x]}</span></div>
           <div style={{ display: 'flex', margin: '0 -3px', flexWrap: 'wrap' }} role="group" aria-label={GOLD_LABEL[x]}>
             {Array.from({ length: ROW_SLOTS[x] }, (_, i) => (
               <button key={i} className="s-slotbtn" style={{ width: 33, height: 40 }} aria-label={`${GOLD_LABEL[x]} ${i + 1}, ${i < g[x] ? 'marked' : 'empty'}`} onClick={() => tap(x, i)}>
@@ -232,7 +287,7 @@ function GoldSection({ ch }: { ch: Character }) {
           </div>
         </div>
       ))}
-      <span className="s-muted" style={{ fontSize: 13, textAlign: 'center' }} role="status">{note || '10 coins = 1 handful · 10 handfuls = 1 bag · 10 bags = 1 chest'}</span>
+      <span className="s-muted" style={{ fontSize: 13, textAlign: 'center' }} role="status">{note || `${ch.coins ? '10 coins = 1 handful · ' : ''}10 handfuls = 1 bag · 10 bags = 1 chest`}</span>
     </section>
   );
 }
@@ -258,7 +313,7 @@ function Items({ ch }: { ch: Character }) {
       updateCharacter(ch.id, (c) => {
         if (what.startsWith('h') && what !== 'hope') return { ...c, hp: Math.max(0, c.hp - total) };
         if (what === 'stress') return { ...c, stress: Math.max(0, c.stress - total) };
-        if (what === 'hope') return { ...c, hope: Math.min(6, c.hope + total) };
+        if (what === 'hope') return { ...c, hope: Math.min(derive(c).hopeSlots, c.hope + total) };
         return { ...c, armorMarked: Math.max(0, c.armorMarked - total) };
       });
       effect = 'applied';

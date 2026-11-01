@@ -60,7 +60,7 @@ export function plainText(s: string): string {
  * filled slot clears it and everything after it.
  */
 export function Track({
-  label, value, max, total, onChange, size = 23, columns,
+  label, value, max, total, onChange, size = 23, columns, countdown,
 }: {
   label: string;
   value: number;
@@ -71,24 +71,27 @@ export function Track({
   onChange: (v: number) => void;
   size?: number;
   columns?: number;
+  /** Show what's left: filled slots are unmarked ones (value stays the number marked). */
+  countdown?: boolean;
 }) {
+  const left = max - value;
   return (
     <div
       role="group"
-      aria-label={`${label}, ${value} of ${max} marked`}
+      aria-label={countdown ? `${label}, ${left} of ${max} left` : `${label}, ${value} of ${max} marked`}
       style={columns ? { display: 'grid', gridTemplateColumns: `repeat(${columns}, ${size + 6}px)` } : { display: 'flex', flexWrap: 'wrap', margin: '0 -3px' }}
     >
       {Array.from({ length: total }, (_, i) => {
         const locked = i >= max;
-        const on = i < value;
+        const on = countdown ? i < left : i < value;
         return (
           <button
             key={i}
             className="s-slotbtn"
             style={{ width: size + 6, height: size + 9 }}
             disabled={locked}
-            aria-label={locked ? `${label} slot ${i + 1}, locked` : `${label} slot ${i + 1}, ${on ? 'marked' : 'empty'}`}
-            onClick={() => onChange(on ? i : i + 1)}
+            aria-label={locked ? `${label} slot ${i + 1}, locked` : countdown ? `${label} slot ${i + 1}, ${on ? 'left' : 'marked'}` : `${label} slot ${i + 1}, ${on ? 'marked' : 'empty'}`}
+            onClick={() => onChange(countdown ? max - (on ? i : i + 1) : on ? i : i + 1)}
           >
             <span className={`s-sq ${on ? 'on' : ''} ${locked ? 'off' : ''}`} style={{ width: size, height: size }} />
           </button>
@@ -124,6 +127,7 @@ export const ICONS = {
   person: 'M12 2.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM12 8v7M8 21l4-6 4 6M6 11l6-2 6 2',
   sword: 'M14.5 3.5l6 6-9 9-4 0-2-2v-4zM4 20l3-3',
   trash: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',
+  bag: 'M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2',
 } as const;
 
 export function DomainIcon({ domain, size = 18 }: { domain: DomainId; size?: number }) {

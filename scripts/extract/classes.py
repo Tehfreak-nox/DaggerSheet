@@ -36,7 +36,8 @@ def split_features(lines: list[Line], strip_emphasis: bool = False) -> list[dict
     for l in lines:
         m = FEATURE_START.match(l.text)
         if m:
-            rest = l.text[m.end():]
+            # A bold colon after the name: "__Wildtouch__**:** You…", "__Ranger’s Focus__**: Spend a Hope**…"
+            rest = re.sub(r'^\*\*\s*:\s*(\*\*\s*)?', lambda x: '' if x.group(1) else '**', l.text[m.end():])
             feats.append((plain(m.group(1)).rstrip(':.'), [Line(l.page, l.col, l.x0, l.top, l.style, rest)]))
         elif feats:
             feats[-1][1].append(l)

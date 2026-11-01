@@ -2,7 +2,7 @@
 // player-entered value is computed here from the stored Character.
 import {
   ancestryById, armorById, cardById, classById, rules, weaponById,
-  type ClassDef, type DomainCard, type DomainId, type Feature, type Subclass, type TraitId, type Weapon,
+  type Beastform, type ClassDef, type DomainCard, type DomainId, type Feature, type Subclass, type TraitId, type Weapon,
 } from '../data';
 import { equipmentModifiers, type Modifier, type Stat } from './effects';
 import { TRAIT_IDS, type Character, type SubclassStage } from './model';
@@ -84,6 +84,16 @@ export function equippedWeapons(ch: Character): { slot: 'primary' | 'secondary';
     }
   }
   return out;
+}
+
+/** The Beastform the character is in, if any (Druid, or a Druid multiclass). */
+export function beastformOf(ch: Character): Beastform | undefined {
+  if (!ch.beastform) return undefined;
+  for (const id of [ch.classId, ch.multiclass?.classId]) {
+    const f = id ? classById.get(id)?.extras.beastforms?.forms.find((x) => x.id === ch.beastform!.formId) : undefined;
+    if (f) return f;
+  }
+  return undefined;
 }
 
 export interface Derived {
@@ -252,6 +262,14 @@ export function derive(ch: Character): Derived {
   const brawlersStrike = cls.id === 'brawler' && weapons.length === 0;
   if (brawlersStrike) mods.push({ stat: 'evasion', value: 1, source: 'I Am the Weapon' });
 
+  // Beastform: the form's trait and Evasion bonuses; Evolution raises one more trait by +1.
+  const form = beastformOf(ch);
+  if (form) {
+    if (form.trait && form.traitBonus) mods.push({ stat: form.trait, value: form.traitBonus, source: form.name });
+    if (form.evasionBonus) mods.push({ stat: 'evasion', value: form.evasionBonus, source: form.name });
+    if (ch.beastform?.evolution) mods.push({ stat: ch.beastform.evolution, value: 1, source: 'Evolution' });
+  }
+
   const always = mods.filter((m) => !m.condition);
   const sum = (stat: Stat) => always.filter((m) => m.stat === stat).reduce((a, m) => a + m.value, 0);
   const traits = sumTraits(mods);
@@ -277,7 +295,7 @@ export function derive(ch: Character): Derived {
     thresholds,
     hitPoints,
     stressSlots,
-    hopeSlots: rules.caps.hope,
+    hopeSlots: Math.max(0, rules.caps.hope - (ch.scars ?? 0)),
     proficiency,
     spellcastTraits: spellTraits,
     spellcast,

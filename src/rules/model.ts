@@ -107,6 +107,14 @@ export interface Character {
   uses: Record<string, number>;
   background: Record<string, string>;
   description: Record<string, string>;
+  /** Avoid Death scars: each one permanently crosses out a Hope slot. */
+  scars?: number;
+  /** Druid Beastform in effect; `evolution` is the trait raised by +1 when Evolution was used. */
+  beastform?: { formId: string; evolution?: TraitId };
+  /** After marking the last Hit Point: the death move in play. */
+  death?: 'unconscious' | 'blaze' | 'dead';
+  /** Track coins in the gold section (optional rule). */
+  coins?: boolean;
   /** Custom gear created for this character (ids start with "hb-"). */
   homebrew?: { weapons: Weapon[]; armor: Armor[]; items: Loot[] };
   /** Last change (ms since epoch); newest copy wins when syncing devices. */

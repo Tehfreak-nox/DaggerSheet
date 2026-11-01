@@ -10,3 +10,5 @@ export * from './gold';
 export * from './levelUp';
 export * from './validate';
 export * from './mechanics';
+export * from './beastform';
+export * from './death';

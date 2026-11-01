@@ -12,7 +12,7 @@ import {
 import { EMBLEMS, FRAMES } from '../theme/tables';
 import { sortGear } from '../ui/gearSort';
 import { Header, Ornament, themeAttrs } from '../ui/Header';
-import { cap, Icon, ICONS, RANGE_NAMES, Recall, Rich, signed } from '../ui/kit';
+import { cap, DomainIcon, Icon, ICONS, RANGE_NAMES, Recall, Rich, signed } from '../ui/kit';
 
 const STEPS = ['Name', 'Class', 'Subclass', 'Ancestry', 'Community', 'Traits', 'Experiences', 'Equipment', 'Domain cards', 'Background', 'Review'];
 
@@ -47,6 +47,7 @@ const EMPTY: Draft = {
 };
 
 const MODS = rules.creation.traitModifiers;
+const PRONOUNS = ['he/him', 'she/her', 'they/them'];
 
 /** Clank "Purposeful Design" (first Clank feature, so also a mixed ancestry with Clank first). */
 function isClank(d: Draft): boolean {
@@ -105,6 +106,7 @@ export function Create() {
   const [d, setD] = useState<Draft>(EMPTY);
   /** Ancestry tile tapped last: its details open under its row. */
   const [peek, setPeek] = useState('');
+  const [otherPro, setOtherPro] = useState(false);
   const up = (p: Partial<Draft>) => setD((x) => ({ ...x, ...p }));
   const cls = d.classId ? classById.get(d.classId) : undefined;
   const sub = cls?.subclasses.find((s) => s.id === d.subclassId);
@@ -180,8 +182,18 @@ export function Create() {
           <>
             <label className="s-label s-muted" htmlFor="c-name">Name</label>
             <input id="c-name" className="s-field" type="text" placeholder="Character name" value={d.name} onChange={(e) => up({ name: e.target.value })} autoComplete="off" />
-            <label className="s-label s-muted" htmlFor="c-pro">Pronouns</label>
-            <input id="c-pro" className="s-field" type="text" placeholder="e.g. she/her" value={d.pronouns} onChange={(e) => up({ pronouns: e.target.value })} autoComplete="off" />
+            <span className="s-label s-muted">Pronouns</span>
+            <div className="seg-choice" role="group" aria-label="Pronouns">
+              {PRONOUNS.map((p) => (
+                <button key={p} className={`s-mini ${d.pronouns === p && !otherPro ? 'solid' : ''}`} aria-pressed={d.pronouns === p && !otherPro}
+                  onClick={() => { setOtherPro(false); up({ pronouns: d.pronouns === p ? '' : p }); }}>{p}</button>
+              ))}
+              <button className={`s-mini ${otherPro ? 'solid' : ''}`} aria-pressed={otherPro}
+                onClick={() => { setOtherPro(!otherPro); up({ pronouns: '' }); }}>Other</button>
+            </div>
+            {otherPro && (
+              <input id="c-pro" className="s-field" type="text" aria-label="Your pronouns" placeholder="e.g. xe/xem" value={d.pronouns} onChange={(e) => up({ pronouns: e.target.value })} autoComplete="off" />
+            )}
             <span className="s-muted hint">Your sheet reads: name · community · subclass · class · ancestry. Each choice restyles the sheet above.</span>
           </>
         )}
@@ -274,7 +286,6 @@ export function Create() {
                 return (
                   <div className="inline-detail stack-10">
                     <span className="s-label">{a.name}{a.group ? ` · ${a.group}` : ''}</span>
-                    <span className="s-muted" style={{ fontSize: 14, lineHeight: 1.45 }}>{a.description}</span>
                     {a.features.map((f, i) => {
                       const used = both || (i === 0 ? top : bottom);
                       return (
@@ -286,11 +297,11 @@ export function Create() {
                       );
                     })}
                     <div className="seg-choice" role="group" aria-label={`Use ${a.name}`}>
-                      <button className={`s-mini ${both ? 'solid' : ''}`} aria-pressed={both} onClick={() => up({ anc1: a.id, anc2: a.id, mixed: false })}>Both features</button>
+                      <button className={`s-mini ${both ? 'solid' : ''}`} aria-pressed={both} onClick={() => up({ anc1: a.id, anc2: a.id, mixed: false })}>Both</button>
                       <button className={`s-mini ${top ? 'solid' : ''}`} aria-pressed={top}
-                        onClick={() => up({ mixed: true, anc1: a.id, anc2: d.mixed && d.anc2 !== a.id ? d.anc2 : '' })}>Top only · mix</button>
+                        onClick={() => up({ mixed: true, anc1: a.id, anc2: d.mixed && d.anc2 !== a.id ? d.anc2 : '' })}>Top only</button>
                       <button className={`s-mini ${bottom ? 'solid' : ''}`} aria-pressed={bottom}
-                        onClick={() => up({ mixed: true, anc2: a.id, anc1: d.mixed && d.anc1 !== a.id ? d.anc1 : '' })}>Bottom only · mix</button>
+                        onClick={() => up({ mixed: true, anc2: a.id, anc1: d.mixed && d.anc1 !== a.id ? d.anc1 : '' })}>Bottom only</button>
                     </div>
                     {pending && (top || bottom) && (
                       <span className="callout">Now tap another ancestry for its {top ? 'bottom' : 'top'} feature.</span>
@@ -315,7 +326,6 @@ export function Create() {
             detail={(c) => (
               <div className="inline-detail stack-10">
                 <span className="s-label">{c.name}</span>
-                <span className="s-muted" style={{ fontSize: 14 }}>{c.name} are often {c.adjectives.join(', ')}.</span>
                 <div><span className="s-feat-name" style={{ fontSize: 17 }}>{c.feature.name}</span><Rich text={c.feature.text} style={{ fontSize: 15 }} /></div>
               </div>
             )}
@@ -457,25 +467,63 @@ function ExampleExperiences({ onPick }: { onPick: (e: string) => void }) {
   );
 }
 
-function weaponLine(w: Weapon) {
-  return `${cap(w.trait)} ${RANGE_NAMES[w.range]} · ${w.burden === 2 ? 'Two-handed' : 'One-handed'}`;
+/** Light, medium or heavy, read from the armor score against its tier (robes, gambeson, chainmail pattern). */
+export function armorWeight(a: Armor): 'light' | 'medium' | 'heavy' {
+  const d = a.score - a.tier;
+  return d <= 1 ? 'light' : d === 2 ? 'medium' : 'heavy';
 }
-function weaponStat(w: Weapon) {
-  return `d${w.damage.die}${w.damage.bonus ? '+' + w.damage.bonus : ''} ${w.damage.type}`;
+
+function WeightIcon({ weight }: { weight: 'light' | 'medium' | 'heavy' }) {
+  const shield = 'M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z';
+  return (
+    <span className="gear-ico" title={`${cap(weight)} armor`}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
+        <defs><clipPath id={`w-${weight}`}><rect x="0" y={weight === 'heavy' ? 0 : weight === 'medium' ? 12 : 24} width="24" height="24" /></clipPath></defs>
+        <path d={shield} fill="currentColor" clipPath={`url(#w-${weight})`} stroke="none" />
+        <path d={shield} />
+      </svg>
+      <span>{cap(weight)}</span>
+    </span>
+  );
+}
+
+/** Which hands a weapon takes: left for a one-handed primary, right for a secondary, both when two-handed. */
+export function Hands({ w }: { w: Weapon }) {
+  const left = w.burden === 2 || w.category === 'primary';
+  const right = w.burden === 2 || w.category === 'secondary';
+  return (
+    <span className="gear-ico hands" title={w.burden === 2 ? 'Two-handed' : w.category === 'primary' ? 'One-handed, primary hand' : 'Off hand'}>
+      <span style={{ display: 'flex' }}>
+        <Icon d={ICONS.hand} size={18} style={{ transform: 'scaleX(-1)', opacity: left ? 1 : 0.2 }} />
+        <Icon d={ICONS.hand} size={18} style={{ opacity: right ? 1 : 0.2 }} />
+      </span>
+      <span>{w.burden === 2 ? 'Two-handed' : 'One-handed'}</span>
+    </span>
+  );
+}
+
+/** ★ in a ring for the guide's suggestion; a plain ★ for a weapon using your best trait. */
+export function GearStar({ kind }: { kind: 'rec' | 'best' }) {
+  return kind === 'rec'
+    ? <span className="star-rec" title="Suggested by the character guide"><Icon d={ICONS.star} size={16} stroke={2} /></span>
+    : <span className="star-best" title="Uses your best trait"><Icon d={ICONS.star} size={14} stroke={2} /></span>;
 }
 
 function GearStep({ d, up, hasSpellcast, useGuide }: { d: Draft; up: (p: Partial<Draft>) => void; hasSpellcast: boolean; useGuide: () => void }) {
-  const [open, setOpen] = useState('');
   const [showAll, setShowAll] = useState<Record<string, boolean>>({});
   const guide = guides[d.classId];
   const prim = d.primary ? weaponById.get(d.primary) : undefined;
   const twoHanded = prim?.burden === 2;
   const rec = new Set([guide.primary.id, guide.secondary?.id, guide.armor.id].filter(Boolean) as string[]);
+  const items = guide.inventory.classItem;
+  const [otherItem, setOtherItem] = useState(!!d.classItem && !items.includes(d.classItem));
 
   const sub = classById.get(d.classId)!.subclasses.find((x) => x.id === d.subclassId);
   const spell = sub?.spellcastTrait ? d.traits[sub.spellcastTrait] ?? null : null;
+  const traitVal = (w: Weapon) => w.trait === 'spellcast' ? spell : d.traits[w.trait as TraitId] ?? null;
+  const best = Math.max(...TRAIT_IDS.map((t) => d.traits[t] ?? -9));
   const sortRec = <T extends { id: string; name: string; trait?: TraitId | 'spellcast' }>(xs: T[]) => sortGear(xs, (x) => rec.has(x.id), d.traits, spell);
-  const groups: { key: string; title: string; items: (Weapon | Armor)[]; chosen: string; note?: string }[] = [
+  const groups: { key: 'primary' | 'secondary' | 'armor'; title: string; items: (Weapon | Armor)[]; chosen: string; note?: string }[] = [
     { key: 'primary', title: 'Primary weapon', items: sortRec(weapons.filter((w) => w.tier === 1 && w.category === 'primary' && !w.group)), chosen: d.primary,
       note: d.classId === 'brawler' ? 'Brawler: with no active weapons you fight with Brawler’s Strike (I Am the Weapon), so a weapon is optional.' : undefined },
     { key: 'secondary', title: 'Secondary weapon', items: sortRec(weapons.filter((w) => w.tier === 1 && w.category === 'secondary')), chosen: d.secondary,
@@ -485,10 +533,14 @@ function GearStep({ d, up, hasSpellcast, useGuide }: { d: Draft; up: (p: Partial
 
   return (
     <>
-      <span className="s-muted hint">★ suggested gear comes first, then weapons that use your best traits.</span>
+      <span className="s-muted hint stack-4">
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><GearStar kind="rec" /> Suggested by the {classById.get(d.classId)!.name} guide</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 24, display: 'inline-grid', placeItems: 'center' }}><GearStar kind="best" /></span> Uses your best trait</span>
+        <span>Tap a row to choose it; tap it again to remove it.</span>
+      </span>
       <div className="rec-box">
         <div className="s-row">
-          <span className="s-label">★ Suggested for {classById.get(d.classId)!.name}</span>
+          <span className="s-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><GearStar kind="rec" /> Suggested for {classById.get(d.classId)!.name}</span>
           <button className="s-mini solid" onClick={useGuide}>Use</button>
         </div>
         <span style={{ fontSize: 14 }}>{[guide.primary.name, guide.secondary?.name, guide.armor.name].filter(Boolean).join(' · ')}</span>
@@ -509,43 +561,32 @@ function GearStep({ d, up, hasSpellcast, useGuide }: { d: Draft; up: (p: Partial
               const blocked = (w && w.damage.type !== 'phy' && !hasSpellcast) ? 'Needs a Spellcast trait'
                 : (w && g.key === 'secondary' && twoHanded) ? 'Hands full'
                 : null;
-              const isOpen = open === x.id;
               const chosen = g.chosen === x.id;
               const vs = w ? versatileStats(w.feature) : null;
+              const star = rec.has(x.id) ? 'rec' : w && best > -9 && traitVal(w) === best ? 'best' : null;
+              const choose = () => {
+                if (g.key === 'primary') up({ primary: chosen ? '' : x.id, secondary: !chosen && w!.burden === 2 ? '' : d.secondary });
+                if (g.key === 'secondary') up({ secondary: chosen ? '' : x.id });
+                if (g.key === 'armor') up({ armorId: chosen ? '' : x.id });
+              };
               return (
-                <div key={x.id} className="gear-row" style={blocked ? { opacity: 0.45 } : undefined}>
-                  <button className="s-row s-press" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? '' : x.id)}>
-                    <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, textAlign: 'left' }}>
-                      <span style={{ font: '700 17px/1.15 var(--head)' }}>{rec.has(x.id) ? '★ ' : ''}{x.name}</span>
-                      <span className="s-muted" style={{ fontSize: 13 }}>{w ? weaponLine(w) : `Thresholds ${a!.thresholds.major}/${a!.thresholds.severe}`}{blocked ? ` · ${blocked}` : ''}</span>
+                <button key={x.id} className={`gear-pick s-press ${chosen ? 'sel' : ''}`} aria-pressed={chosen} disabled={!!blocked && !chosen} onClick={choose}
+                  style={blocked ? { opacity: 0.45 } : undefined}>
+                  <span className="gp-main">
+                    <span className="gp-name">{star && <GearStar kind={star} />}{x.name}{chosen && <span className="chosen">Chosen</span>}</span>
+                    <span className="gp-meta">
+                      {w ? <Hands w={w} /> : <WeightIcon weight={armorWeight(a!)} />}
+                      <span className="s-muted">{w ? `${w.trait === 'spellcast' ? 'Spellcast' : cap(w.trait)} · ${RANGE_NAMES[w.range]}` : `Thresholds ${a!.thresholds.major} / ${a!.thresholds.severe}`}</span>
                     </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
-                      <span className="s-num" style={{ fontSize: 16 }}>{w ? weaponStat(w) : `Score ${a!.score}`}</span>
-                      {chosen && <span className="chosen">Chosen</span>}
-                      <Icon d={ICONS.chevron} style={{ transform: isOpen ? 'rotate(180deg)' : undefined }} />
-                    </span>
-                  </button>
-                  {isOpen && (
-                    <div className="stack-10" style={{ padding: '4px 0 14px' }}>
-                      <div className="grid-2 kv">
-                        {(w ? [['Trait', cap(w.trait)], ['Range', RANGE_NAMES[w.range]], ['Damage', weaponStat(w)], ['Burden', w.burden === 2 ? 'Two-handed' : 'One-handed']]
-                          : [['Major', String(a!.thresholds.major)], ['Severe', String(a!.thresholds.severe)], ['Armor Score', String(a!.score)], ['Tier', String(a!.tier)]]).map(([k, v]) => (
-                          <span key={k} style={{ display: 'flex', flexDirection: 'column' }}><span className="s-label s-muted" style={{ fontSize: 11 }}>{k}</span><span style={{ fontSize: 15 }}>{v}</span></span>
-                        ))}
-                      </div>
-                      {x.feature && <span className="s-feat-text" style={{ fontSize: 15 }}><b>{x.feature.name}:</b> {x.feature.text}</span>}
-                      {vs && <span className="s-muted" style={{ fontSize: 13 }}>Versatile: {cap(vs.trait)}, {RANGE_NAMES[vs.range]}, d{vs.damage.die}{vs.damage.bonus ? '+' + vs.damage.bonus : ''}</span>}
-                      <button className={`s-mini ${chosen ? '' : 'solid'}`} style={{ alignSelf: 'flex-start' }} disabled={!!blocked && !chosen}
-                        onClick={() => {
-                          if (g.key === 'primary') up({ primary: chosen ? '' : x.id, secondary: !chosen && w!.burden === 2 ? '' : d.secondary });
-                          if (g.key === 'secondary') up({ secondary: chosen ? '' : x.id });
-                          if (g.key === 'armor') up({ armorId: chosen ? '' : x.id });
-                        }}>
-                        {chosen ? 'Remove' : 'Choose'}
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    {x.feature && <span className="gp-feat"><b>{x.feature.name}:</b> {x.feature.text}</span>}
+                    {vs && <span className="s-muted" style={{ fontSize: 13 }}>Versatile: {cap(vs.trait)}, {RANGE_NAMES[vs.range]}, d{vs.damage.die}{vs.damage.bonus ? '+' + vs.damage.bonus : ''}</span>}
+                    {blocked && <span className="s-muted" style={{ fontSize: 13 }}>{blocked}</span>}
+                  </span>
+                  <span className="gp-side">
+                    {w ? <><span className="s-num" style={{ fontSize: 18 }}>d{w.damage.die}{w.damage.bonus ? '+' + w.damage.bonus : ''}</span><span className="s-label s-muted" style={{ fontSize: 11 }}>{w.damage.type === 'phy' ? 'Physical' : 'Magic'}</span></>
+                      : <><span className="s-num" style={{ fontSize: 20 }}>{a!.score}</span><span className="s-label s-muted" style={{ fontSize: 11 }}>Score</span></>}
+                  </span>
+                </button>
               );
             })}
             {g.items.length > 6 && (
@@ -557,18 +598,24 @@ function GearStep({ d, up, hasSpellcast, useGuide }: { d: Draft; up: (p: Partial
         );
       })}
       <span className="s-label" style={{ marginTop: 10 }}>Potion</span>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <div className="stack-col">
         {(['minor-health-potion', 'minor-stamina-potion'] as const).map((p) => (
-          <button key={p} className={`s-mini ${d.potion === p ? 'solid' : ''}`} onClick={() => up({ potion: p })}>
+          <button key={p} className={`s-mini wide ${d.potion === p ? 'solid' : ''}`} aria-pressed={d.potion === p} onClick={() => up({ potion: p })}>
             {p === 'minor-health-potion' ? 'Minor Health Potion · 1d4 HP' : 'Minor Stamina Potion · 1d4 Stress'}
           </button>
         ))}
       </div>
       <span className="s-label" style={{ marginTop: 10 }}>Class item</span>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        {guide.inventory.classItem.map((it) => (
-          <button key={it} className={`s-mini ${d.classItem === it ? 'solid' : ''}`} style={{ textTransform: 'none', letterSpacing: 0 }} onClick={() => up({ classItem: it })}>{it}</button>
+      <div className="stack-col">
+        {items.map((it) => (
+          <button key={it} className={`s-mini wide ${!otherItem && d.classItem === it ? 'solid' : ''}`} aria-pressed={!otherItem && d.classItem === it}
+            onClick={() => { setOtherItem(false); up({ classItem: it }); }}>{it}</button>
         ))}
+        <button className={`s-mini wide ${otherItem ? 'solid' : ''}`} aria-pressed={otherItem}
+          onClick={() => { setOtherItem(true); up({ classItem: '' }); }}>Other</button>
+        {otherItem && (
+          <input className="s-field" type="text" aria-label="Your class item" placeholder="Describe your class item" value={d.classItem} onChange={(e) => up({ classItem: e.target.value })} autoComplete="off" />
+        )}
       </div>
       <span className="s-muted hint">Also added: a torch, 50 feet of rope, basic supplies and a handful of gold.</span>
     </>
@@ -583,33 +630,42 @@ function CardStep({ d, up }: { d: Draft; up: (p: Partial<Draft>) => void }) {
   return (
     <>
       <span className="s-muted hint">Choose {need} level 1 cards from {cls.domains.map(cap).join(' and ')}. Tap a card to read it. {d.cards.length} of {need} chosen.</span>
-      {pool.map((c) => {
-        const sel = d.cards.includes(c.id);
-        const isOpen = open === c.id;
-        return (
-          <div key={c.id} className={`card-pick ${sel ? 'sel' : ''}`}>
-            <button className="s-row s-press" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? '' : c.id)}>
-              <span style={{ display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left' }}>
-                <span className="s-feat-name" style={{ fontSize: 18 }}>{c.name}</span>
-                <span className="s-muted" style={{ fontSize: 13 }}>{cap(c.domain)} · {cap(c.type)}</span>
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {sel && <span className="chosen">Chosen</span>}
-                <Recall cost={c.recallCost} />
-              </span>
-            </button>
-            {isOpen && (
-              <div className="stack-10" style={{ padding: '0 12px 14px' }}>
-                <Rich text={c.text} style={{ fontSize: 15 }} />
-                <button className={`s-mini ${sel ? '' : 'solid'}`} style={{ alignSelf: 'flex-start' }} disabled={!sel && d.cards.length >= need}
-                  onClick={() => up({ cards: sel ? d.cards.filter((x) => x !== c.id) : [...d.cards, c.id] })}>
-                  {sel ? 'Remove' : d.cards.length >= need ? `${need} chosen` : 'Choose'}
+      {cls.domains.map((dom, di) => (
+        <Fragment key={dom}>
+          {di > 0 && <hr className="sep" />}
+          <span className="s-label domain-head"><DomainIcon domain={dom} size={22} /> {cap(dom)}</span>
+          {pool.filter((c) => c.domain === dom).map((c) => {
+            const sel = d.cards.includes(c.id);
+            const isOpen = open === c.id;
+            return (
+              <div key={c.id} className={`card-pick ${sel ? 'sel' : ''}`}>
+                <button className="s-row s-press" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? '' : c.id)}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
+                    <DomainIcon domain={c.domain} size={24} />
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span className="s-feat-name" style={{ fontSize: 18 }}>{c.name}</span>
+                      <span className="s-muted" style={{ fontSize: 13 }}>{cap(c.domain)} · {cap(c.type)}</span>
+                    </span>
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {sel && <span className="chosen">Chosen</span>}
+                    <Recall cost={c.recallCost} />
+                  </span>
                 </button>
+                {isOpen && (
+                  <div className="stack-10" style={{ padding: '0 12px 14px' }}>
+                    <Rich text={c.text} style={{ fontSize: 15 }} />
+                    <button className={`s-mini ${sel ? '' : 'solid'}`} style={{ alignSelf: 'flex-start' }} disabled={!sel && d.cards.length >= need}
+                      onClick={() => up({ cards: sel ? d.cards.filter((x) => x !== c.id) : [...d.cards, c.id] })}>
+                      {sel ? 'Remove' : d.cards.length >= need ? `${need} chosen` : 'Choose'}
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        );
-      })}
+            );
+          })}
+        </Fragment>
+      ))}
     </>
   );
 }
@@ -679,33 +735,17 @@ function Feat({ name, text, note, tag }: { name: string; text: string; note?: st
   );
 }
 
-/** Everything about a class, shown under its tile before you pick it. */
+/** A class's Hope feature and class features, shown under its tile before you pick it. */
 function ClassDetail({ id }: { id: string }) {
   const c = classById.get(id)!;
-  const ex = c.extras;
   return (
     <div className="inline-detail stack-14" data-cls={c.id} data-sub="a">
       <span className="s-label" style={{ fontSize: 18 }}>{c.name}</span>
-      <span style={{ fontSize: 15, lineHeight: 1.45 }}>{c.description}</span>
-      <div className="grid-2 kv">
-        {[['Domains', c.domains.map(cap).join(' & ')], ['Starting HP', String(c.startingHitPoints)], ['Starting Evasion', String(c.startingEvasion)], ['Class items', c.classItems]].map(([k, v]) => (
-          <span key={k} style={{ display: 'flex', flexDirection: 'column' }}><span className="s-label s-muted" style={{ fontSize: 11 }}>{k}</span><span style={{ fontSize: 15 }}>{v}</span></span>
-        ))}
-      </div>
       <span className="s-label">Hope feature</span>
       <Feat name={c.hopeFeature.name} text={c.hopeFeature.text} tag={`${c.hopeFeature.hopeCost} Hope`} />
+      <hr className="sep" />
       <span className="s-label">Class feature{c.features.length > 1 ? 's' : ''}</span>
       {c.features.map((f) => <Feat key={f.id} name={f.name} text={f.text} note={f.note} />)}
-      {ex.beastforms && <span className="s-muted" style={{ fontSize: 14 }}>Beastform: {ex.beastforms.forms.length} creature forms across tiers 1–4; you can take forms of your tier or lower.</span>}
-      {ex.patronSpheres && <span className="s-muted" style={{ fontSize: 14 }}>Patron spheres of influence: {ex.patronSpheres.join(', ')}.</span>}
-      <span className="s-label">Subclasses</span>
-      {c.subclasses.map((s) => (
-        <span key={s.id} style={{ fontSize: 15, lineHeight: 1.4 }}>
-          <b>{s.name}</b> · {s.spellcastTrait ? `Spellcast ${cap(s.spellcastTrait)}` : 'no Spellcast trait'}. {s.description}
-        </span>
-      ))}
-      {ex.martialStances && <span className="s-muted" style={{ fontSize: 14 }}>Martial Artist subclass: {ex.martialStances.stances.length} martial stances across tiers 1–4.</span>}
-      {ex.companion && <span className="s-muted" style={{ fontSize: 14 }}>Beastbound subclass: an animal companion that levels up with you.</span>}
     </div>
   );
 }
@@ -714,17 +754,18 @@ function ClassDetail({ id }: { id: string }) {
 function SubclassDetail({ classId, subclassId }: { classId: string; subclassId: string }) {
   const s = classById.get(classId)!.subclasses.find((x) => x.id === subclassId)!;
   const stages: [keyof typeof s & ('foundation' | 'specialization' | 'mastery'), string][] = [
-    ['foundation', 'Foundation · level 1'],
-    ['specialization', 'Specialization · an upgraded subclass card from level 5'],
-    ['mastery', 'Mastery · the next upgrade, from level 8'],
+    ['foundation', 'Foundation · Level 1'],
+    ['specialization', 'Specialization · Level 5'],
+    ['mastery', 'Mastery · Level 8'],
   ];
   return (
     <div className="inline-detail stack-14">
       <span className="s-label" style={{ fontSize: 18 }}>{s.name}</span>
       <span style={{ fontSize: 14 }}>{s.spellcastTrait ? `Spellcast trait: ${cap(s.spellcastTrait)}` : 'No Spellcast trait (you can’t use magic weapons).'}</span>
-      {stages.map(([k, label]) => (
+      {stages.map(([k, label], i) => (
         <div key={k} className="stack-10">
-          <span className="s-label">{label}</span>
+          {i > 0 && <hr className="sep" />}
+          <span className="s-label stage-head">{label}</span>
           {s[k].map((f) => <Feat key={f.id} name={f.name} text={f.text} note={f.note} />)}
         </div>
       ))}

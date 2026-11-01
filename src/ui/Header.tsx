@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ancestryById, classById, communityById } from '../data';
-import type { AncestryChoice } from '../rules';
+import { tierOf, type AncestryChoice } from '../rules';
 import { EMBLEMS, FRAMES, ORNAMENTS } from '../theme/tables';
 import { Icon, ICONS } from './kit';
 
@@ -12,6 +12,7 @@ export interface Persona {
   subclassId?: string;
   ancestry?: AncestryChoice;
   communityId?: string;
+  multiclass?: { classId: string; subclassId: string };
 }
 
 /** data-cls / data-sub attributes that drive the class palette (persona.css). */
@@ -33,7 +34,9 @@ export function sentence(p: Persona): string {
   const com = p.communityId ? communityById.get(p.communityId) : undefined;
   const ids = ancestryIds(p.ancestry);
   const anc = ids ? (ids[0] === ids[1] ? ancestryById.get(ids[0])?.name : `${ancestryById.get(ids[0])?.name}/${ancestryById.get(ids[1])?.name}`) : undefined;
-  const words = [com?.name, sub?.name, cls?.name, anc].filter(Boolean);
+  const mc = p.multiclass ? classById.get(p.multiclass.classId) : undefined;
+  const mcSub = mc?.subclasses.find((s) => s.id === p.multiclass!.subclassId);
+  const words = [com?.name, sub?.name, cls?.name, ...(mc ? ['and', mcSub?.name, mc.name] : []), anc].filter(Boolean);
   if (!words.length) return 'Choose a class to begin';
   const first = words[0]!;
   return `${/^[AEIOU]/i.test(first) ? 'an' : 'a'} ${words.join(' ')}`;
@@ -53,13 +56,38 @@ export function Ornament({ id, flip }: { id?: string; flip?: boolean }) {
   );
 }
 
-export function Emblem({ classId, subIndex, size = 210, opacity = 0.17, style }: { classId?: string; subIndex: number; size?: number; opacity?: number; style?: React.CSSProperties }) {
+/** Index of a subclass within its class (0: ring frame, 1: diamond frame). */
+export function subIndexOf(classId?: string, subclassId?: string): number {
+  const cls = classId ? classById.get(classId) : undefined;
+  return cls ? Math.max(0, cls.subclasses.findIndex((s) => s.id === subclassId)) : 0;
+}
+
+/** Class emblem in its subclass frame; a multiclass shows both, split down the middle. */
+export function Emblem({ classId, subIndex, size = 210, opacity = 0.17, style, multi }: {
+  classId?: string; subIndex: number; size?: number; opacity?: number; style?: React.CSSProperties;
+  multi?: { classId: string; subIndex: number };
+}) {
   if (!classId) return null;
+  const uid = `em-${classId}-${multi?.classId ?? ''}-${size}`;
   return (
     <svg width={size} height={size} viewBox="-5 -5 34 34" fill="none" stroke="#FFFFFF" strokeWidth=".6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
       style={{ position: 'absolute', right: -44, top: -24, opacity, pointerEvents: 'none', ...style }}>
-      <path d={EMBLEMS[classId]} />
-      <path d={FRAMES[subIndex] ?? FRAMES[0]} />
+      {multi ? (
+        <>
+          <defs>
+            <clipPath id={`${uid}-l`}><rect x="-5" y="-5" width="17" height="34" /></clipPath>
+            <clipPath id={`${uid}-r`}><rect x="12" y="-5" width="17" height="34" /></clipPath>
+          </defs>
+          <g clipPath={`url(#${uid}-l)`}><path d={EMBLEMS[classId]} /><path d={FRAMES[subIndex] ?? FRAMES[0]} /></g>
+          <g clipPath={`url(#${uid}-r)`}><path d={EMBLEMS[multi.classId]} /><path d={FRAMES[multi.subIndex] ?? FRAMES[0]} /></g>
+          <path d="M12 -4V28" strokeDasharray="1 1" />
+        </>
+      ) : (
+        <>
+          <path d={EMBLEMS[classId]} />
+          <path d={FRAMES[subIndex] ?? FRAMES[0]} />
+        </>
+      )}
     </svg>
   );
 }
@@ -89,7 +117,8 @@ export function Header({
 
   return (
     <header className="s-band">
-      <Emblem classId={cls?.id} subIndex={subIndex} />
+      <Emblem classId={cls?.id} subIndex={subIndex}
+        multi={persona.multiclass ? { classId: persona.multiclass.classId, subIndex: subIndexOf(persona.multiclass.classId, persona.multiclass.subclassId) } : undefined} />
       {onHome && (
         <button className="s-icon s-press band-btn" style={{ left: 2 }} aria-label="All characters" onClick={onHome}>
           <Icon d={ICONS.back} size={24} stroke={2.4} />
@@ -106,7 +135,7 @@ export function Header({
         <span className="s-sub">{sentence(persona)}</span>
         {persona.level !== undefined && (
           <span className="s-sub" style={{ fontSize: 15, color: 'rgba(255,255,255,.65)' }}>
-            Level {persona.level}{persona.pronouns ? ` · ${persona.pronouns}` : ''}
+            Level {persona.level} · Tier {tierOf(persona.level)}{persona.pronouns ? ` · ${persona.pronouns}` : ''}
           </span>
         )}
       </div>
@@ -116,7 +145,7 @@ export function Header({
           <button key={t} className={`s-navtab ${tab === t ? 'on' : ''}`} aria-current={tab === t ? 'page' : undefined}
             style={{ border: 0, background: 'transparent', minHeight: preview ? 46 : 64 }}
             onClick={() => onTab?.(t)} disabled={!onTab}>
-            {!preview && <Icon d={t === 'character' ? ICONS.person : ICONS.sword} size={30} stroke={1.6} />}
+            {!preview && <Icon d={t === 'character' ? ICONS.person : ICONS.bag} size={30} stroke={1.6} />}
             {t === 'character' ? 'Character' : 'Equipment'}
           </button>
         ))}

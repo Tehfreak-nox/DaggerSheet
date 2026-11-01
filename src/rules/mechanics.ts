@@ -12,7 +12,9 @@ export type Control =
   | { kind: 'damage'; count: number | 'proficiency'; sides: number; bonus: number; type: 'magic' | 'physical' | null; label: string }
   | { kind: 'dice'; count: number; sides: number; bonus: number; label: string }
   | { kind: 'uses'; scope: UseScope; max: number; label: string }
-  | { kind: 'tokens'; source: TokenSource; label: string };
+  | { kind: 'tokens'; source: TokenSource; label: string }
+  /** "roll a d20 as your Hope Die": armed for the next action roll. */
+  | { kind: 'hopeDie'; sides: number; label: string };
 
 export type TokenSource =
   | { fixed: number }
@@ -106,6 +108,13 @@ export function controlsFor(rawText: string): Control[] {
         : { trait: TRAITS[w], min: tok[3] ? Number(tok[3]) : undefined };
     }
     add({ kind: 'tokens', source, label: 'Tokens' });
+  }
+
+  // A bigger Hope Die: "you can roll a d20 as your Hope Die".
+  const hopeDie = /\broll a d(\d+) as your Hope Die\b/i.exec(text);
+  if (hopeDie) {
+    add({ kind: 'hopeDie', sides: Number(hopeDie[1]), label: `d${hopeDie[1]} Hope Die` });
+    damageSpans.push([hopeDie.index, hopeDie.index + hopeDie[0].length]);
   }
 
   // Other dice: "roll a d6", "clear 1d4 Hit Points", "a d8 to your damage roll".

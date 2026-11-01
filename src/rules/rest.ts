@@ -89,5 +89,7 @@ export function rest(
   const clear = kind === 'long' ? [USE_SCOPES.rest, USE_SCOPES.longRest] : [USE_SCOPES.rest];
   c.uses = Object.fromEntries(Object.entries(c.uses).filter(([k]) => !clear.some((p) => k.startsWith(p))));
   c.shortRestStreak = kind === 'short' ? c.shortRestStreak + 1 : 0;
+  // Avoid Death: "They return to consciousness when … the party finishes a long rest."
+  if (kind === 'long' && c.death === 'unconscious') c.death = undefined;
   return { character: c, log };
 }

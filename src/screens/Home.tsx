@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { go } from '../app/nav';
 import { deleteCharacter, exportJson, importJson, useStore } from '../app/store';
-import type { Character } from '../rules';
-import { Emblem, sentence, themeAttrs } from '../ui/Header';
+import { effectiveMode, toggleMode } from '../app/theme';
+import { tierOf, type Character } from '../rules';
+import { Emblem, sentence, subIndexOf, themeAttrs } from '../ui/Header';
 import { Icon, ICONS } from '../ui/kit';
 
 export function Home() {
@@ -13,6 +14,7 @@ export function Home() {
   const [text, setText] = useState('');
   const [msg, setMsg] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [mode, setMode] = useState(effectiveMode());
 
   return (
     <div className="s home">
@@ -44,6 +46,9 @@ export function Home() {
           <button className="s-mini" onClick={() => { setIo(io === 'export' ? 'none' : 'export'); setText(exportJson()); setMsg(''); }} disabled={!list.length}>Export</button>
           <button className="s-mini" onClick={() => { setIo(io === 'import' ? 'none' : 'import'); setText(''); setMsg(''); }}>Import</button>
           <button className="s-mini" onClick={() => go({ name: 'about' })}>About</button>
+          <button className="s-mini theme-btn" aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`} onClick={() => setMode(toggleMode())}>
+            {mode === 'dark' ? '☀ Light' : '☾ Dark'}
+          </button>
         </div>
         {io !== 'none' && (
           <div className="stack-10">
@@ -72,10 +77,11 @@ function CharRow({ c, confirming, setConfirm }: { c: Character; confirming: bool
   return (
     <div className="char-row" {...attrs}>
       <button className="char-open s-press" onClick={() => go({ name: 'sheet', id: c.id })}>
-        <Emblem classId={c.classId} subIndex={attrs['data-sub'] === 'b' ? 1 : 0} size={120} opacity={0.22} style={{ right: -20, top: -20 }} />
+        <Emblem classId={c.classId} subIndex={attrs['data-sub'] === 'b' ? 1 : 0} size={120} opacity={0.22} style={{ right: -20, top: -20 }}
+          multi={c.multiclass ? { classId: c.multiclass.classId, subIndex: subIndexOf(c.multiclass.classId, c.multiclass.subclassId) } : undefined} />
         <span className="s-name" style={{ fontSize: 22 }}>{c.name}</span>
         <span className="s-sub" style={{ fontSize: 14 }}>{sentence(c)}</span>
-        <span className="s-sub" style={{ fontSize: 13, color: 'rgba(255,255,255,.65)' }}>Level {c.level}</span>
+        <span className="s-sub" style={{ fontSize: 13, color: 'rgba(255,255,255,.65)' }}>Level {c.level} · Tier {tierOf(c.level)}</span>
       </button>
       {confirming ? (
         <div className="s-row" style={{ padding: '8px 12px' }}>

@@ -249,6 +249,7 @@ export interface Rules {
     coinsOptional: boolean;
     text: string;
   };
+  death: { intro: string; moves: { id: 'blaze-of-glory' | 'avoid-death' | 'risk-it-all'; name: string; text: string }[] };
 }
 
 export interface MixedAncestryRule {

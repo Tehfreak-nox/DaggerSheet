@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { back } from '../app/nav';
 import { saveCharacter, useStore } from '../app/store';
 import { classById, classes, rules, type Advancement, type DomainId, type TraitId } from '../data';
@@ -136,19 +136,19 @@ export function LevelUp({ id }: { id: string }) {
             const usedHere = ch.advancements.filter((m) => m.tier === tier && m.choice.id === a.id).length * a.cost;
             return (
               <div key={a.id} className={`adv-row ${!avail && !chosen ? 'dim' : ''}`}>
-                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                <button className="adv-head" disabled={!avail && !chosen} aria-pressed={chosen > 0}
+                  aria-label={`${SHORT[a.id]}: ${chosen ? 'chosen' : avail ? 'available' : 'no slots left'}`} onClick={() => toggle(a)}>
                   <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ fontSize: 15, fontWeight: 600 }}>{SHORT[a.id]}</span>
                     <span className="s-muted" style={{ fontSize: 13, lineHeight: 1.35 }}>{capped ? `${capped}.` : a.text}</span>
                   </span>
-                  <button className={`adv-boxes ${a.cost === 2 ? 'boxed' : ''}`} disabled={!avail && !chosen}
-                    aria-label={`${SHORT[a.id]}: ${chosen ? 'chosen' : avail ? 'available' : 'no slots left'}`} onClick={() => toggle(a)}>
+                  <span className={`adv-boxes ${a.cost === 2 ? 'boxed' : ''}`} aria-hidden="true">
                     {Array.from({ length: Math.max(total, 1) }, (_, i) => {
                       const state = i < usedHere ? 'used' : i < usedHere + chosen * a.cost ? 'on' : '';
                       return <span key={i} className={`s-sq ${state === 'on' ? 'on' : ''} ${state === 'used' ? 'used' : ''}`} style={{ width: 24, height: 24 }} />;
                     })}
-                  </button>
-                </div>
+                  </span>
+                </button>
                 {picks.map((p, i) => p.id !== a.id ? null : (
                   <PickDetail key={i} p={p} ch={ch} level={level} expNames={expNames} expVals={expVals}
                     taken={newCardIds} sim={simForCards} onChange={(x) => edit(i, x)} />
@@ -226,7 +226,7 @@ function PickDetail({ p, ch, level, expNames, expVals, taken, sim, onChange }: {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {TRAIT_IDS.map((t) => (
               <button key={t} className={`s-mini ${p.traits.includes(t) ? 'solid' : ''}`} disabled={marked.includes(t)}
-                onClick={() => onChange({ traits: toggleIn(p.traits, t as never) as TraitId[] })}>{cap(t)} {signed(d.traits[t])}</button>
+                onClick={() => onChange({ traits: toggleIn(p.traits, t as never) as TraitId[] })}>{cap(t)} {signed(d.traits[t])} → {signed(d.traits[t] + 1)}</button>
             ))}
           </div>
         </div>
@@ -238,7 +238,7 @@ function PickDetail({ p, ch, level, expNames, expVals, taken, sim, onChange }: {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {expNames.map((n, i) => (
               <button key={i} className={`s-mini ${p.experiences.includes(i) ? 'solid' : ''}`} style={{ textTransform: 'none', letterSpacing: 0 }}
-                onClick={() => onChange({ experiences: toggleIn(p.experiences, i as never) as number[] })}>{n} +{expVals[i]}</button>
+                onClick={() => onChange({ experiences: toggleIn(p.experiences, i as never) as number[] })}>{n} +{expVals[i]} → +{expVals[i] + 1}</button>
             ))}
           </div>
         </div>
@@ -285,31 +285,48 @@ function PickDetail({ p, ch, level, expNames, expVals, taken, sim, onChange }: {
 
 function CardList({ ch, level, value, exclude, onPick }: { ch: Character; level: number; value: string; exclude: string[]; onPick: (id: string) => void }) {
   const [open, setOpen] = useState('');
-  const cards = useMemo(() => legalCards(ch, level, exclude).sort((a, b) => b.level - a.level || a.domain.localeCompare(b.domain)), [ch, level, exclude.join()]);
+  const cards = useMemo(() => legalCards(ch, level, exclude), [ch, level, exclude.join()]);
+  const levels = [...new Set(cards.map((c) => c.level))].sort((a, b) => b - a);
   return (
     <div className="card-list">
-      {cards.map((c) => {
-        const sel = value === c.id;
-        const isOpen = open === c.id || sel;
+      {levels.map((lvl, li) => {
+        const atLevel = cards.filter((c) => c.level === lvl);
+        const doms = [...new Set(atLevel.map((c) => c.domain))];
         return (
-          <div key={c.id} className={`card-pick ${sel ? 'sel' : ''}`}>
-            <button className="s-row s-press" aria-expanded={isOpen} onClick={() => setOpen(open === c.id ? '' : c.id)}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
-                <DomainIcon domain={c.domain} />
-                <span style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span className="s-feat-name" style={{ fontSize: 17 }}>{c.name}</span>
-                  <span className="s-muted" style={{ fontSize: 13 }}>{cap(c.domain)} · Level {c.level} {cap(c.type)}</span>
-                </span>
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{sel && <span className="chosen">Chosen</span>}<Recall cost={c.recallCost} /></span>
-            </button>
-            {isOpen && (
-              <div className="stack-10" style={{ padding: '0 12px 12px' }}>
-                <Rich text={c.text} style={{ fontSize: 14 }} />
-                <button className={`s-mini ${sel ? '' : 'solid'}`} style={{ alignSelf: 'flex-start' }} onClick={() => onPick(sel ? '' : c.id)}>{sel ? 'Remove' : 'Choose'}</button>
-              </div>
-            )}
-          </div>
+          <Fragment key={lvl}>
+            {li > 0 && <hr className="sep" />}
+            <h3 className="s-title" style={{ margin: '4px 0' }}><i /><span>Level {lvl}</span><i /></h3>
+            {doms.map((dm, di) => (
+              <Fragment key={dm}>
+                {di > 0 && <hr className="sep" style={{ width: '60%' }} />}
+                <span className="s-label domain-head" style={{ fontSize: 14 }}><DomainIcon domain={dm} size={20} /> {cap(dm)}</span>
+                {atLevel.filter((c) => c.domain === dm).map((c) => {
+                  const sel = value === c.id;
+                  const isOpen = open === c.id || sel;
+                  return (
+                    <div key={c.id} className={`card-pick ${sel ? 'sel' : ''}`}>
+                      <button className="s-row s-press" aria-expanded={isOpen} onClick={() => setOpen(open === c.id ? '' : c.id)}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
+                          <DomainIcon domain={c.domain} />
+                          <span style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span className="s-feat-name" style={{ fontSize: 17 }}>{c.name}</span>
+                            <span className="s-muted" style={{ fontSize: 13 }}>{cap(c.domain)} · Level {c.level} {cap(c.type)}</span>
+                          </span>
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{sel && <span className="chosen">Chosen</span>}<Recall cost={c.recallCost} /></span>
+                      </button>
+                      {isOpen && (
+                        <div className="stack-10" style={{ padding: '0 12px 12px' }}>
+                          <Rich text={c.text} style={{ fontSize: 14 }} />
+                          <button className={`s-mini ${sel ? '' : 'solid'}`} style={{ alignSelf: 'flex-start' }} onClick={() => onPick(sel ? '' : c.id)}>{sel ? 'Remove' : 'Choose'}</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </Fragment>
+            ))}
+          </Fragment>
         );
       })}
     </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { back } from '../app/nav';
 import { toast } from '../app/toast';
 import { updateCharacter, useStore } from '../app/store';
@@ -69,9 +69,14 @@ export function Vault({ id }: { id: string }) {
           const mcLimit = ch.multiclass ? Math.ceil(ch.level / 2) : 0;
           return (
             <section key={lvl} className="stack-4" style={locked ? { opacity: 0.55 } : undefined}>
+              {lvl > 1 && <hr className="sep" style={{ marginBottom: 10 }} />}
               <h2 className="s-title" style={{ margin: '0 0 4px' }}><i /><span>Level {lvl}</span><i /></h2>
               {locked && <span className="s-muted" style={{ fontSize: 13, textAlign: 'center' }}>Unlocks at level {lvl}</span>}
-              {cards.map((c) => {
+              {domains.filter((dm) => cards.some((c) => c.domain === dm)).map((dm, di) => (
+              <Fragment key={dm}>
+              {di > 0 && <hr className="sep" />}
+              <span className="s-label domain-head" style={{ fontSize: 14 }}><DomainIcon domain={dm} size={20} /> {cap(dm)}</span>
+              {cards.filter((c) => c.domain === dm).map((c) => {
                 const inL = loadout.has(c.id), inV = vault.has(c.id);
                 const mcLocked = ch.multiclass?.domain === c.domain && !(classById.get(ch.classId)!.domains as string[]).includes(c.domain) && c.level > mcLimit;
                 const status = inL ? 'In loadout' : inV ? 'In vault' : locked || mcLocked ? 'Locked' : 'Not learned';
@@ -98,6 +103,8 @@ export function Vault({ id }: { id: string }) {
                   </div>
                 );
               })}
+              </Fragment>
+              ))}
             </section>
           );
         })}
