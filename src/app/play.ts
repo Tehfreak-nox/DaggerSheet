@@ -243,6 +243,16 @@ export function dice(title: string, count: number, sides: number, bonus = 0, sub
   return total;
 }
 
+/** Add extra dice to the damage roll on screen (Rampage: a d10 for each 1). */
+export function addDamageDice(label: string, count: number, sides: number) {
+  const r = state.roll;
+  if (!r || r.kind !== 'damage' || count < 1) return;
+  const extra = rollMany(count, sides);
+  const rolls = [...r.result.rolls, { sides, values: extra, dropped: null }];
+  const total = r.result.total + extra.reduce((a, b) => a + b, 0);
+  show({ ...r, result: { ...r.result, rolls, total }, effects: [...r.effects, `${label}: +${extra.join(' +')}.`], rerolled: [...r.rerolled, label] });
+}
+
 /** Show dice already rolled by a rules function (death moves). */
 export function showDice(title: string, values: number[], labels: string[], effects: string[], sub?: string) {
   show({ kind: 'dice', title, sub, values, sides: 12, bonus: 0, total: 0, effects, labels });

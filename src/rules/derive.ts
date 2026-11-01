@@ -5,6 +5,7 @@ import {
   type Beastform, type ClassDef, type DomainCard, type DomainId, type Feature, type Subclass, type TraitId, type Weapon,
 } from '../data';
 import { equipmentModifiers, type Modifier, type Stat } from './effects';
+import { activeForm } from './forms';
 import { TRAIT_IDS, type Character, type SubclassStage } from './model';
 
 export const STAGES: SubclassStage[] = ['foundation', 'specialization', 'mastery'];
@@ -88,12 +89,7 @@ export function equippedWeapons(ch: Character): { slot: 'primary' | 'secondary';
 
 /** The Beastform the character is in, if any (Druid, or a Druid multiclass). */
 export function beastformOf(ch: Character): Beastform | undefined {
-  if (!ch.beastform) return undefined;
-  for (const id of [ch.classId, ch.multiclass?.classId]) {
-    const f = id ? classById.get(id)?.extras.beastforms?.forms.find((x) => x.id === ch.beastform!.formId) : undefined;
-    if (f) return f;
-  }
-  return undefined;
+  return activeForm(ch)?.form;
 }
 
 export interface Derived {
@@ -263,10 +259,11 @@ export function derive(ch: Character): Derived {
   if (brawlersStrike) mods.push({ stat: 'evasion', value: 1, source: 'I Am the Weapon' });
 
   // Beastform: the form's trait and Evasion bonuses; Evolution raises one more trait by +1.
-  const form = beastformOf(ch);
+  const form = activeForm(ch);
   if (form) {
     if (form.trait && form.traitBonus) mods.push({ stat: form.trait, value: form.traitBonus, source: form.name });
     if (form.evasionBonus) mods.push({ stat: 'evasion', value: form.evasionBonus, source: form.name });
+    if (form.thresholdBonus) mods.push({ stat: 'major', value: form.thresholdBonus, source: form.name }, { stat: 'severe', value: form.thresholdBonus, source: form.name });
     if (ch.beastform?.evolution) mods.push({ stat: ch.beastform.evolution, value: 1, source: 'Evolution' });
   }
 

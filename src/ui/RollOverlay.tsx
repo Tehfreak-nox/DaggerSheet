@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { closeRoll, rerollDamage, rerollHopeDie, usePlay, type RollView } from '../app/play';
+import { addDamageDice, closeRoll, rerollDamage, rerollHopeDie, usePlay, type RollView } from '../app/play';
 import { useStore } from '../app/store';
-import { hasAncestryFeature, type Character } from '../rules';
+import { activeForm, derive, hasAncestryFeature, type Character } from '../rules';
 import { signed } from './kit';
 
 function useTumble(active: boolean, sides: number) {
@@ -18,7 +18,7 @@ function Die({ value, sides, rolling, fear, small, dropped, picked, onPick }: {
   value: number; sides: number; rolling: boolean; fear?: boolean; small?: boolean; dropped?: boolean; picked?: boolean; onPick?: () => void;
 }) {
   const t = useTumble(rolling, sides);
-  const cls = `s-die ${fear ? 'fear' : ''} ${small ? 'sm' : ''} ${sides === 6 ? 'd6' : ''} ${rolling ? 's-spin' : ''} ${picked ? 'picked' : ''}`;
+  const cls = `s-die ${fear ? 'fear' : ''} ${small ? 'sm' : ''} d${sides} ${rolling ? 's-spin' : ''} ${picked ? 'picked' : ''}`;
   if (onPick) {
     return (
       <button className={cls} style={{ border: 0, padding: 0 }} aria-pressed={!!picked} aria-label={`d${sides} showing ${value}${picked ? ', selected to reroll' : ''}`} onClick={onPick}>
@@ -61,6 +61,22 @@ function Followups({ r, ch, picked, setPicked, picking, setPicking }: {
     const low = r.result.rolls.some((g) => g.values.some((v) => v <= 2));
     if (ch.cards.loadout.includes('blade-not-good-enough') && low && !used('Not Good Enough')) {
       out.push(<button key="ng" className="s-btn s-press" onClick={() => rerollDamage('Not Good Enough', (v) => v <= 2)}>Reroll 1s and 2s · Not Good Enough</button>);
+    }
+    // Beastform features that act on the damage dice.
+    const form = r.attack ? activeForm(ch) : undefined;
+    for (const { feature } of form?.features ?? []) {
+      const t = feature.text.replace(/\*\*/g, '');
+      const ones = r.result.rolls.reduce((n, g) => n + g.values.filter((v) => v === 1).length, 0);
+      const extra = /When you roll a 1 on a damage die, you can roll a d(\d+) and add the result/.exec(t);
+      if (extra && ones && !used(feature.name)) {
+        out.push(<button key={feature.id} className="s-btn s-press" onClick={() => addDamageDice(feature.name, ones, Number(extra[1]))}>{feature.name} · +d{extra[1]} for {ones === 1 ? 'your 1' : `each 1 (${ones})`}</button>);
+      }
+      if (/reroll all damage dice that rolled a result lower than your Proficiency/.test(t) && !used(feature.name)) {
+        const prof = derive(ch).proficiency;
+        if (r.result.rolls.some((g) => g.values.some((v) => v < prof))) {
+          out.push(<button key={feature.id} className="s-btn s-press" onClick={() => rerollDamage(feature.name, (v) => v < prof)}>{feature.name} · reroll dice under {prof}</button>);
+        }
+      }
     }
     if (ch.classId === 'sorcerer' && r.magic && r.attack) {
       if (!picking) {

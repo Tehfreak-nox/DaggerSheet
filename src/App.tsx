@@ -3,6 +3,7 @@ import { back, useScreen } from './app/nav';
 import { connectAccount, useStore } from './app/store';
 import { themeAttrs } from './ui/Header';
 import { About } from './screens/About';
+import { BeastformPicker } from './screens/Beastform';
 import { Create } from './screens/Create';
 import { Home } from './screens/Home';
 import { LevelUp } from './screens/LevelUp';
@@ -27,6 +28,7 @@ export function App() {
     case 'picker': view = <Picker id={s.id} kind={s.kind} />; break;
     case 'rest': view = <Rest id={s.id} kind={s.kind} />; break;
     case 'levelup': view = <LevelUp id={s.id} />; break;
+    case 'beastform': view = <BeastformPicker id={s.id} via={s.via} />; break;
     default: view = <button onClick={back}>Back</button>;
   }
   return (

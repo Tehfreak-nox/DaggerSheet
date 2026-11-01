@@ -12,9 +12,9 @@
   -webkit-font-smoothing: antialiased;
 }
 .s *, .s *::before, .s *::after { box-sizing: border-box; }
-.s button, .s input, .s select, .s textarea { font: inherit; color: inherit; }
-.s button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
-.s a { color: inherit; text-decoration: none; }
+:where(.s) :where(button, input, select, textarea) { font: inherit; color: inherit; }
+:where(.s) button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
+:where(.s) a { color: inherit; text-decoration: none; }
 
 /* ---------- header band ---------- */
 .s-band { position: relative; overflow: hidden; background: var(--band); color: #FFFFFF; padding: 22px 20px 0; }
@@ -26,9 +26,9 @@
 
 /* ---------- section banner title ---------- */
 .s-title { display: flex; align-items: center; gap: 10px; }
-.s-title::before, .s-title::after { content: ""; flex: 1; height: 7px; border-top: 3px solid var(--accent, var(--ink)); border-bottom: 1px solid var(--accent, var(--ink)); }
+.s-title::before, .s-title::after { content: ""; flex: 1; height: 7px; border-top: 3px solid var(--accent-line); border-bottom: 1px solid var(--accent-line); }
 .s-title > span { font: 800 24px/1 var(--head); letter-spacing: .04em; text-transform: uppercase; }
-.s-title > i { width: 8px; height: 8px; flex: none; transform: rotate(45deg); background: var(--accent, var(--ink)); }
+.s-title > i { width: 8px; height: 8px; flex: none; transform: rotate(45deg); background: var(--accent-line); }
 
 /* ---------- labels / text ---------- */
 .s-label { font: 700 14px/1.1 var(--head); letter-spacing: .06em; text-transform: uppercase; }
@@ -63,7 +63,7 @@
 .s-thr { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); align-items: stretch; }
 .s-thr .box { min-height: 46px; display: flex; align-items: center; justify-content: center; background: var(--accent, var(--ink)); color: #FFFFFF; font: 700 15px/1 var(--head); letter-spacing: .06em; text-transform: uppercase; border-radius: 6px; }
 .s-thr .n { min-width: 46px; display: flex; align-items: center; justify-content: center; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); font: 500 22px/1 var(--head); position: relative; }
-.s-thr .n::after { content: ""; position: absolute; right: -9px; top: 50%; transform: translateY(-50%); border-left: 9px solid var(--accent, var(--ink)); border-top: 9px solid transparent; border-bottom: 9px solid transparent; z-index: 1; }
+.s-thr .n::after { content: ""; position: absolute; right: -9px; top: 50%; transform: translateY(-50%); border-left: 9px solid var(--accent-line); border-top: 9px solid transparent; border-bottom: 9px solid transparent; z-index: 1; }
 .s-thr .cap { padding-top: 6px; text-align: center; font: 600 13px/1 var(--head); color: var(--ink-2); }
 
 /* ---------- controls ---------- */
@@ -93,7 +93,7 @@
 .s-armed { background: var(--ink) !important; color: var(--paper) !important; border-color: var(--ink) !important; }
 .s-armed .s-muted { color: var(--paper) !important; opacity: .75; }
 .s-ghost { opacity: .4; }
-.s-mini { min-height: 40px; padding: 0 12px; border: 2px solid var(--ink); border-radius: 8px; background: var(--paper); font: 700 13px/1 var(--head); letter-spacing: .05em; text-transform: uppercase; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.s-mini { min-height: 40px; padding: 0 12px; border: 2px solid var(--btn-b); border-radius: 8px; background: var(--paper); color: var(--btn-c); font: 700 13px/1 var(--head); letter-spacing: .05em; text-transform: uppercase; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .s-mini.solid { background: var(--accent, var(--ink)); border-color: var(--accent, var(--ink)); color: #FFFFFF; }
 .s-mini:disabled { opacity: .35; cursor: default; }
 .s-token { width: 36px; height: 36px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--paper); padding: 0; flex: none; }
@@ -107,12 +107,22 @@
 @keyframes s-pop { from { transform: translateY(12px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
 .s-die { position: relative; width: 78px; height: 78px; flex: none; }
 .s-die::before, .s-die > span { clip-path: polygon(50% 0, 79% 10%, 98% 35%, 98% 65%, 79% 90%, 50% 100%, 21% 90%, 2% 65%, 2% 35%, 21% 10%); }
-.s-die::before { content: ""; position: absolute; inset: 0; background: var(--ink); }
-.s-die > span { position: absolute; inset: 3px; display: flex; align-items: center; justify-content: center; background: var(--paper); color: var(--ink); font: 600 32px/1 var(--head); }
-.s-die.fear > span { background: var(--ink); color: var(--paper); inset: 0; }
+.s-die::before { content: ""; position: absolute; inset: 0; background: var(--die-ring); }
+.s-die > span { position: absolute; inset: 3px; display: flex; align-items: center; justify-content: center; background: var(--die-light); color: var(--die-dark); font: 600 32px/1 var(--head); }
+.s-die.fear > span { background: var(--die-dark); color: var(--die-light); }
+/* each die drawn in its own shape */
+.s-die.d4::before, .s-die.d4 > span { clip-path: polygon(50% 0, 100% 92%, 0 92%); }
+.s-die.d4 > span { inset: 6px 7px 4px; padding-top: 28%; font-size: 26px; }
 .s-die.d6::before, .s-die.d6 > span { clip-path: none; border-radius: 12px; }
+.s-die.d8::before, .s-die.d8 > span { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.s-die.d8 > span { inset: 5px; }
+.s-die.d10::before, .s-die.d10 > span { clip-path: polygon(50% 0, 100% 56%, 50% 100%, 0 56%); }
+.s-die.d10 > span { inset: 5px; padding-top: 14%; }
+.s-die.d20::before, .s-die.d20 > span { clip-path: polygon(50% 0, 94% 25%, 94% 75%, 50% 100%, 6% 75%, 6% 25%); }
+.s-die.d20 > span { inset: 4px; }
 .s-die.sm { width: 52px; height: 52px; }
 .s-die.sm > span { font-size: 22px; }
+.s-die.sm.d4 > span { font-size: 18px; }
 .s-spin { animation: s-tumble .42s linear infinite; }
 .s-spin.b { animation-duration: .5s; animation-direction: reverse; }
 @keyframes s-tumble { 0% { transform: translateY(0) rotate(0); } 25% { transform: translateY(-12px) rotate(90deg); } 50% { transform: translateY(0) rotate(180deg); } 75% { transform: translateY(-6px) rotate(270deg); } 100% { transform: translateY(0) rotate(360deg); } }

@@ -5,9 +5,9 @@ import { updateCharacter } from '../app/store';
 import { go } from '../app/nav';
 import { cardById, classById, communityById, rules, type TraitId } from '../data';
 import {
-  ancestryFeatures, availableForms, avoidDeath, beastformOf, blazeOfGlory, derive, dropOut, hasBeastform, multiclassSubclass,
-  mustMakeDeathMove, riskItAll, setHitPoints, splitClear, STAGES, subclassOf, transform, transformProblem, TRAIT_IDS, wake,
-  type Character, type TransformVia,
+  activeForm, ancestryFeatures, avoidDeath, blazeOfGlory, derive, dropOut, hasBeastform, multiclassSubclass,
+  mustMakeDeathMove, riskItAll, setHitPoints, splitClear, STAGES, subclassOf, TRAIT_IDS, wake,
+  type Character,
 } from '../rules';
 import { TRAIT_VERBS } from '../theme/tables';
 import { FeatureCard } from '../ui/FeatureCard';
@@ -274,24 +274,6 @@ function ClassExtras({ ch }: { ch: Character }) {
   const ex = cls.extras;
   const d = derive(ch);
   const [open, setOpen] = useState(false);
-  if (ex.beastforms) {
-    const forms = ex.beastforms.forms.filter((f) => f.tier <= d.tier);
-    return (
-      <Expander title={`Beastforms · tier ${d.tier} or lower (${forms.length})`} open={open} onToggle={() => setOpen(!open)}>
-        {forms.map((f) => (
-          <FeatureCard key={f.id} ch={ch} featureKey={`beast:${f.id}`} name={f.name}
-            meta={`Tier ${f.tier} · ${f.examples}`}
-            text={[
-              f.trait ? `**${cap(f.trait)} ${signed(f.traitBonus)}** · **Evasion ${signed(f.evasionBonus)}**` : '',
-              f.attack ? `Attack: ${cap(f.attack.range.replace('-', ' '))} ${cap(f.attack.trait)} **${f.attack.damage} ${f.attack.type}**` : '',
-              f.advantages.length ? `Gain advantage on: ${f.advantages.join(', ')}` : '',
-              f.text,
-              ...f.features.map((x) => `**${x.name}:** ${x.text}`),
-            ].filter(Boolean).join('\n\n')} />
-        ))}
-      </Expander>
-    );
-  }
   if (ex.martialStances && ch.subclassId === 'martial-artist') {
     return (
       <Expander title="Martial stances" open={open} onToggle={() => setOpen(!open)}>
@@ -442,80 +424,41 @@ function DeathPanel({ ch }: { ch: Character }) {
   );
 }
 
-/** Beastform (class feature) or Evolution (Hope feature): pick a form, then transform. */
+/** Beastform (class feature) or Evolution (Hope feature). The cog opens the form window; while transformed it becomes a cancel mark. */
 function BeastformCard({ ch, name, text, tag, via }: { ch: Character; name: string; text: string; tag?: string; via: 'beastform' | 'evolution' }) {
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState('');
-  const [trait, setTrait] = useState<TraitId | ''>('');
-  const current = beastformOf(ch);
-  const forms = availableForms(ch);
-  const how: TransformVia | null = via === 'beastform' ? { via } : trait ? { via, trait } : null;
-  const problem = form && how ? transformProblem(ch, form, how) : null;
-  const stateLine = current && (
-    <div className="beast-on">
-      <span style={{ flex: 1, fontSize: 15 }}>
-        <b>In Beastform: {current.name}</b>
-        {current.trait ? ` · ${cap(current.trait)} ${signed(current.traitBonus)}` : ''} · Evasion {signed(current.evasionBonus)}
-        {ch.beastform?.evolution ? ` · ${cap(ch.beastform.evolution)} +1 (Evolution)` : ''}
-      </span>
-      <button className="s-mini" aria-label="Drop out of Beastform" onClick={() => updateCharacter(ch.id, dropOut)}>Drop out</button>
-    </div>
-  );
+  const current = activeForm(ch);
   return (
     <article className="feat">
       <div className="s-row" style={{ alignItems: 'flex-start' }}>
         <span className="s-feat-name">{name}</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {tag && <span className="s-label s-muted" style={{ fontSize: 12 }}>{tag}</span>}
-          {via === 'beastform' && (
-            <button className="s-icon s-press" style={{ width: 44, height: 44 }} aria-label="Choose a Beastform" aria-expanded={open} onClick={() => setOpen(!open)}>
+          {via === 'beastform' && (current ? (
+            <button className="s-icon s-press" style={{ width: 44, height: 44 }} aria-label={`Drop out of Beastform (${current.name})`}
+              onClick={() => { updateCharacter(ch.id, dropOut); toast('You drop out of Beastform.'); }}>
+              <Icon d={ICONS.cancel} size={24} />
+            </button>
+          ) : (
+            <button className="s-icon s-press" style={{ width: 44, height: 44 }} aria-label="Choose a Beastform" onClick={() => go({ name: 'beastform', id: ch.id, via: 'beastform' })}>
               <Icon d={ICONS.cog} size={20} />
             </button>
-          )}
+          ))}
         </span>
       </div>
       <Rich text={text} />
-      {via === 'beastform' && stateLine}
-      {via === 'evolution' && !open && (
-        <button className="s-mini solid" style={{ alignSelf: 'flex-start' }} disabled={ch.hope < 3 || !hasBeastform(ch)} onClick={() => setOpen(true)}>Use · 3 Hope</button>
-      )}
-      {open && (
-        <div className="stack-10 beast-pick">
-          <span className="s-label s-muted" style={{ fontSize: 12 }}>{via === 'evolution' ? 'Evolution: no Stress. Choose a form and a trait to raise by +1.' : 'Mark a Stress to transform. Forms of tier ' + derive(ch).tier + ' or lower.'}</span>
-          {forms.map((f) => (
-            <button key={f.id} className={`beast-opt s-press ${form === f.id ? 'sel' : ''}`} aria-pressed={form === f.id} onClick={() => setForm(f.id)}>
-              <span style={{ display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left' }}>
-                <b>{f.name}</b>
-                <span className="s-muted" style={{ fontSize: 13 }}>Tier {f.tier} · {f.examples}</span>
-                <span style={{ fontSize: 13 }}>
-                  {f.trait ? `${cap(f.trait)} ${signed(f.traitBonus)} · ` : ''}Evasion {signed(f.evasionBonus)}
-                  {f.attack ? ` · ${cap(f.attack.trait)} ${f.attack.damage} ${f.attack.type}` : ''}
-                </span>
-              </span>
-            </button>
-          ))}
-          {via === 'evolution' && (
-            <label className="stack-4">
-              <span className="s-label s-muted" style={{ fontSize: 12 }}>Trait to raise by +1</span>
-              <select className="s-field" value={trait} onChange={(e) => setTrait(e.target.value as TraitId)}>
-                <option value="">Choose a trait</option>
-                {TRAIT_IDS.map((t) => <option key={t} value={t}>{cap(t)}</option>)}
-              </select>
-            </label>
-          )}
-          {problem && <span className="s-muted" style={{ fontSize: 13 }}>{problem}</span>}
-          <span style={{ display: 'flex', gap: 6 }}>
-            <button className="s-mini" onClick={() => { setOpen(false); setForm(''); setTrait(''); }}>Cancel</button>
-            <button className="s-mini solid" disabled={!form || !how || !!problem}
-              onClick={() => {
-                updateCharacter(ch.id, (c) => transform(dropOut(c), form, how!));
-                toast(`Transformed: ${forms.find((f) => f.id === form)?.name}.`);
-                setOpen(false); setForm(''); setTrait('');
-              }}>
-              {via === 'evolution' ? 'Confirm · 3 Hope' : 'Transform · mark a Stress'}
-            </button>
+      {via === 'beastform' && current && (
+        <div className="beast-on">
+          <span style={{ flex: 1, fontSize: 15 }}>
+            <b>In Beastform: {current.name}</b>
+            {current.trait ? ` · ${cap(current.trait)} ${signed(current.traitBonus)}` : ''} · Evasion {signed(current.evasionBonus)}
+            {current.thresholdBonus ? ` · thresholds ${signed(current.thresholdBonus)}` : ''}
+            {ch.beastform?.evolution ? ` · ${cap(ch.beastform.evolution)} +1 (Evolution)` : ''}
           </span>
         </div>
+      )}
+      {via === 'evolution' && (
+        <button className="s-mini solid" style={{ alignSelf: 'flex-start' }} disabled={ch.hope < 3 || !hasBeastform(ch)}
+          onClick={() => go({ name: 'beastform', id: ch.id, via: 'evolution' })}>Use · 3 Hope</button>
       )}
     </article>
   );

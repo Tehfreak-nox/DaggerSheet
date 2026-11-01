@@ -39,6 +39,8 @@ Each of these is a reading of the SRD that the engine currently implements. Each
 - **Domain icons** are the app's own drawings. The official Daggerheart domain symbols aren't part of the SRD licence, so they aren't used.
 - **Blaze of Glory** arms an automatic critical success for the next action roll; after that roll the character is marked as having crossed the veil. "With GM approval" is left to the table.
 - **Risk It All** clears Hope-die points from Hit Points first, then Stress; the sheet then lets you move points between them as the SRD allows.
+- **Evolution with a Hybrid**: Evolution replaces Beastform's own Stress; a Hybrid's "additional Stress" is still marked.
+- **Beastform damage dice**: "add a d8 to your damage roll" (Pack Hunting) is a toggle on the beast attack that rolls with it. Rampage's +1 Proficiency marks its Stress when armed (refunded if you disarm it before rolling); its d10 for each 1, and Deadly Raptor's reroll, are offered on the damage result.
 - **Rest moves on allies** (Tend to Wounds, Repair Armor on an ally) aren't modelled; the engine applies moves to the resting character.
 
 ## Not extracted (out of scope for now)

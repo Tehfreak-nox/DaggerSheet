@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { actionRoll, armedFor, damage, dice, toggleHopeDie, usePlay } from '../app/play';
+import { actionRoll, armedFor, damage, dice, toggleExtra, toggleHopeDie, usePlay } from '../app/play';
 import { updateCharacter } from '../app/store';
 import type { TraitId } from '../data';
 import { canPayStress, controlsFor, derive, type Character, type Control, type TokenSource } from '../rules';
@@ -7,7 +7,7 @@ import { Rich } from './kit';
 
 /** A feature or domain card with tap controls derived from its text. */
 export function FeatureCard({
-  ch, featureKey, name, text, meta, aside, note, ghost, tag, extra,
+  ch, featureKey, name, text, meta, aside, note, ghost, tag, extra, skip = [],
 }: {
   ch: Character;
   /** Stable key for uses/tokens, e.g. "class:rally" or "card:arcana-rune-ward". */
@@ -20,14 +20,14 @@ export function FeatureCard({
   ghost?: boolean;
   tag?: string;
   extra?: ReactNode;
+  /** Control kinds handled elsewhere (e.g. a Beastform die added to the attack). */
+  skip?: Control['kind'][];
 }) {
-  const controls = ghost ? [] : controlsFor(text);
+  const controls = ghost ? [] : controlsFor(text).filter((c) => !skip.includes(c.kind));
   const uses = controls.filter((c): c is Extract<Control, { kind: 'uses' }> => c.kind === 'uses');
-  // A Hope cost followed by dice ("Spend 3 Hope to clear 1d4 Hit Points") is one button that pays and rolls.
-  const hopeCost = controls.find((c): c is Extract<Control, { kind: 'hope' }> => c.kind === 'hope' && c.n !== 'any');
-  const rolled = hopeCost && controls.find((c) => c.kind === 'dice' || c.kind === 'damage');
-  const combo = hopeCost && rolled ? { cost: hopeCost.n as number, roll: rolled } : null;
-  const actions = controls.filter((c) => c.kind !== 'uses' && c.kind !== 'tokens' && !(combo && (c === hopeCost || c === rolled)));
+  const hopeDie = controls.find((c): c is Extract<Control, { kind: 'hopeDie' }> => c.kind === 'hopeDie');
+  // With a use box, the box itself arms the bigger Hope Die (Orderborne "Dedicated").
+  const actions = controls.filter((c) => c.kind !== 'uses' && c.kind !== 'tokens' && !(c.kind === 'hopeDie' && uses.length));
   const tokens = controls.find((c): c is Extract<Control, { kind: 'tokens' }> => c.kind === 'tokens');
   return (
     <article className={`feat ${ghost ? 's-ghost' : ''}`}>
@@ -41,13 +41,13 @@ export function FeatureCard({
       </div>
       <Rich text={text} />
       {note && <span className="s-muted" style={{ fontSize: 14, lineHeight: 1.4 }}>{note}</span>}
-      {uses.map((u) => <UseBoxes key={u.label} ch={ch} k={`${u.scope}:${featureKey}`} max={u.max} label={u.label} />)}
+      {uses.map((u, i) => <UseBoxes key={u.label} ch={ch} k={`${u.scope}:${featureKey}`} max={u.max} label={u.label} arm={i === 0 && hopeDie ? { sides: hopeDie.sides, source: name } : undefined} />)}
       {tokens && <Tokens ch={ch} k={`tokens:${featureKey}`} source={tokens.source} />}
-      {(actions.length > 0 || combo) && (
+      {actions.length > 0 && (
         <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {combo && <ComboButton ch={ch} cost={combo.cost} roll={combo.roll} name={name} />}
-          {actions.map((c) => c.kind === 'hopeDie'
-            ? <HopeDieToggle key={c.label} ch={ch} c={c} name={name} useKey={uses[0] ? `${uses[0].scope}:${featureKey}` : ''} max={uses[0]?.max ?? 0} />
+          {actions.map((c) => c.kind === 'hopeDie' ? <HopeDieToggle key={c.label} ch={ch} c={c} name={name} />
+            : c.kind === 'hopeRoll' ? <ComboButton key={c.label} ch={ch} cost={c.n} roll={c.roll} name={name} />
+            : c.kind === 'hopeBonus' ? <HopeBonusToggle key={c.label} ch={ch} c={c} name={name} />
             : <ActionButton key={c.label} ch={ch} c={c} name={name} />)}
         </span>
       )}
@@ -88,15 +88,28 @@ function ComboButton({ ch, cost, roll, name }: { ch: Character; cost: number; ro
   );
 }
 
-/** "Roll a d20 as your Hope Die": arm it for the next action roll, like an Experience. */
-function HopeDieToggle({ ch, c, name, useKey, max }: { ch: Character; c: Extract<Control, { kind: 'hopeDie' }>; name: string; useKey: string; max: number }) {
+/** "Roll a d20 as your Hope Die" with no use limit (Rise to the Challenge): arm it for the next action roll. */
+function HopeDieToggle({ ch, c, name }: { ch: Character; c: Extract<Control, { kind: 'hopeDie' }>; name: string }) {
   const armed = usePlay((s) => s.armed[ch.id]) ?? armedFor(ch.id);
-  const on = !!armed.hopeDie && armed.hopeDie.source === name;
-  const spent = !!useKey && max > 0 && (ch.uses[useKey] ?? 0) >= max;
+  const on = armed.hopeDie?.source === name;
   return (
-    <button className={`s-mini ${on ? 'solid' : ''}`} aria-pressed={on} disabled={!on && spent}
-      onClick={() => toggleHopeDie(ch.id, c.sides, useKey, name)}>
-      {on ? `d${c.sides} Hope Die armed` : spent ? 'Used' : `Arm d${c.sides} Hope Die`}
+    <button className={`s-mini ${on ? 'solid' : ''}`} aria-pressed={on} onClick={() => toggleHopeDie(ch.id, c.sides, '', name)}>
+      {on ? `d${c.sides} Hope Die armed` : `Arm d${c.sides} Hope Die`}
+    </button>
+  );
+}
+
+/** "Spend a Hope to gain a +2 bonus to the roll": pay now, add it to the next roll; tap again to refund. */
+function HopeBonusToggle({ ch, c, name }: { ch: Character; c: Extract<Control, { kind: 'hopeBonus' }>; name: string }) {
+  const armed = usePlay((s) => s.armed[ch.id]) ?? armedFor(ch.id);
+  const on = armed.extras.some((e) => e.label === name);
+  return (
+    <button className={`s-mini ${on ? 'solid' : ''}`} aria-pressed={on} disabled={!on && ch.hope < c.n}
+      onClick={() => {
+        updateCharacter(ch.id, (x) => ({ ...x, hope: x.hope + (on ? c.n : -c.n) }));
+        toggleExtra(ch.id, { label: name, value: c.bonus });
+      }}>
+      {on ? `+${c.bonus} armed · tap to refund` : c.label}
     </button>
   );
 }
@@ -157,17 +170,27 @@ function ActionButton({ ch, c, name }: { ch: Character; c: Control; name: string
   }
 }
 
-function UseBoxes({ ch, k, max, label }: { ch: Character; k: string; max: number; label: string }) {
+function UseBoxes({ ch, k, max, label, arm }: { ch: Character; k: string; max: number; label: string; arm?: { sides: number; source: string } }) {
   const used = ch.uses[k] ?? 0;
+  const armed = usePlay((s) => s.armed[ch.id]) ?? armedFor(ch.id);
+  const on = !!arm && armed.hopeDie?.useKey === k;
   return (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
       <span className="s-label s-muted" style={{ fontSize: 12 }}>{label}</span>
-      {Array.from({ length: max }, (_, i) => (
-        <button key={i} className={`s-check ${i < used ? 'on' : ''}`} aria-pressed={i < used}
-          aria-label={`${label}: use ${i + 1} ${i < used ? 'used' : 'available'}`}
-          onClick={() => updateCharacter(ch.id, (x) => ({ ...x, uses: { ...x.uses, [k]: i < used ? i : i + 1 } }))} />
-      ))}
-      {used >= max && <span className="s-muted" style={{ fontSize: 12 }}>Used</span>}
+      {Array.from({ length: max }, (_, i) => {
+        // With `arm`, the next free box arms the bigger Hope Die; it's marked when you roll.
+        const next = arm && i === used;
+        return (
+          <button key={i} className={`s-check ${i < used ? 'on' : ''} ${next && on ? 'armed' : ''}`} aria-pressed={i < used || (!!next && on)}
+            aria-label={next ? `${on ? 'Disarm' : 'Arm'} d${arm!.sides} Hope Die (${label})` : `${label}: use ${i + 1} ${i < used ? 'used' : 'available'}`}
+            onClick={() => next
+              ? toggleHopeDie(ch.id, arm!.sides, k, arm!.source)
+              : updateCharacter(ch.id, (x) => ({ ...x, uses: { ...x.uses, [k]: i < used ? i : i + 1 } }))} />
+        );
+      })}
+      {on ? <span className="s-label" style={{ fontSize: 12 }}>d{arm!.sides} Hope Die armed</span>
+        : arm && used < max ? <span className="s-muted" style={{ fontSize: 12 }}>Tap to arm d{arm.sides} Hope Die</span>
+        : used >= max ? <span className="s-muted" style={{ fontSize: 12 }}>Used</span> : null}
     </span>
   );
 }

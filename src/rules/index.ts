@@ -12,3 +12,4 @@ export * from './validate';
 export * from './mechanics';
 export * from './beastform';
 export * from './death';
+export * from './forms';

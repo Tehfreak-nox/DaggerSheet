@@ -5,7 +5,7 @@ import { actionRoll, damage, dice, setCrit, usePlay } from '../app/play';
 import { updateCharacter } from '../app/store';
 import { armorById, lootById, rules, weaponById } from '../data';
 import {
-  addGold, attackProfile, beastformOf, DENOMS, derive, dropOut, equipWeapon, removeGold, ROW_SLOTS, store, take, versatileStats,
+  activeForm, addGold, attackProfile, canPayStress, damageAddOns, DENOMS, derive, equipWeapon, removeGold, ROW_SLOTS, store, take, versatileStats,
   type AttackProfile, type Character, type Denom,
 } from '../rules';
 import { AdvDis, ArmorShield } from './CharacterTab';
@@ -157,45 +157,75 @@ function Weapons({ ch }: { ch: Character }) {
 /** The Beastform's attack and features, while transformed. */
 function BeastAttack({ ch }: { ch: Character }) {
   const d = derive(ch);
-  const f = beastformOf(ch);
+  const f = activeForm(ch);
   const crit = usePlay((s) => !!s.crit[ch.id]);
+  const [addOn, setAddOn] = useState<Record<string, boolean>>({});
+  const [powered, setPowered] = useState(false);
   if (!f) return null;
   const at = f.attack;
-  const m = at ? /^d(\d+)(?:\+(\d+))?$/.exec(at.damage) : null;
+  const adds = damageAddOns(f).filter((x) => addOn[x.key]);
+  const rampage = f.features.find((x) => /mark a Stress to gain a \+1 bonus to your Proficiency for that attack/.test(x.feature.text.replace(/\*\*/g, '')));
+  const prof = d.proficiency + (powered ? 1 : 0);
   const traitVal = at ? d.traits[at.trait] : 0;
-  const dmgText = m ? `${d.proficiency}d${m[1]}${m[2] ? `+${m[2]}` : ''} ${at!.type}` : '';
+  const dieText = at ? `${prof}d${at.sides}${adds.map((x) => `+d${x.sides}`).join('')}${at.bonus ? `+${at.bonus}` : ''}` : '';
+  const dmgText = at ? `${dieText} ${at.type}` : '';
+  const togglePower = () => {
+    if (!powered && !canPayStress(ch, 1, d.stressSlots)) { toast('All your Stress is marked.'); return; }
+    updateCharacter(ch.id, (c) => ({ ...c, stress: c.stress + (powered ? -1 : 1) }));
+    setPowered(!powered);
+  };
   const rollDamage = (critical: boolean) => {
-    if (!m) return;
-    damage(`Damage · ${f.name}`, { dice: [{ count: d.proficiency, sides: Number(m[1]) }], bonus: Number(m[2] ?? 0), critical },
-      critical ? `${dmgText} · critical` : dmgText, [], { charId: ch.id, magic: at!.type === 'mag', attack: true });
+    if (!at) return;
+    damage(`Damage · ${f.name}`, {
+      dice: [{ count: prof, sides: at.sides }, ...adds.map((x) => ({ count: 1, sides: x.sides }))], bonus: at.bonus, critical,
+    }, `${critical ? `${dmgText} · critical` : dmgText}${adds.length ? ` · ${adds.map((x) => x.name).join(', ')}` : ''}`, [], { charId: ch.id, magic: at.type === 'mag', attack: true });
     setCrit(ch.id, false);
+    setAddOn({});
+    setPowered(false);
   };
   return (
     <section className="stack-14">
       <Title>Beastform</Title>
       <article className="weapon">
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span className="s-label s-muted" style={{ fontSize: 12 }}>Tier {f.tier} · {f.examples}</span>
+          <span className="s-label s-muted" style={{ fontSize: 12 }}>Tier {f.form.tier} · {f.form.examples}</span>
           <span className="s-feat-name" style={{ fontSize: 22, marginTop: -4 }}>{f.name}</span>
-          {at && <span style={{ fontSize: 17 }}>{cap(at.trait)} {RANGE_NAMES[at.range] ?? at.range} · {at.damage} {at.type} using your Proficiency</span>}
+          {at && <span style={{ fontSize: 17 }}>{cap(at.trait)} {RANGE_NAMES[at.range] ?? at.range} · d{at.sides}{at.bonus ? `+${at.bonus}` : ''} {at.type} using your Proficiency</span>}
           {f.advantages.length > 0 && <span className="s-feat-text">Advantage on rolls to {f.advantages.join(', ')}.</span>}
-          <button className="s-mini" style={{ alignSelf: 'flex-start' }} onClick={() => updateCharacter(ch.id, dropOut)}>Drop out</button>
+          {(damageAddOns(f).length > 0 || rampage) && (
+            <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {damageAddOns(f).map((x) => (
+                <button key={x.key} className={`s-mini ${addOn[x.key] ? 'solid' : ''}`} aria-pressed={!!addOn[x.key]} title={x.condition}
+                  onClick={() => setAddOn({ ...addOn, [x.key]: !addOn[x.key] })}>
+                  {x.name} +d{x.sides}
+                </button>
+              ))}
+              {rampage && (
+                <button className={`s-mini ${powered ? 'solid' : ''}`} aria-pressed={powered} onClick={togglePower}>
+                  {rampage.feature.name} · +1 Proficiency{powered ? '' : ' (1 Stress)'}
+                </button>
+              )}
+            </span>
+          )}
         </div>
-        {at && m && (
+        {at && (
           <div className="weapon-btns">
             <button className="s-btn solid s-press" aria-label={`Hit roll 2d12 ${signed(traitVal)}`}
               onClick={() => actionRoll(ch.id, `Attack · ${f.name}`, [{ label: cap(at.trait), value: traitVal }], `2d12 ${signed(traitVal)}`, { attack: true, trait: at.trait, critDamage: () => rollDamage(true) })}>
               <span style={{ fontSize: 11, opacity: 0.75 }}>Hit</span><span className="s-num">{signed(traitVal)}</span>
             </button>
-            <button className={`s-btn s-press ${crit ? 's-armed' : ''}`} style={{ borderColor: 'var(--ink)', background: 'var(--surface)' }} onClick={() => rollDamage(crit)}
+            <button className={`s-btn s-press ${crit ? 's-armed' : ''}`} style={{ borderColor: 'var(--btn-b)', background: 'var(--surface)' }} onClick={() => rollDamage(crit)}
               aria-label={`Damage roll ${dmgText}${crit ? ', critical' : ''}`}>
-              <span style={{ fontSize: 11 }}>{crit ? 'Crit dmg' : 'Damage'}</span><span className="s-num" style={{ fontSize: 17 }}>{d.proficiency}{at.damage}</span>
+              <span style={{ fontSize: 11 }}>{crit ? 'Crit dmg' : 'Damage'}</span><span className="s-num" style={{ fontSize: dieText.length > 9 ? 14 : 17 }}>{dieText}</span>
             </button>
           </div>
         )}
       </article>
-      {f.features.map((x) => <FeatureCard key={x.id} ch={ch} featureKey={`beast:${f.id}:${x.id}`} name={x.name} text={x.text} />)}
-      {f.text && <span className="s-feat-text">{f.text}</span>}
+      {f.features.map((x) => (
+        <FeatureCard key={x.key} ch={ch} featureKey={`beast:${x.key}`} name={x.feature.name} meta={x.from !== f.name ? x.from : undefined} text={x.feature.text}
+          skip={damageAddOns(f).some((a) => a.key === x.key) ? ['dice'] : x === rampage ? ['dice', 'stress'] : []} />
+      ))}
+      {f.form.text && <span className="s-feat-text">{f.form.text}</span>}
     </section>
   );
 }

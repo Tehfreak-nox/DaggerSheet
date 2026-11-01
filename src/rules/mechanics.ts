@@ -14,7 +14,11 @@ export type Control =
   | { kind: 'uses'; scope: UseScope; max: number; label: string }
   | { kind: 'tokens'; source: TokenSource; label: string }
   /** "roll a d20 as your Hope Die": armed for the next action roll. */
-  | { kind: 'hopeDie'; sides: number; label: string };
+  | { kind: 'hopeDie'; sides: number; label: string }
+  /** A Hope cost and the dice it pays for, in the same sentence: one button. */
+  | { kind: 'hopeRoll'; n: number; roll: Extract<Control, { kind: 'dice' | 'damage' }>; label: string }
+  /** "spend a Hope to gain a +2 bonus to the roll": armed for the next roll. */
+  | { kind: 'hopeBonus'; n: number; bonus: number; label: string };
 
 export type TokenSource =
   | { fixed: number }
@@ -54,6 +58,33 @@ export function controlsFor(rawText: string): Control[] {
     const key = JSON.stringify(c);
     if (!seen.has(key)) { seen.add(key); out.push(c); }
   };
+  /** Text already turned into a combined control, skipped by the single-control passes. */
+  const used: [number, number][] = [];
+  const isUsed = (at: number) => used.some(([a, b]) => at >= a && at < b);
+
+  // Hope that buys a bonus to the roll: arm it like an Experience.
+  for (const m of text.matchAll(/\bspend (a|an|one|two|\d+) Hope to gain a \+(\d+) bonus to (?:the|that|your) (?:roll|[A-Z]\w+ Roll)/gi)) {
+    const cost = n(m[1]);
+    add({ kind: 'hopeBonus', n: cost, bonus: Number(m[2]), label: `Spend ${cost} Hope · +${m[2]} to the roll` });
+    used.push([m.index!, m.index! + m[0].length]);
+  }
+
+  // A Hope cost and dice in the same sentence ("spend a Hope to … 1d8"): one button that pays and rolls.
+  for (const sm of text.matchAll(/[^.!?\n]+[.!?]?/g)) {
+    const sentence = sm[0];
+    const h = /\bspend (a|an|one|two|three|\d+) Hope\b/i.exec(sentence);
+    const dm = /\b(\d*)d(\d+)(?:\s*\+\s*(\d+))?(?:\s+(magic|physical)\s+damage(?: using your (Proficiency))?|\s+(?:magic|physical)?\s*damage)?/i.exec(sentence);
+    if (!h || !dm || isUsed(sm.index! + h.index)) continue;
+    const dmg = /damage/i.test(dm[0]) || /\bdeal|damage/i.test(sentence.slice(dm.index));
+    const count = dm[5] || (!dm[1] && /Proficiency/.test(dm[0])) ? 'proficiency' : dm[1] ? Number(dm[1]) : 1;
+    const bonus = dm[3] ? Number(dm[3]) : 0;
+    const roll: Extract<Control, { kind: 'dice' | 'damage' }> = dmg && /damage/i.test(sentence)
+      ? { kind: 'damage', count, sides: Number(dm[2]), bonus, type: (dm[4]?.toLowerCase() as 'magic' | 'physical') ?? null, label: `${dm[0].trim()}` }
+      : { kind: 'dice', count: count === 'proficiency' ? 1 : count, sides: Number(dm[2]), bonus, label: `Roll ${dm[0].trim()}` };
+    const cost = n(h[1]);
+    add({ kind: 'hopeRoll', n: cost, roll, label: `Use · ${cost} Hope · ${dm[1] || ''}d${dm[2]}${bonus ? `+${bonus}` : ''}` });
+    used.push([sm.index! + h.index, sm.index! + h.index + h[0].length], [sm.index! + dm.index, sm.index! + dm.index + dm[0].length]);
+  }
 
   // Uses: "Once per long rest", "twice per session", "three times per rest".
   for (const m of text.matchAll(/\b(once|twice|three times) per (long rest|short rest|rest|session|scene)\b/gi)) {
@@ -64,6 +95,7 @@ export function controlsFor(rawText: string): Control[] {
 
   // Costs you pay: "Spend 3 Hope", "spend a Hope", "spend any number of Hope".
   for (const m of text.matchAll(/\bspend (a|an|one|two|three|\d+|any number of) Hope\b/gi)) {
+    if (isUsed(m.index!)) continue;
     const amount = /any/i.test(m[1]) ? 'any' : n(m[1]);
     add({ kind: 'hope', n: amount, label: amount === 'any' ? 'Spend Hope' : `Spend ${amount} Hope` });
   }
@@ -77,6 +109,9 @@ export function controlsFor(rawText: string): Control[] {
 
   // Rolls: "make a Spellcast Roll (15)", "make an Instinct Roll".
   for (const m of text.matchAll(/\bmake an? (Spellcast|Agility|Strength|Finesse|Instinct|Presence|Knowledge) Roll(?: \((\d+)\))?/gi)) {
+    // "before you make a Spellcast Roll", "when you make a Presence Roll": a condition, not an instruction.
+    const lead = text.slice(Math.max(0, m.index! - 24), m.index!);
+    if (/\b(before|when|whenever|after|if|would|each time)\b(\s+you)?(\s+would)?\s*$/i.test(lead)) continue;
     const trait = m[1].toLowerCase() === 'spellcast' ? 'spellcast' : TRAITS[m[1].toLowerCase()];
     const difficulty = m[2] ? Number(m[2]) : undefined;
     add({ kind: 'roll', trait, difficulty, label: `${cap(m[1])} Roll${difficulty ? ` (${difficulty})` : ''}` });
@@ -85,6 +120,7 @@ export function controlsFor(rawText: string): Control[] {
   // Damage: "d8+2 magic damage using your Proficiency", "1d20+3 magic damage".
   const damageSpans: [number, number][] = [];
   for (const m of text.matchAll(/\b(\d*)d(\d+)(?:\s*\+\s*(\d+))?\s+(magic|physical)?\s*damage(?: using your (Proficiency))?/gi)) {
+    if (isUsed(m.index!)) continue;
     const count = m[5] || !m[1] ? 'proficiency' : Number(m[1]);
     const bonus = m[3] ? Number(m[3]) : 0;
     const label = `${count === 'proficiency' ? '' : count}d${m[2]}${bonus ? `+${bonus}` : ''} ${m[4] ? m[4].toLowerCase() + ' ' : ''}damage`;
@@ -120,7 +156,7 @@ export function controlsFor(rawText: string): Control[] {
   // Other dice: "roll a d6", "clear 1d4 Hit Points", "a d8 to your damage roll".
   for (const m of text.matchAll(/\b(\d*)d(\d+)(?:\s*\+\s*(\d+))?\b/gi)) {
     const at = m.index!;
-    if (damageSpans.some(([a, b]) => at >= a && at < b)) continue;
+    if (damageSpans.some(([a, b]) => at >= a && at < b) || isUsed(at)) continue;
     if (tok && tok[1] && text.indexOf(tok[1]) === at) continue;
     const count = m[1] ? Number(m[1]) : 1;
     const bonus = m[3] ? Number(m[3]) : 0;

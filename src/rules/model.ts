@@ -1,4 +1,5 @@
 import type { AdvancementId, Armor, DomainId, Loot, TraitId, Weapon } from '../data';
+import type { BeastformChoice } from './forms';
 
 export const TRAIT_IDS: TraitId[] = ['agility', 'strength', 'finesse', 'instinct', 'presence', 'knowledge'];
 
@@ -109,8 +110,8 @@ export interface Character {
   description: Record<string, string>;
   /** Avoid Death scars: each one permanently crosses out a Hope slot. */
   scars?: number;
-  /** Druid Beastform in effect; `evolution` is the trait raised by +1 when Evolution was used. */
-  beastform?: { formId: string; evolution?: TraitId };
+  /** Druid Beastform in effect (see forms.ts for evolved and hybrid choices). */
+  beastform?: BeastformChoice;
   /** After marking the last Hit Point: the death move in play. */
   death?: 'unconscious' | 'blaze' | 'dead';
   /** Track coins in the gold section (optional rule). */

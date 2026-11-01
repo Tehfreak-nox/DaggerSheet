@@ -128,6 +128,7 @@ export const ICONS = {
   sword: 'M14.5 3.5l6 6-9 9-4 0-2-2v-4zM4 20l3-3',
   trash: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',
   bag: 'M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2',
+  cancel: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8.5 8.5l7 7M15.5 8.5l-7 7',
 } as const;
 
 export function DomainIcon({ domain, size = 18 }: { domain: DomainId; size?: number }) {

@@ -85,8 +85,8 @@ export function Vault({ id }: { id: string }) {
                   <div key={c.id} className="vault-row">
                     <button className="s-row s-press vault-head" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? '' : c.id)}>
                       <span className={`dom-badge ${inL ? 'on' : ''}`}><DomainIcon domain={c.domain} size={18} /></span>
-                      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left', opacity: inL || inV ? 1 : 0.6 }}>
-                        <span className="s-feat-name" style={{ fontSize: 18 }}>{c.name}</span>
+                      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left' }}>
+                        <span className="s-feat-name" style={{ fontSize: 18, color: inL || inV ? undefined : 'var(--ink-2)' }}>{c.name}</span>
                         <span className="s-muted" style={{ fontSize: 13 }}>{cap(c.domain)} · {cap(c.type)} · {status}</span>
                       </span>
                       <Recall cost={c.recallCost} />
