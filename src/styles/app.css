@@ -171,3 +171,4 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 /* inline details under a grid row */
 .inline-span { grid-column: 1 / -1; }
 .inline-detail { padding: 14px; border: 2px solid var(--accent, var(--ink)); border-radius: 10px; background: #FFFFFF; animation: s-pop .18s ease-out; scroll-margin: 16px; }
+.seg-choice { display: flex; flex-wrap: wrap; gap: 6px; }

@@ -21,10 +21,10 @@ interface Draft {
   pronouns: string;
   classId: string;
   subclassId: string;
+  /** Mixed ancestry: anc1 gives the top (first) feature, anc2 the bottom (second). */
   mixed: boolean;
   anc1: string;
   anc2: string;
-  slot: 0 | 1;
   communityId: string;
   traits: Partial<Record<TraitId, number>>;
   held: number | null;
@@ -41,7 +41,7 @@ interface Draft {
 }
 
 const EMPTY: Draft = {
-  name: '', pronouns: '', classId: '', subclassId: '', mixed: false, anc1: '', anc2: '', slot: 0, communityId: '',
+  name: '', pronouns: '', classId: '', subclassId: '', mixed: false, anc1: '', anc2: '', communityId: '',
   traits: {}, held: null, exp: ['', ''], purposeful: 0, primary: '', secondary: '', armorId: '',
   potion: 'minor-health-potion', classItem: '', cards: [], answers: {}, connections: {},
 };
@@ -55,8 +55,9 @@ function isClank(d: Draft): boolean {
 }
 
 function ancestryOf(d: Draft): AncestryChoice | undefined {
-  if (!d.anc1) return undefined;
-  return d.mixed && d.anc2 && d.anc2 !== d.anc1 ? { mixed: { first: d.anc1, second: d.anc2 } } : { id: d.anc1 };
+  const a = d.anc1 || d.anc2;
+  if (!a) return undefined;
+  return d.anc1 && d.anc2 && d.anc1 !== d.anc2 ? { mixed: { first: d.anc1, second: d.anc2 } } : { id: a };
 }
 
 function toInput(d: Draft): CreateInput {
@@ -115,7 +116,7 @@ export function Create() {
       case 0: return d.name.trim().length > 0;
       case 1: return !!d.classId;
       case 2: return !!d.subclassId;
-      case 3: return !!d.anc1 && (!d.mixed || (!!d.anc2 && d.anc2 !== d.anc1));
+      case 3: return !!d.anc1 && !!d.anc2 && (!d.mixed || d.anc1 !== d.anc2);
       case 4: return !!d.communityId;
       case 5: return TRAIT_IDS.every((t) => d.traits[t] !== undefined);
       case 6: return d.exp.every((e) => e.trim()) && d.exp[0].trim().toLowerCase() !== d.exp[1].trim().toLowerCase();
@@ -186,9 +187,12 @@ export function Create() {
         )}
 
         {step === 1 && (
-          <div className="grid-2">
-            {classes.map((c) => (
-              <button key={c.id} className="class-tile s-press" data-cls={c.id} data-sub="a" aria-pressed={d.classId === c.id} onClick={() => pickClass(c.id)}>
+          <InlineGrid
+            columns={2}
+            items={classes}
+            openId={d.classId}
+            tile={(c) => (
+              <button className="class-tile s-press" data-cls={c.id} data-sub="a" aria-pressed={d.classId === c.id} onClick={() => pickClass(c.id)}>
                 <span className="head">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={EMBLEMS[c.id]} /></svg>
                   <span>{c.name}</span>
@@ -198,79 +202,99 @@ export function Create() {
                   <span className="s-muted" style={{ fontSize: 12 }}>HP {c.startingHitPoints} · Evasion {c.startingEvasion}</span>
                 </span>
               </button>
-            ))}
-          </div>
+            )}
+            detail={(c) => <ClassDetail id={c.id} />}
+          />
         )}
 
         {step === 2 && cls && (
           <>
-            <span className="s-muted hint">Both subclasses share the {cls.name} colours and emblem; each shifts the accent and the frame around the emblem.</span>
+            <span className="s-muted hint">Both subclasses share the {cls.name} colours and emblem; each shifts the accent and the frame around the emblem. Tap one to read all of its abilities.</span>
             {cls.subclasses.map((s, i) => (
-              <button key={s.id} className="sub-tile s-press" data-cls={cls.id} data-sub={i ? 'b' : 'a'} aria-pressed={d.subclassId === s.id} onClick={() => up({ subclassId: s.id, cards: [] })}>
-                <span className="em">
-                  <svg width="44" height="44" viewBox="-5 -5 34 34" fill="none" stroke="#FFFFFF" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={EMBLEMS[cls.id]} /><path d={FRAMES[i]} /></svg>
-                </span>
-                <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left' }}>
-                  <span className="s-feat-name">{s.name}</span>
-                  <span className="s-muted" style={{ fontSize: 13 }}>{s.spellcastTrait ? `Spellcast: ${cap(s.spellcastTrait)}` : 'No Spellcast trait'} · {i ? 'diamond' : 'ring'} frame</span>
-                  <span style={{ fontSize: 14, lineHeight: 1.35 }}>{s.description}</span>
-                </span>
-                <span className="swatch" />
-              </button>
+              <Fragment key={s.id}>
+                <button className="sub-tile s-press" data-cls={cls.id} data-sub={i ? 'b' : 'a'} aria-pressed={d.subclassId === s.id} onClick={() => up({ subclassId: s.id, cards: [] })}>
+                  <span className="em">
+                    <svg width="44" height="44" viewBox="-5 -5 34 34" fill="none" stroke="#FFFFFF" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={EMBLEMS[cls.id]} /><path d={FRAMES[i]} /></svg>
+                  </span>
+                  <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left' }}>
+                    <span className="s-feat-name">{s.name}</span>
+                    <span className="s-muted" style={{ fontSize: 13 }}>{s.spellcastTrait ? `Spellcast: ${cap(s.spellcastTrait)}` : 'No Spellcast trait'} · {i ? 'diamond' : 'ring'} frame</span>
+                    <span style={{ fontSize: 14, lineHeight: 1.35 }}>{s.description}</span>
+                  </span>
+                  <span className="swatch" />
+                </button>
+                {d.subclassId === s.id && <SubclassDetail classId={cls.id} subclassId={s.id} />}
+              </Fragment>
             ))}
-            {sub && (
-              <div className="stack-10">
-                <span className="s-label">Foundation</span>
-                {sub.foundation.map((f) => <div key={f.id}><span className="s-feat-name" style={{ fontSize: 17 }}>{f.name}</span><Rich text={f.text} style={{ fontSize: 15 }} /></div>)}
-              </div>
-            )}
           </>
         )}
 
         {step === 3 && (
           <>
-            <div className="s-row soft">
-              <span style={{ fontSize: 14, lineHeight: 1.35 }}><b>Mixed ancestry</b> · first feature from one, second from another</span>
-              <button className={`s-check ${d.mixed ? 'on' : ''}`} aria-pressed={d.mixed} aria-label="Mixed ancestry" onClick={() => up({ mixed: !d.mixed, slot: 0, anc2: '' })} />
-            </div>
+            <span className="s-muted hint">Tap an ancestry to read it. You get both of its features. To mix two ancestries, choose “Top only” or “Bottom only” in its details, then tap a second ancestry for the other feature.</span>
             {d.mixed && (
-              <div className="s-pills" style={{ justifyContent: 'flex-start' }}>
-                {[0, 1].map((i) => (
-                  <button key={i} className={`s-pill ${d.slot === i ? 'on' : ''}`} style={{ border: '2px solid var(--accent, var(--ink))' }} onClick={() => up({ slot: i as 0 | 1 })}>
-                    {i === 0 ? 'First feature' : 'Second feature'} · {ancestries.find((a) => a.id === (i ? d.anc2 : d.anc1))?.name ?? '—'}
-                  </button>
-                ))}
+              <div className="s-row soft" style={{ alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 14, lineHeight: 1.4 }}>
+                  <b>Mixed ancestry</b><br />
+                  Top: {d.anc1 ? `${ancName(d.anc1)} · ${ancFeature(d.anc1, 0)}` : <i>tap an ancestry</i>}<br />
+                  Bottom: {d.anc2 ? `${ancName(d.anc2)} · ${ancFeature(d.anc2, 1)}` : <i>tap an ancestry</i>}
+                </span>
+                <button className="s-mini" onClick={() => { const keep = d.anc1 || d.anc2; up({ mixed: false, anc1: keep, anc2: keep }); setPeek(keep); }}>Undo mix</button>
               </div>
             )}
             <InlineGrid
               items={ancestries}
-              openId={peek || d.anc1}
+              openId={peek || d.anc1 || d.anc2}
               tile={(a) => {
-                const sel = a.id === d.anc1 || (d.mixed && a.id === d.anc2);
+                const sel = a.id === d.anc1 || a.id === d.anc2;
                 return (
                   <button className={`anc-tile s-press ${sel ? 'sel' : ''}`} aria-pressed={sel}
-                    onClick={() => { setPeek(a.id); if (d.mixed && d.slot === 1) up({ anc2: a.id }); else up({ anc1: a.id, slot: d.mixed ? 1 : 0 }); }}>
+                    onClick={() => {
+                      setPeek(a.id);
+                      const pending = d.mixed && (!d.anc1 || !d.anc2);
+                      if (pending) {
+                        if (!d.anc1 && a.id !== d.anc2) up({ anc1: a.id });
+                        else if (!d.anc2 && a.id !== d.anc1) up({ anc2: a.id });
+                      } else if (!d.mixed) {
+                        // Not mixing: tapping an ancestry takes both of its features.
+                        up({ anc1: a.id, anc2: a.id, mixed: false });
+                      }
+                      // While a finished mix is in place, tapping just opens the details.
+                    }}>
                     <Ornament id={a.id} />
                     <span style={{ font: '700 14px/1 var(--head)' }}>{a.name}</span>
                   </button>
                 );
               }}
               detail={(a) => {
-                const usedFirst = a.id === d.anc1;
-                const usedSecond = d.mixed ? a.id === d.anc2 : a.id === d.anc1;
+                const both = !d.mixed && d.anc1 === a.id;
+                const top = d.mixed && d.anc1 === a.id;
+                const bottom = d.mixed && d.anc2 === a.id;
+                const pending = d.mixed && (!d.anc1 || !d.anc2);
                 return (
                   <div className="inline-detail stack-10">
                     <span className="s-label">{a.name}{a.group ? ` · ${a.group}` : ''}</span>
+                    <span className="s-muted" style={{ fontSize: 14, lineHeight: 1.45 }}>{a.description}</span>
                     {a.features.map((f, i) => {
-                      const used = i === 0 ? usedFirst : usedSecond;
+                      const used = both || (i === 0 ? top : bottom);
                       return (
-                        <div key={f.id} style={d.mixed && !used ? { opacity: 0.45 } : undefined}>
+                        <div key={f.id} style={d.mixed && (top || bottom) && !used ? { opacity: 0.45 } : undefined}>
                           <span className="s-feat-name" style={{ fontSize: 17 }}>{f.name}</span>
-                          {d.mixed && <span className="s-muted" style={{ fontSize: 12 }}> · {i === 0 ? 'first' : 'second'} feature{used ? ', yours' : ''}</span>}
+                          <span className="s-muted" style={{ fontSize: 12 }}> · {i === 0 ? 'top' : 'bottom'} feature{used ? ' · yours' : ''}</span>
                           <Rich text={f.text} style={{ fontSize: 15 }} />
                         </div>
                       );
                     })}
+                    <div className="seg-choice" role="group" aria-label={`Use ${a.name}`}>
+                      <button className={`s-mini ${both ? 'solid' : ''}`} aria-pressed={both} onClick={() => up({ anc1: a.id, anc2: a.id, mixed: false })}>Both features</button>
+                      <button className={`s-mini ${top ? 'solid' : ''}`} aria-pressed={top}
+                        onClick={() => up({ mixed: true, anc1: a.id, anc2: d.mixed && d.anc2 !== a.id ? d.anc2 : '' })}>Top only · mix</button>
+                      <button className={`s-mini ${bottom ? 'solid' : ''}`} aria-pressed={bottom}
+                        onClick={() => up({ mixed: true, anc2: a.id, anc1: d.mixed && d.anc1 !== a.id ? d.anc1 : '' })}>Bottom only · mix</button>
+                    </div>
+                    {pending && (top || bottom) && (
+                      <span className="callout">Now tap another ancestry for its {top ? 'bottom' : 'top'} feature.</span>
+                    )}
                   </div>
                 );
               }}
@@ -598,7 +622,7 @@ function Review({ d }: { d: Draft }) {
   const rows: [string, string][] = [
     ['Name', `${d.name}${d.pronouns ? ` (${d.pronouns})` : ''}`],
     ['Class', `${cls?.name} · ${sub?.name}`],
-    ['Ancestry', d.mixed && d.anc2 ? `${ancestries.find((a) => a.id === d.anc1)?.name} / ${ancestries.find((a) => a.id === d.anc2)?.name}` : ancestries.find((a) => a.id === d.anc1)?.name ?? ''],
+    ['Ancestry', d.anc1 !== d.anc2 ? `${ancName(d.anc1)} (${ancFeature(d.anc1, 0)}) / ${ancName(d.anc2)} (${ancFeature(d.anc2, 1)})` : ancName(d.anc1)],
     ['Community', communities.find((c) => c.id === d.communityId)?.name ?? ''],
     ['Traits', TRAIT_IDS.map((t) => `${cap(t).slice(0, 3)} ${signed(d.traits[t] ?? 0)}`).join(' · ')],
     ['Experiences', d.exp.join(' · ')],
@@ -631,12 +655,78 @@ function InlineGrid<T extends { id: string }>({ items, openId, tile, detail, col
     if (idx >= 0) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [openId]);
   return (
-    <div className="grid-3">
+    <div className={columns === 2 ? 'grid-2' : 'grid-3'}>
       {items.map((x, i) => (
         <Fragment key={x.id}>
           {tile(x)}
           {i === rowEnd && <div ref={ref} className="inline-span">{detail(items[idx])}</div>}
         </Fragment>
+      ))}
+    </div>
+  );
+}
+
+const ancName = (id: string) => ancestries.find((a) => a.id === id)?.name ?? '';
+const ancFeature = (id: string, i: 0 | 1) => ancestries.find((a) => a.id === id)?.features[i].name ?? '';
+
+function Feat({ name, text, note, tag }: { name: string; text: string; note?: string; tag?: string }) {
+  return (
+    <div className="stack-4">
+      <span><span className="s-feat-name" style={{ fontSize: 17 }}>{name}</span>{tag && <span className="s-muted" style={{ fontSize: 12 }}> · {tag}</span>}</span>
+      <Rich text={text} style={{ fontSize: 15 }} />
+      {note && <span className="s-muted" style={{ fontSize: 13 }}>{note}</span>}
+    </div>
+  );
+}
+
+/** Everything about a class, shown under its tile before you pick it. */
+function ClassDetail({ id }: { id: string }) {
+  const c = classById.get(id)!;
+  const ex = c.extras;
+  return (
+    <div className="inline-detail stack-14" data-cls={c.id} data-sub="a">
+      <span className="s-label" style={{ fontSize: 18 }}>{c.name}</span>
+      <span style={{ fontSize: 15, lineHeight: 1.45 }}>{c.description}</span>
+      <div className="grid-2 kv">
+        {[['Domains', c.domains.map(cap).join(' & ')], ['Starting HP', String(c.startingHitPoints)], ['Starting Evasion', String(c.startingEvasion)], ['Class items', c.classItems]].map(([k, v]) => (
+          <span key={k} style={{ display: 'flex', flexDirection: 'column' }}><span className="s-label s-muted" style={{ fontSize: 11 }}>{k}</span><span style={{ fontSize: 15 }}>{v}</span></span>
+        ))}
+      </div>
+      <span className="s-label">Hope feature</span>
+      <Feat name={c.hopeFeature.name} text={c.hopeFeature.text} tag={`${c.hopeFeature.hopeCost} Hope`} />
+      <span className="s-label">Class feature{c.features.length > 1 ? 's' : ''}</span>
+      {c.features.map((f) => <Feat key={f.id} name={f.name} text={f.text} note={f.note} />)}
+      {ex.beastforms && <span className="s-muted" style={{ fontSize: 14 }}>Beastform: {ex.beastforms.forms.length} creature forms across tiers 1–4; you can take forms of your tier or lower.</span>}
+      {ex.patronSpheres && <span className="s-muted" style={{ fontSize: 14 }}>Patron spheres of influence: {ex.patronSpheres.join(', ')}.</span>}
+      <span className="s-label">Subclasses</span>
+      {c.subclasses.map((s) => (
+        <span key={s.id} style={{ fontSize: 15, lineHeight: 1.4 }}>
+          <b>{s.name}</b> · {s.spellcastTrait ? `Spellcast ${cap(s.spellcastTrait)}` : 'no Spellcast trait'}. {s.description}
+        </span>
+      ))}
+      {ex.martialStances && <span className="s-muted" style={{ fontSize: 14 }}>Martial Artist subclass: {ex.martialStances.stances.length} martial stances across tiers 1–4.</span>}
+      {ex.companion && <span className="s-muted" style={{ fontSize: 14 }}>Beastbound subclass: an animal companion that levels up with you.</span>}
+    </div>
+  );
+}
+
+/** Every subclass ability, with when you gain it. */
+function SubclassDetail({ classId, subclassId }: { classId: string; subclassId: string }) {
+  const s = classById.get(classId)!.subclasses.find((x) => x.id === subclassId)!;
+  const stages: [keyof typeof s & ('foundation' | 'specialization' | 'mastery'), string][] = [
+    ['foundation', 'Foundation · level 1'],
+    ['specialization', 'Specialization · an upgraded subclass card from level 5'],
+    ['mastery', 'Mastery · the next upgrade, from level 8'],
+  ];
+  return (
+    <div className="inline-detail stack-14">
+      <span className="s-label" style={{ fontSize: 18 }}>{s.name}</span>
+      <span style={{ fontSize: 14 }}>{s.spellcastTrait ? `Spellcast trait: ${cap(s.spellcastTrait)}` : 'No Spellcast trait (you can’t use magic weapons).'}</span>
+      {stages.map(([k, label]) => (
+        <div key={k} className="stack-10">
+          <span className="s-label">{label}</span>
+          {s[k].map((f) => <Feat key={f.id} name={f.name} text={f.text} note={f.note} />)}
+        </div>
       ))}
     </div>
   );
