@@ -7,3 +7,4 @@ __pycache__
 scripts/extract/out
 dist-artifact
 *.tsbuildinfo
+sources/

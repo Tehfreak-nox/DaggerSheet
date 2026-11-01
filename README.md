@@ -17,6 +17,9 @@ characters locally.
 | 7. Rests and level up | done |
 | 8. Polish (PWA install, tablet layout, art refinement) | in progress |
 
+Site: https://tehfreak-nox.github.io/DaggerSheet/ (built and published from `main` by
+`.github/workflows/pages.yml`).
+
 Test build: https://claude.ai/artifact/X1Bozmcjm8Kgr2Jbjexp4u (private to the owner; republished with
 `npm run build:artifact`, which writes `dist-artifact/daggersheet.html`).
 
@@ -24,7 +27,8 @@ Test build: https://claude.ai/artifact/X1Bozmcjm8Kgr2Jbjexp4u (private to the ow
 
 ```
 design/            Design handoff: interactive mockups (*.dc.html), CSS, HANDOFF.md
-sources/           Source PDFs (SRD 2.0 in four parts, official character sheets and guides)
+sources/           Source PDFs, not in the repo: put the SRD 2.0 PDFs and the official character
+                   sheets and guides PDF here to regenerate the data with `npm run data`
 scripts/extract/   Python extraction pipeline: PDFs -> src/data/*.json
 src/data/          Generated rules data, TypeScript types (types.ts), typed index, tests
 src/rules/         Rules engine: derived stats, creation, rolls, damage, rests, gold, level up, validation
