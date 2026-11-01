@@ -1,0 +1,15 @@
+{
+  "name": "DaggerSheet",
+  "short_name": "DaggerSheet",
+  "description": "A Daggerheart character sheet: create, level up and play your characters.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#191b1e",
+  "theme_color": "#1f2124",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
