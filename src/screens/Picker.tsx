@@ -59,10 +59,11 @@ function addItem(ch: Character, l: Loot): string {
 function Catalog({ ch, kind }: { ch: Character; kind: Kind }) {
   const myTier = tierOf(ch.level);
   const [tier, setTier] = useState<Tier>(myTier);
-  const [group, setGroup] = useState(kind === 'weapon' ? 'primary-phy' : kind === 'item' ? 'consumable' : 'all');
+  const g = guides[ch.classId];
+  const guideMagic = g?.primary.id ? allWeapons.find((w) => w.id === g.primary.id)?.damage.type !== 'phy' : false;
+  const [group, setGroup] = useState(kind === 'weapon' ? (guideMagic ? 'primary-mag' : 'primary-phy') : kind === 'item' ? 'consumable' : 'all');
   const [open, setOpen] = useState('');
   const [msg, setMsg] = useState('');
-  const g = guides[ch.classId];
   const rec = new Set([g?.primary.id, g?.secondary?.id, g?.armor.id].filter(Boolean) as string[]);
   const recName = (n: string) => n.replace(/^(Improved|Advanced|Legendary) /, '');
   const recNames = new Set([g?.primary.name, g?.secondary?.name, g?.armor.name].filter(Boolean) as string[]);

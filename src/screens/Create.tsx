@@ -47,6 +47,12 @@ const EMPTY: Draft = {
 
 const MODS = rules.creation.traitModifiers;
 
+/** Clank "Purposeful Design" (first Clank feature, so also a mixed ancestry with Clank first). */
+function isClank(d: Draft): boolean {
+  const anc = ancestryOf(d);
+  return !!anc && hasAncestryFeature({ ancestry: anc } as Character, 'purposeful-design');
+}
+
 function ancestryOf(d: Draft): AncestryChoice | undefined {
   if (!d.anc1) return undefined;
   return d.mixed && d.anc2 && d.anc2 !== d.anc1 ? { mixed: { first: d.anc1, second: d.anc2 } } : { id: d.anc1 };
@@ -329,13 +335,11 @@ export function Create() {
                 <input className="s-field" type="text" id={`c-exp-${i}`} aria-label={i ? 'Second Experience' : 'First Experience'}
                   placeholder={i ? 'e.g. Silver Tongue' : 'e.g. Raised by Smugglers'} value={d.exp[i]}
                   onChange={(e) => { const exp = [...d.exp] as [string, string]; exp[i] = e.target.value; up({ exp }); }} autoComplete="off" />
-                <span className="s-num" style={{ fontSize: 22 }}>+{2 + (d.anc1 === 'clank' || (d.mixed && d.anc1 === 'clank') ? (d.purposeful === i ? 1 : 0) : 0)}</span>
+                <span className="s-num" style={{ fontSize: 22 }}>+{2 + (isClank(d) && d.purposeful === i ? 1 : 0)}</span>
               </div>
             ))}
             {(() => {
-              const anc = ancestryOf(d);
-              const isClank = anc && hasAncestryFeature({ ancestry: anc } as Character, 'purposeful-design');
-              if (!isClank) return null;
+              if (!isClank(d)) return null;
               return (
                 <div className="soft stack-10">
                   <span style={{ fontSize: 14 }}><b>Purposeful Design</b> (Clank): which Experience fits the purpose you were made for? It gets a permanent +1.</span>

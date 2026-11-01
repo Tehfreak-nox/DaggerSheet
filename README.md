@@ -10,12 +10,15 @@ characters locally.
 |---|---|
 | 1. Rules data extracted from the PDFs, with types and tests | done |
 | 2. Rules engine (pure functions and tests) | done |
-| 3. App shell, store, persistence, theme | next |
-| 4. Character page | |
-| 5. Equipment, pickers, vault | |
-| 6. Create flow | |
-| 7. Rests and level up | |
-| 8. Polish | |
+| 3. App shell, store, persistence, theme | done |
+| 4. Character page | done |
+| 5. Equipment, pickers, vault | done |
+| 6. Create flow | done |
+| 7. Rests and level up | done |
+| 8. Polish (PWA install, tablet layout, art refinement) | in progress |
+
+Test build: https://claude.ai/artifact/X1Bozmcjm8Kgr2Jbjexp4u (private to the owner; republished with
+`npm run build:artifact`, which writes `dist-artifact/daggersheet.html`).
 
 ## Layout
 
@@ -25,6 +28,10 @@ sources/           Source PDFs (SRD 2.0 in four parts, official character sheets
 scripts/extract/   Python extraction pipeline: PDFs -> src/data/*.json
 src/data/          Generated rules data, TypeScript types (types.ts), typed index, tests
 src/rules/         Rules engine: derived stats, creation, rolls, damage, rests, gold, level up, validation
+src/app/           Character store (local + account sync), navigation, table-time state (armed rolls)
+src/screens/       Home, Create, Character, Equipment, Picker, Vault, Rest, Level up, About
+src/ui/            Header, roll overlay, feature cards with tap controls, shared pieces
+src/styles/        sheet.css and persona.css from the design handoff, app.css for layout
 FLAGS.md           Ambiguities and decisions found while extracting
 ```
 
