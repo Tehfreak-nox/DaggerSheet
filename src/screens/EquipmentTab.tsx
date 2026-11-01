@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { go } from '../app/nav';
+import { toast } from '../app/toast';
 import { actionRoll, damage, dice, setCrit, usePlay } from '../app/play';
 import { updateCharacter } from '../app/store';
 import { armorById, lootById, rules, weaponById } from '../data';
@@ -269,6 +270,7 @@ function Items({ ch }: { ch: Character }) {
       ...c,
       items: c.items.flatMap((x, j) => (j === i ? (x.qty > 1 ? [{ ...x, qty: x.qty - 1 }] : []) : [x])),
     }));
+    if (!m && !dm) toast(`Used ${loot.name}.`);
   };
 
   return (

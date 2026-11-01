@@ -11,6 +11,7 @@ import { Rest } from './screens/Rest';
 import { Sheet } from './screens/Sheet';
 import { Vault } from './screens/Vault';
 import { RollOverlay } from './ui/RollOverlay';
+import { Toast } from './ui/Toast';
 
 export function App() {
   const s = useScreen();
@@ -33,6 +34,7 @@ export function App() {
       {view}
       <div className="s" {...(ch ? themeAttrs(ch) : {})}>
         <RollOverlay />
+        <Toast />
       </div>
     </div>
   );

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { back } from '../app/nav';
+import { toast } from '../app/toast';
 import { updateCharacter, useStore } from '../app/store';
 import {
   armor as allArmor, guides, loot as allLoot, rules, weapons as allWeapons,
   type Armor, type Loot, type RangeId, type Tier, type TraitId, type Weapon,
 } from '../data';
 import { armorProblems, derive, equipWeapon, tierOf, weaponProblems, type Character, type EquipProblem } from '../rules';
+import { sortGear } from '../ui/gearSort';
 import { themeAttrs } from '../ui/Header';
 import { cap, Icon, ICONS, Page, RANGE_NAMES } from '../ui/kit';
 
@@ -53,7 +55,7 @@ function addItem(ch: Character, l: Loot): string {
     ...c,
     items: have && l.kind === 'consumable' ? c.items.map((x) => (x.id === l.id ? { ...x, qty: x.qty + 1 } : x)) : [...c.items, { id: l.id, qty: 1 }],
   }));
-  return `Added ${l.name}.`;
+  return `Added ${l.name} to your items.`;
 }
 
 function Catalog({ ch, kind }: { ch: Character; kind: Kind }) {
@@ -63,7 +65,6 @@ function Catalog({ ch, kind }: { ch: Character; kind: Kind }) {
   const guideMagic = g?.primary.id ? allWeapons.find((w) => w.id === g.primary.id)?.damage.type !== 'phy' : false;
   const [group, setGroup] = useState(kind === 'weapon' ? (guideMagic ? 'primary-mag' : 'primary-phy') : kind === 'item' ? 'consumable' : 'all');
   const [open, setOpen] = useState('');
-  const [msg, setMsg] = useState('');
   const rec = new Set([g?.primary.id, g?.secondary?.id, g?.armor.id].filter(Boolean) as string[]);
   const recName = (n: string) => n.replace(/^(Improved|Advanced|Legendary) /, '');
   const recNames = new Set([g?.primary.name, g?.secondary?.name, g?.armor.name].filter(Boolean) as string[]);
@@ -83,7 +84,8 @@ function Catalog({ ch, kind }: { ch: Character; kind: Kind }) {
   } else {
     rows = allLoot.filter((l) => l.kind === group && !l.id.startsWith('hb-'));
   }
-  rows = [...rows].sort((a, b) => Number(isRec(b)) - Number(isRec(a)));
+  const dv = derive(ch);
+  rows = sortGear(rows as (Weapon & Armor & Loot)[], isRec, dv.traits, dv.spellcast);
 
   return (
     <>
@@ -105,8 +107,7 @@ function Catalog({ ch, kind }: { ch: Character; kind: Kind }) {
             ))}
           </div>
         )}
-        {kind !== 'item' && <span className="s-muted" style={{ fontSize: 14 }}>★ suggested by the {cap(ch.classId)} guide · you can equip tier {myTier} or lower</span>}
-        {msg && <span className="callout" role="status">{msg}</span>}
+        {kind !== 'item' && <span className="s-muted" style={{ fontSize: 14 }}>★ suggested by the {cap(ch.classId)} guide first{kind === 'weapon' ? ', then weapons for your best traits' : ''} · you can equip tier {myTier} or lower</span>}
       </div>
       <div className="picker-rows">
         {rows.map((x) => {
@@ -142,9 +143,9 @@ function Catalog({ ch, kind }: { ch: Character; kind: Kind }) {
                   <button className="s-mini solid" style={{ alignSelf: 'flex-start' }}
                     disabled={!!a && probs.length > 0}
                     onClick={() => {
-                      if (w) setMsg(addWeapon(ch, w));
-                      if (a) { updateCharacter(ch.id, (c) => ({ ...c, armorId: a.id, armorMarked: 0 })); back(); }
-                      if (l) setMsg(addItem(ch, l));
+                      if (w) toast(addWeapon(ch, w));
+                      if (a) { updateCharacter(ch.id, (c) => ({ ...c, armorId: a.id, armorMarked: 0 })); toast(`Equipped ${a.name}.`); back(); }
+                      if (l) toast(addItem(ch, l));
                     }}>
                     {a ? (ch.armorId === a.id ? 'Equipped' : 'Equip') : w ? (ch[w.category] || probs.length ? 'Add to inventory' : `Equip as ${w.category}`) : 'Add'}
                   </button>
@@ -188,24 +189,26 @@ function Custom({ ch, kind }: { ch: Character; kind: Kind }) {
       };
       const next = { ...ch, homebrew: { ...hb, weapons: [...hb.weapons, w] } };
       updateCharacter(ch.id, () => next);
-      setErr(addWeapon(next, w));
+      toast(addWeapon(next, w));
+      setErr('');
     } else if (kind === 'armor') {
       const [maj, sev, sc] = [Number(f.major), Number(f.severe), Number(f.score)];
       if (!maj || !sev || sev <= maj || sc < 0 || sc > 12) { setErr('Enter base thresholds (Major below Severe) and a score from 0 to 12.'); return; }
       const a: Armor = { id: hbId(), name: f.name.trim(), tier: Number(f.tier) as Tier, thresholds: { major: maj, severe: sev }, score: sc, feature: featureOf() };
       updateCharacter(ch.id, (c) => ({ ...c, homebrew: { ...hb, armor: [...hb.armor, a] }, armorId: a.id, armorMarked: 0 }));
+      toast(`Equipped ${a.name}.`);
       back();
     } else {
       const l: Loot = { id: hbId(), name: f.name.trim(), kind: f.itemKind as Loot['kind'], roll: 0, set: 'additional', text: f.notes.trim() };
       updateCharacter(ch.id, (c) => ({ ...c, homebrew: { ...hb, items: [...hb.items, l] }, items: [...c.items, { id: l.id, qty: 1 }] }));
-      setErr(`Added ${l.name}.`);
+      toast(`Added ${l.name}.`);
+      setErr('');
     }
   };
 
   const field = (id: string, label: string, el: React.ReactNode) => (
     <div className="stack-6"><label className="s-label s-muted" style={{ fontSize: 15 }} htmlFor={id}>{label}</label>{el}</div>
   );
-  void derive;
   return (
     <div className="stack-16" style={{ paddingTop: 18 }}>
       {field('c-name', 'Name', <input id="c-name" className="s-field" value={f.name} onChange={set('name')} placeholder={kind === 'weapon' ? 'e.g. Grandmother’s Saber' : kind === 'armor' ? 'e.g. Patched Leathers' : 'e.g. Lucky Coin'} />)}

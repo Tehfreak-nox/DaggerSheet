@@ -91,7 +91,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .create-progress .bar span.now { background: var(--accent, var(--ink)); }
 .create-title { margin: 0; font: 800 26px/1.05 var(--head); text-transform: uppercase; letter-spacing: .02em; }
 .create-main { display: flex; flex-direction: column; gap: 14px; padding-top: 14px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
-.create-nav { position: sticky; bottom: 0; margin-top: 12px; display: grid; grid-template-columns: 1fr 2fr; gap: 8px; padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(rgba(255,255,255,0), #FFFFFF 30%); }
+.create-nav { margin-top: 8px; display: grid; grid-template-columns: 1fr 2fr; gap: 8px; padding: 4px 0 12px; }
 .class-tile { padding: 0; border: 3px solid var(--line); border-radius: 10px; overflow: hidden; background: #FFFFFF; text-align: left; display: flex; flex-direction: column; }
 .class-tile[aria-pressed="true"] { border-color: var(--c-a); box-shadow: 0 0 0 2px var(--c-a); }
 .class-tile .head { background: var(--c-deep); color: #FFFFFF; padding: 10px; display: flex; align-items: center; gap: 8px; font: 800 18px/1 var(--head); text-transform: uppercase; }
@@ -152,3 +152,22 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   .app { max-width: 760px; }
   .traits { gap: 10px; }
 }
+
+/* tap feedback: a ring that pulses out from whatever you pressed */
+.tap-pulse { animation: tap-pulse .45s ease-out; }
+@keyframes tap-pulse {
+  0% { outline: 3px solid var(--accent, #141414); outline-offset: 0; }
+  100% { outline: 3px solid transparent; outline-offset: 10px; }
+}
+.s-slotbtn.tap-pulse .s-sq, .s-trait.tap-pulse .face { animation: tap-pop .3s ease-out; }
+@keyframes tap-pop { 0% { transform: scale(1); } 40% { transform: scale(1.15); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .tap-pulse, .tap-pulse * { animation: none !important; } }
+
+/* toast */
+.toast-wrap { position: fixed; left: 0; right: 0; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 70; display: flex; justify-content: center; pointer-events: none; padding: 0 16px; }
+.toast { max-width: 520px; padding: 12px 18px; border-radius: 10px; background: var(--c-deep, #1E1B18); color: #FFFFFF; font: 600 15px/1.3 var(--body); box-shadow: 0 10px 30px rgba(0,0,0,.3); border-bottom: 3px solid var(--accent, #FFFFFF); animation: toast-in .25s ease-out; }
+@keyframes toast-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* inline details under a grid row */
+.inline-span { grid-column: 1 / -1; }
+.inline-detail { padding: 14px; border: 2px solid var(--accent, var(--ink)); border-radius: 10px; background: #FFFFFF; animation: s-pop .18s ease-out; scroll-margin: 16px; }

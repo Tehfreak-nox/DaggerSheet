@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { back } from '../app/nav';
+import { toast } from '../app/toast';
 import { updateCharacter, useStore } from '../app/store';
 import { classById, domainCards, rules, type DomainCard } from '../data';
 import { accessibleDomains, canPayStress, derive } from '../rules';
@@ -12,7 +13,6 @@ export function Vault({ id }: { id: string }) {
   const ch = useStore((s) => s.characters[id]);
   const [resting, setResting] = useState(true);
   const [open, setOpen] = useState('');
-  const [msg, setMsg] = useState('');
   if (!ch) return null;
   const d = derive(ch);
   const domains = accessibleDomains(ch);
@@ -22,14 +22,14 @@ export function Vault({ id }: { id: string }) {
 
   const toVault = (c: DomainCard) => {
     updateCharacter(id, (x) => ({ ...x, cards: { loadout: x.cards.loadout.filter((y) => y !== c.id), vault: [...x.cards.vault, c.id] } }));
-    setMsg(`${c.name} moved to the vault.`);
+    toast(`${c.name} moved to the vault.`);
   };
   const toLoadout = (c: DomainCard) => {
-    if (full) { setMsg('Your loadout is full. Move a card to the vault first (free).'); return; }
+    if (full) { toast('Your loadout is full. Move a card to the vault first (free).'); return; }
     const cost = resting ? 0 : c.recallCost;
-    if (cost && !canPayStress(ch, cost, d.stressSlots)) { setMsg(`Recalling ${c.name} costs ${cost} Stress and you don’t have enough unmarked.`); return; }
+    if (cost && !canPayStress(ch, cost, d.stressSlots)) { toast(`Recalling ${c.name} costs ${cost} Stress and you don’t have enough unmarked.`); return; }
     updateCharacter(id, (x) => ({ ...x, stress: x.stress + cost, cards: { vault: x.cards.vault.filter((y) => y !== c.id), loadout: [...x.cards.loadout, c.id] } }));
-    setMsg(cost ? `${c.name} recalled: marked ${cost} Stress.` : `${c.name} moved to your loadout.`);
+    toast(cost ? `${c.name} recalled: marked ${cost} Stress.` : `${c.name} moved to your loadout.`);
   };
 
   const strip = ch.cards.loadout.map((cid) => domainCards.find((c) => c.id === cid)!).filter(Boolean);
@@ -46,7 +46,6 @@ export function Vault({ id }: { id: string }) {
             {resting ? 'During a rest you can move cards between your loadout and vault for free.'
               : 'Outside a rest, moving a card into your loadout costs Stress equal to its Recall Cost. Moving one to the vault is free.'}
           </span>
-          {msg && <span className="callout" role="status">{msg}</span>}
         </div>
 
         <section className="stack-10">

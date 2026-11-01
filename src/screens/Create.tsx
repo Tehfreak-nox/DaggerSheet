@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { back, replace } from '../app/nav';
 import { saveCharacter } from '../app/store';
 import {
@@ -10,6 +10,7 @@ import {
   type AncestryChoice, type Character, type CreateInput,
 } from '../rules';
 import { EMBLEMS, FRAMES } from '../theme/tables';
+import { sortGear } from '../ui/gearSort';
 import { Header, Ornament, themeAttrs } from '../ui/Header';
 import { cap, Icon, ICONS, RANGE_NAMES, Recall, Rich, signed } from '../ui/kit';
 
@@ -36,13 +37,13 @@ interface Draft {
   classItem: string;
   cards: string[];
   answers: Record<string, string>;
-  connections: string;
+  connections: Record<string, string>;
 }
 
 const EMPTY: Draft = {
   name: '', pronouns: '', classId: '', subclassId: '', mixed: false, anc1: '', anc2: '', slot: 0, communityId: '',
   traits: {}, held: null, exp: ['', ''], purposeful: 0, primary: '', secondary: '', armorId: '',
-  potion: 'minor-health-potion', classItem: '', cards: [], answers: {}, connections: '',
+  potion: 'minor-health-potion', classItem: '', cards: [], answers: {}, connections: {},
 };
 
 const MODS = rules.creation.traitModifiers;
@@ -75,7 +76,10 @@ function toInput(d: Draft): CreateInput {
     potion: d.potion,
     classItem: d.classItem,
     cards: d.cards,
-    background: { ...d.answers, ...(d.connections ? { connections: d.connections } : {}) },
+    background: {
+      ...Object.fromEntries(Object.entries(d.answers).filter(([, a]) => a.trim())),
+      ...Object.fromEntries(Object.entries(d.connections).filter(([, a]) => a.trim()).map(([q, a]) => [`Connection: ${q}`, a])),
+    },
   };
 }
 
@@ -92,8 +96,14 @@ function trayUsed(d: Draft): number[] {
 }
 
 export function Create() {
-  const [step, setStep] = useState(0);
+  const [step, setStepRaw] = useState(0);
+  const setStep = (n: number) => {
+    setStepRaw(n);
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  };
   const [d, setD] = useState<Draft>(EMPTY);
+  /** Ancestry tile tapped last: its details open under its row. */
+  const [peek, setPeek] = useState('');
   const up = (p: Partial<Draft>) => setD((x) => ({ ...x, ...p }));
   const cls = d.classId ? classById.get(d.classId) : undefined;
   const sub = cls?.subclasses.find((s) => s.id === d.subclassId);
@@ -232,52 +242,60 @@ export function Create() {
                 ))}
               </div>
             )}
-            <div className="grid-3">
-              {ancestries.map((a) => {
+            <InlineGrid
+              items={ancestries}
+              openId={peek || d.anc1}
+              tile={(a) => {
                 const sel = a.id === d.anc1 || (d.mixed && a.id === d.anc2);
                 return (
-                  <button key={a.id} className={`anc-tile s-press ${sel ? 'sel' : ''}`} aria-pressed={sel}
-                    onClick={() => (d.mixed && d.slot === 1 ? up({ anc2: a.id }) : up({ anc1: a.id, slot: d.mixed ? 1 : 0 }))}>
+                  <button className={`anc-tile s-press ${sel ? 'sel' : ''}`} aria-pressed={sel}
+                    onClick={() => { setPeek(a.id); if (d.mixed && d.slot === 1) up({ anc2: a.id }); else up({ anc1: a.id, slot: d.mixed ? 1 : 0 }); }}>
                     <Ornament id={a.id} />
                     <span style={{ font: '700 14px/1 var(--head)' }}>{a.name}</span>
                   </button>
                 );
-              })}
-            </div>
-            {d.anc1 && (
-              <div className="stack-10">
-                {(() => {
-                  const first = ancestries.find((a) => a.id === d.anc1)!;
-                  const second = ancestries.find((a) => a.id === (d.mixed && d.anc2 ? d.anc2 : d.anc1))!;
-                  return [first.features[0], second.features[1]].map((f) => (
-                    <div key={f.id}><span className="s-feat-name" style={{ fontSize: 17 }}>{f.name}</span><Rich text={f.text} style={{ fontSize: 15 }} /></div>
-                  ));
-                })()}
-              </div>
-            )}
+              }}
+              detail={(a) => {
+                const usedFirst = a.id === d.anc1;
+                const usedSecond = d.mixed ? a.id === d.anc2 : a.id === d.anc1;
+                return (
+                  <div className="inline-detail stack-10">
+                    <span className="s-label">{a.name}{a.group ? ` · ${a.group}` : ''}</span>
+                    {a.features.map((f, i) => {
+                      const used = i === 0 ? usedFirst : usedSecond;
+                      return (
+                        <div key={f.id} style={d.mixed && !used ? { opacity: 0.45 } : undefined}>
+                          <span className="s-feat-name" style={{ fontSize: 17 }}>{f.name}</span>
+                          {d.mixed && <span className="s-muted" style={{ fontSize: 12 }}> · {i === 0 ? 'first' : 'second'} feature{used ? ', yours' : ''}</span>}
+                          <Rich text={f.text} style={{ fontSize: 15 }} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }}
+            />
           </>
         )}
 
         {step === 4 && (
-          <>
-            <div className="grid-3">
-              {communities.map((c) => (
-                <button key={c.id} className="com-tile s-press" aria-pressed={d.communityId === c.id} onClick={() => up({ communityId: c.id })}>
-                  <span className={`fx fx-${c.id}`} style={{ display: 'block', padding: 8, borderRadius: 0 }}><span className="fx-in" style={{ display: 'block', height: 34, padding: 0 }} /></span>
-                  <span className="name">{c.name}</span>
-                </button>
-              ))}
-            </div>
-            {d.communityId && (() => {
-              const c = communities.find((x) => x.id === d.communityId)!;
-              return (
-                <div className="stack-10">
-                  <span className="s-muted" style={{ fontSize: 14 }}>{c.name} are often {c.adjectives.join(', ')}.</span>
-                  <div><span className="s-feat-name" style={{ fontSize: 17 }}>{c.feature.name}</span><Rich text={c.feature.text} style={{ fontSize: 15 }} /></div>
-                </div>
-              );
-            })()}
-          </>
+          <InlineGrid
+            items={communities}
+            openId={d.communityId}
+            tile={(c) => (
+              <button className="com-tile s-press" aria-pressed={d.communityId === c.id} onClick={() => up({ communityId: c.id })}>
+                <span className={`fx fx-${c.id}`} style={{ display: 'block', padding: 8, borderRadius: 0 }}><span className="fx-in" style={{ display: 'block', height: 34, padding: 0 }} /></span>
+                <span className="name">{c.name}</span>
+              </button>
+            )}
+            detail={(c) => (
+              <div className="inline-detail stack-10">
+                <span className="s-label">{c.name}</span>
+                <span className="s-muted" style={{ fontSize: 14 }}>{c.name} are often {c.adjectives.join(', ')}.</span>
+                <div><span className="s-feat-name" style={{ fontSize: 17 }}>{c.feature.name}</span><Rich text={c.feature.text} style={{ fontSize: 15 }} /></div>
+              </div>
+            )}
+          />
         )}
 
         {step === 5 && guide && (
@@ -372,9 +390,13 @@ export function Create() {
               </div>
             ))}
             <span className="s-label" style={{ marginTop: 10 }}>Connections · {cls.name}</span>
-            <span className="s-muted hint">Ask your fellow players one of these for their character to answer, or make up your own.</span>
-            {cls.connectionQuestions.map((q) => <span key={q} className="quote">“{q}”</span>)}
-            <textarea className="s-field area" id="bg-con" rows={3} placeholder="Notes on your connections" aria-label="Connection notes" value={d.connections} onChange={(e) => up({ connections: e.target.value })} />
+            <span className="s-muted hint">Ask your fellow players these for their character to answer, and note what they say.</span>
+            {cls.connectionQuestions.map((q, i) => (
+              <div key={i} className="stack-6">
+                <label className="s-feat-text" style={{ fontSize: 15, fontWeight: 700 }} htmlFor={`con-${i}`}>{q}</label>
+                <textarea id={`con-${i}`} className="s-field area" rows={3} placeholder="Their answer" value={d.connections[q] ?? ''} onChange={(e) => up({ connections: { ...d.connections, [q]: e.target.value } })} />
+              </div>
+            ))}
           </>
         )}
 
@@ -426,7 +448,9 @@ function GearStep({ d, up, hasSpellcast, useGuide }: { d: Draft; up: (p: Partial
   const twoHanded = prim?.burden === 2;
   const rec = new Set([guide.primary.id, guide.secondary?.id, guide.armor.id].filter(Boolean) as string[]);
 
-  const sortRec = <T extends { id: string }>(xs: T[]) => [...xs].sort((a, b) => Number(rec.has(b.id)) - Number(rec.has(a.id)));
+  const sub = classById.get(d.classId)!.subclasses.find((x) => x.id === d.subclassId);
+  const spell = sub?.spellcastTrait ? d.traits[sub.spellcastTrait] ?? null : null;
+  const sortRec = <T extends { id: string; name: string; trait?: TraitId | 'spellcast' }>(xs: T[]) => sortGear(xs, (x) => rec.has(x.id), d.traits, spell);
   const groups: { key: string; title: string; items: (Weapon | Armor)[]; chosen: string; note?: string }[] = [
     { key: 'primary', title: 'Primary weapon', items: sortRec(weapons.filter((w) => w.tier === 1 && w.category === 'primary' && !w.group)), chosen: d.primary,
       note: d.classId === 'brawler' ? 'Brawler: with no active weapons you fight with Brawler’s Strike (I Am the Weapon), so a weapon is optional.' : undefined },
@@ -437,6 +461,7 @@ function GearStep({ d, up, hasSpellcast, useGuide }: { d: Draft; up: (p: Partial
 
   return (
     <>
+      <span className="s-muted hint">★ suggested gear comes first, then weapons that use your best traits.</span>
       <div className="rec-box">
         <div className="s-row">
           <span className="s-label">★ Suggested for {classById.get(d.classId)!.name}</span>
@@ -589,5 +614,30 @@ function Review({ d }: { d: Draft }) {
       ))}
       {problems.length > 0 && <p className="callout">{problems.join(' ')}</p>}
     </>
+  );
+}
+
+/**
+ * A 3-column tile grid that opens the chosen tile's details directly under
+ * its row, so the text appears where you tapped instead of below the grid.
+ */
+function InlineGrid<T extends { id: string }>({ items, openId, tile, detail, columns = 3 }: {
+  items: T[]; openId?: string; tile: (x: T) => ReactNode; detail: (x: T) => ReactNode; columns?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const idx = items.findIndex((x) => x.id === openId);
+  const rowEnd = idx < 0 ? -1 : Math.min(items.length - 1, Math.floor(idx / columns) * columns + columns - 1);
+  useEffect(() => {
+    if (idx >= 0) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [openId]);
+  return (
+    <div className="grid-3">
+      {items.map((x, i) => (
+        <Fragment key={x.id}>
+          {tile(x)}
+          {i === rowEnd && <div ref={ref} className="inline-span">{detail(items[idx])}</div>}
+        </Fragment>
+      ))}
+    </div>
   );
 }
