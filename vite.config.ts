@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  // Relative paths: the site is served from /DaggerSheet/ on GitHub Pages.
+  // Relative paths: the site is served from /DaggerSheet.app/ on GitHub Pages.
   base: './',
   plugins: [react()],
   // One bundle on purpose: the rules data ships with the app so it works offline.

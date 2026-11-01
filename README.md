@@ -5,7 +5,7 @@ roll Duality Dice, track Hope, Stress, Hit Points, armor, gold, items and
 domain cards, rest, and level up from 1 to 10. Mobile-first, tap-only, and
 installable on your phone's home screen.
 
-**Open it: https://tehfreak-nox.github.io/DaggerSheet/**
+**Open it: https://tehfreak-nox.github.io/DaggerSheet.app/**
 
 ## Using it
 
