@@ -83,9 +83,6 @@ function Weapons({ ch }: { ch: Character }) {
                 Versatile · {cap(vs.trait)} {RANGE_NAMES[vs.range]}
               </button>
             )}
-            {a.conditional.map((m) => (
-              <span key={m.source + m.condition} className="s-chip" title={m.condition}>{m.source} {signed(m.value)} damage</span>
-            ))}
             {w && (
               <button className="s-mini" onClick={() => updateCharacter(ch.id, (c) => ({ ...c, [slot]: undefined, inventoryWeapons: [...c.inventoryWeapons, c[slot]!].slice(0, 2) }))}>
                 Unequip
