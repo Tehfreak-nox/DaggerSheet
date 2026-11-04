@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
   addDamageDice, addDieToRoll, addToDamage, applyFromResult, closeRoll, lastFearDie, makeItHope, maxOneDamageDie, pay,
-  rerollDamage, rerollDuality, rerollFearDie, rerollHopeDie, swapDuality, usePlay, type RollView,
+  rerollDamage, rerollDuality, rerollFearDie, rerollHopeDie, swapDuality, takePoolDie, usePlay, type RollView,
 } from '../app/play';
 import { useStore } from '../app/store';
-import { derive, inEffect, strip, type Character, type InEffect } from '../rules';
+import { controlsFor, derive, inEffect, strip, type Character, type InEffect } from '../rules';
 import { signed } from './kit';
 
 function useTumble(active: boolean, sides: number) {
@@ -118,6 +118,17 @@ function Followups({ r, ch, picked, setPicked, picking, setPicking }: {
         opt('hp', 'Clear a Hit Point', (c) => ({ ...c, hp: Math.max(0, c.hp - 1) }));
         opt('ar', 'Clear an Armor Slot', (c) => ({ ...c, armorMarked: Math.max(0, c.armorMarked - 1) }));
         opt('tg', 'Target marks +1 HP', (c) => c);
+      }
+    }
+    // A pool of dice gained instead of a Hope (Slayer Dice).
+    if ((x.outcome === 'hope' || crit) && !r.reaction) {
+      for (const e of effects) {
+        const pool = controlsFor(e.text).find((c) => c.kind === 'dicePool');
+        if (!pool || pool.kind !== 'dicePool' || used(pool.name)) continue;
+        const poolKey = `pool:${e.key}`;
+        const max = derive(ch).proficiency;
+        const have = ch.uses[poolKey] ?? 0;
+        if (have < max) btn(`${e.key}-pool`, `Take a ${pool.name.replace(/ Dice$/, ' Die')} instead of a Hope (${have}/${max})`, () => takePoolDie(pool.name, poolKey, max));
       }
     }
     if (r.damageFn && crit) btn('cd', 'Roll critical damage', () => { closeRoll(); r.damageFn!({ critical: true }); }, { solid: true });

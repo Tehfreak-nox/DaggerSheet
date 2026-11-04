@@ -10,7 +10,7 @@ import {
   type AttackProfile, type Character, type Denom,
 } from '../rules';
 import { AdvDis, ArmorShield } from './CharacterTab';
-import { FeatureCard } from '../ui/FeatureCard';
+import { EquipmentControls, FeatureCard } from '../ui/FeatureCard';
 import { cap, Icon, ICONS, RANGE_NAMES, signed, Title } from '../ui/kit';
 
 export function EquipmentTab({ ch }: { ch: Character }) {
@@ -75,6 +75,7 @@ function Weapons({ ch }: { ch: Character }) {
             </span>
           </div>
           {a.feature && <span className="s-feat-text"><b>{a.feature.name}:</b> {a.feature.text}</span>}
+          {a.feature && w && <EquipmentControls ch={ch} item={w.id} feature={a.feature} />}
           {!w && <span className="s-feat-text">I Am the Weapon: a trait of your choice, Melee, d8+d6 using your Proficiency. +1 Evasion while you have no other active weapons.</span>}
           <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {vs && (
@@ -191,6 +192,7 @@ function ArmorSection({ ch }: { ch: Character }) {
           <span className="s-chip" style={{ alignSelf: 'flex-start' }}>Major threshold {d.thresholds.major}</span>
           <span className="s-chip" style={{ alignSelf: 'flex-start' }}>Severe threshold {d.thresholds.severe}</span>
           {a?.feature && <span className="s-feat-text" style={{ fontSize: 15 }}><b>{a.feature.name}:</b> {a.feature.text}</span>}
+          {a?.feature && <EquipmentControls ch={ch} item={a.id} feature={a.feature} />}
           <span className="s-muted" style={{ fontSize: 13 }}>
             {a ? `Base ${a.thresholds.major} / ${a.thresholds.severe} · score ${a.score} · +${ch.level} level` : `Major = level, Severe = 2 × level`}
             {d.modifiers.filter((m) => ['major', 'severe', 'armorScore'].includes(m.stat) && m.source !== a?.name).map((m) => ` · ${m.source} ${signed(m.value)} ${m.stat === 'armorScore' ? 'armor' : m.stat}`).filter((x, i, arr) => arr.indexOf(x) === i).join('')}

@@ -20,10 +20,14 @@ export interface Arm {
   cost?: Cost;
   /** Stays armed until switched off (Sneak Attack, Ignition). */
   persist?: boolean;
-  roll?: { value?: number; stat?: TraitId | 'proficiency'; advantage?: boolean };
-  damage?: { dice?: { count: number | 'tier'; sides: number }; bonus?: number; stat?: { trait: TraitId; times: number }; proficiency?: number; double?: boolean };
+  roll?: { value?: number; stat?: TraitId | 'proficiency'; advantage?: boolean; dice?: { count: number; sides: number }; attackOnly?: boolean };
+  damage?: { dice?: { count: number | 'tier'; sides: number }; bonus?: number; stat?: { trait: TraitId; times: number }; proficiency?: number; double?: boolean; dieSize?: number };
   /** The roll part was used; the damage part is still waiting for a damage roll. */
   rollDone?: boolean;
+  /** Used up by whichever comes first, the roll or the damage roll (Slayer Dice). */
+  either?: boolean;
+  /** Tokens (or pooled dice) taken from a card's counter; given back when disarmed. */
+  refundTo?: { key: string; n: number };
 }
 
 export interface Armed {
@@ -112,6 +116,13 @@ export function pay(id: string, cost?: Cost, times = 1): boolean {
   return true;
 }
 
+/** Give back what an arm took from a card's counter (tokens, pooled dice). */
+function refundCounter(id: string, x: Arm) {
+  if (!x.refundTo) return;
+  const { key, n } = x.refundTo;
+  updateCharacter(id, (c) => ({ ...c, uses: { ...c.uses, [key]: (c.uses[key] ?? 0) + n } }));
+}
+
 function refund(id: string, cost: Cost | undefined, times: number) {
   if (!cost || times < 1) return;
   updateCharacter(id, (c) => ('hope' in cost
@@ -165,10 +176,15 @@ function armFromEffect(effect: ArmEffect): Pick<Arm, 'roll' | 'damage'> {
   if ('damageBonus' in effect) return { damage: { bonus: effect.damageBonus } };
   if ('damageStat' in effect) return { damage: { stat: { trait: effect.damageStat, times: effect.times } } };
   if ('proficiency' in effect) return { damage: { proficiency: effect.proficiency } };
+  if ('damageDie' in effect) return { damage: { dieSize: effect.damageDie } };
   return { damage: { double: true } };
 }
 
-export interface ArmSpec { key: string; label: string; effect: ArmEffect; cost?: Cost; max?: number; persist?: boolean }
+export interface ArmSpec {
+  key: string; label: string; effect: ArmEffect; cost?: Cost; max?: number; persist?: boolean;
+  /** Pay with tokens from this counter key. */
+  tokens?: { key: string; n: number };
+}
 
 /**
  * Arm (paying the cost), arm again up to `max`, or disarm and refund. A
@@ -179,14 +195,44 @@ export function toggleArm(id: string, spec: ArmSpec) {
   const have = a.arms.find((x) => x.key === spec.key);
   if (have && (!spec.max || have.count >= spec.max)) {
     refund(id, have.cost, have.rollDone ? 0 : have.count);
+    if (!have.rollDone) refundCounter(id, have);
     setArmed(id, { ...armedFor(id), arms: a.arms.filter((x) => x.key !== spec.key) });
     return;
   }
+  if (spec.tokens) {
+    const ch = getCharacter(id);
+    if (!ch || (ch.uses[spec.tokens.key] ?? 0) < spec.tokens.n) { toast('No tokens left on this card.'); return; }
+  }
   if (!pay(id, spec.cost)) return;
+  if (spec.tokens) {
+    const t = spec.tokens;
+    updateCharacter(id, (c) => ({ ...c, uses: { ...c.uses, [t.key]: Math.max(0, (c.uses[t.key] ?? 0) - t.n) } }));
+  }
   const arms = have
     ? a.arms.map((x) => (x.key === spec.key ? { ...x, count: x.count + 1 } : x))
-    : [...a.arms, { key: spec.key, label: spec.label, count: 1, cost: spec.cost, persist: spec.persist, ...armFromEffect(spec.effect) }];
+    : [...a.arms, { key: spec.key, label: spec.label, count: 1, cost: spec.cost, persist: spec.persist, refundTo: spec.tokens, ...armFromEffect(spec.effect) }];
   setArmed(id, { ...armedFor(id), arms });
+}
+
+/**
+ * Arm pooled dice (Slayer Dice): taken off the card now, rolled into your next
+ * attack roll or damage roll, whichever comes first. Tap again to put them back.
+ */
+export function togglePoolArm(id: string, poolKey: string, label: string, sides: number) {
+  const a = armedFor(id);
+  const key = `pool:${poolKey}`;
+  const have = a.arms.find((x) => x.key === key);
+  if (have) {
+    refundCounter(id, have);
+    setArmed(id, { ...a, arms: a.arms.filter((x) => x.key !== key) });
+    return;
+  }
+  const n = getCharacter(id)?.uses[poolKey] ?? 0;
+  if (n < 1) return;
+  updateCharacter(id, (c) => ({ ...c, uses: { ...c.uses, [poolKey]: 0 } }));
+  const dice = { count: n, sides };
+  setArmed(id, { ...a, arms: [...a.arms, { key, label: `${n}d${sides} ${label}`, count: 1, either: true, refundTo: { key: poolKey, n },
+    roll: { dice, attackOnly: true }, damage: { dice } }] });
 }
 
 /** Arm a flat bonus with an amount ("spend 3 tokens: +3 to the roll"); replaces any earlier one. */
@@ -199,7 +245,7 @@ export function clearArmed(id: string, refundAll = true) {
   const a = armedFor(id);
   if (refundAll) {
     if (a.experiences.length) updateCharacter(id, (c) => ({ ...c, hope: Math.min(derive(c).hopeSlots, c.hope + a.experiences.length) }));
-    for (const x of a.arms) refund(id, x.cost, x.rollDone ? 0 : x.count);
+    for (const x of a.arms) { refund(id, x.cost, x.rollDone ? 0 : x.count); if (!x.rollDone) refundCounter(id, x); }
   }
   setArmed(id, EMPTY);
 }
@@ -271,13 +317,19 @@ export function actionRoll(id: string, title: string, modifiers: RollModifier[],
   }
   const a = armedFor(id);
   const d = derive(ch);
-  const rollArms = a.arms.filter((x) => x.roll && !x.rollDone);
+  const rollArms = a.arms.filter((x) => x.roll && !x.rollDone && (!x.roll.attackOnly || o.attack));
+  // Dice armed into the roll (Slayer Dice) are rolled now.
+  const armDice = rollArms.filter((x) => x.roll!.dice).map((x) => {
+    const values = rollMany(x.roll!.dice!.count, x.roll!.dice!.sides);
+    return { label: `${x.label} (${values.join(', ')})`, value: values.reduce((s2, v) => s2 + v, 0) };
+  });
   const counters = dieCounters(ch, 'action');
   const mods = [
     ...counters.map((x) => ({ label: x.label, value: x.value })),
     ...modifiers,
     ...a.experiences.map((i) => ({ label: d.experiences[i]?.name ?? 'Experience', value: d.experiences[i]?.value ?? 0 })),
     ...a.extras,
+    ...armDice,
     ...rollArms.filter((x) => x.roll!.value !== undefined || x.roll!.stat).map((x) => ({
       label: x.label.split(' · ')[0],
       value: x.count * (x.roll!.value ?? (x.roll!.stat === 'proficiency' ? d.proficiency : d.traits[x.roll!.stat as TraitId])),
@@ -299,7 +351,8 @@ export function actionRoll(id: string, title: string, modifiers: RollModifier[],
     return next;
   });
   // Spend what was armed: roll-only arms go; arms with a damage part wait for the damage roll.
-  const arms = a.arms.flatMap((x) => (x.persist || !x.roll || x.rollDone ? [x] : x.damage ? [{ ...x, rollDone: true }] : []));
+  const used = new Set(rollArms.map((x) => x.key));
+  const arms = a.arms.flatMap((x) => (!used.has(x.key) || x.persist ? [x] : x.either || !x.damage ? [] : [{ ...x, rollDone: true }]));
   // "After you add its value to a roll, increase the die's value by one" (Wild Surge).
   for (const x of counters) {
     const next = x.value + 1;
@@ -407,6 +460,16 @@ export function applyFromResult(label: string, fn: (c: Character) => Character, 
   set({ roll: { ...state.roll!, effects: [...r.effects, note ?? label], rerolled: [...r.rerolled, label] } as State['roll'] });
 }
 
+/** On a roll with Hope, take a pooled die (Slayer Dice) instead of the Hope. */
+export function takePoolDie(label: string, poolKey: string, max: number) {
+  const r = state.roll;
+  if (!r || r.kind !== 'action') return;
+  const id = r.charId;
+  const gained = r.applied.hope;
+  updateCharacter(id, (c) => ({ ...c, hope: Math.max(0, c.hope - gained), uses: { ...c.uses, [poolKey]: Math.min(max, (c.uses[poolKey] ?? 0) + 1) } }));
+  set({ roll: { ...state.roll!, applied: { ...r.applied, hope: 0 }, effects: [...r.effects, `${label}: took a die instead of a Hope.`], rerolled: [...r.rerolled, label] } as State['roll'] });
+}
+
 // ---- damage -------------------------------------------------------------------
 
 export function damage(title: string, req: DamageRequest, sub?: string, effects: string[] = [], opts: { charId?: string; magic?: boolean; attack?: boolean } = {}) {
@@ -428,6 +491,7 @@ export function damage(title: string, req: DamageRequest, sub?: string, effects:
         const dm = x.damage!;
         const name = x.label.split(' · ')[0];
         if (dm.proficiency && dice.length) dice[0] = { ...dice[0], count: dice[0].count + dm.proficiency * x.count };
+        if (dm.dieSize && dice.length) dice[0] = { ...dice[0], sides: dm.dieSize };
         if (dm.dice) dice.push({ count: (dm.dice.count === 'tier' ? d.tier : dm.dice.count) * x.count, sides: dm.dice.sides });
         if (dm.bonus) mods.push({ label: name, value: dm.bonus * x.count });
         if (dm.stat) mods.push({ label: name, value: d.traits[dm.stat.trait] * dm.stat.times * x.count });

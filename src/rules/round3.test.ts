@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { guides } from '../data';
 import {
   avoidDeath, blazeOfGlory, controlsFor, createCharacter, derive, dropOut, dualityRoll, mustMakeDeathMove,
-  rest, riskItAll, scoreDuality, setHitPoints, splitClear, transform, transformProblem, applyOutcome, activeForm, damageAddOns, availableForms, evolvedRule, hybridRule, attackProfile, setActive, inEffect,
+  rest, riskItAll, scoreDuality, setHitPoints, splitClear, transform, transformProblem, applyOutcome, activeForm, damageAddOns, availableForms, evolvedRule, hybridRule, attackProfile, setActive, inEffect, newSession,
   type CreateInput, type Rng,
 } from './index';
 
@@ -242,5 +242,36 @@ describe('card passives and lasting effects', () => {
     expect(inEffect(with3).some((e) => e.key === 'card:arcana-arcana-touched')).toBe(false);
     const with4 = { ...ch, cards: { loadout: [...with3.cards.loadout, 'arcana-unleash-chaos'], vault: [] } };
     expect(inEffect(with4).some((e) => e.key === 'card:arcana-arcana-touched')).toBe(true);
+  });
+});
+
+describe('Grum: Slayer Dice, Strategic Approach, weapon features', () => {
+  const grum = () => createCharacter({
+    id: 'grum', name: 'Grum Mudrunner', classId: 'warrior', subclassId: 'call-of-the-slayer', ancestry: { id: 'orc' }, communityId: 'warborne',
+    traits: { ...guides.warrior.traits }, experiences: ['A', 'B'], primary: { id: 'broadsword' }, secondary: { id: 'hatchet' },
+    armorId: 'chainmail-armor', potion: 'minor-health-potion', cards: ['bone-untouchable', 'blade-get-back-up'],
+  });
+  const grum2 = () => ({ ...grum(), level: 2, cards: { loadout: ['bone-strategic-approach', 'bone-untouchable', 'blade-get-back-up'], vault: [] } });
+
+  it('reads Slayer Dice as a pool, Strategic Approach options as token-paid arms, Follow-Up as an arm', () => {
+    const slayer = inEffect(grum()).find((e) => e.key === 'sub:slayer')!;
+    expect(controlsFor(slayer.text)).toEqual([expect.objectContaining({ kind: 'dicePool', name: 'Slayer Dice', sides: 6, hopeAtSessionEnd: true })]);
+    const sa = controlsFor(inEffect(grum2()).find((e) => e.key === 'card:bone-strategic-approach')!.text);
+    expect(sa.filter((c) => c.kind === 'arm').map((c) => [c.label, c.kind === 'arm' && c.tokenCost])).toEqual([['Advantage on the attack', 1], ['+d8 to damage', 1]]);
+    expect(controlsFor('On a successful attack with your primary weapon within Melee range, you can mark a Stress to gain a +1 bonus to your Proficiency for this attack.'))
+      .toEqual([expect.objectContaining({ kind: 'arm', cost: { stress: 1 }, effect: { proficiency: 1 } })]);
+  });
+
+  it('a new session clears Slayer Dice and gives a Hope per die', () => {
+    const ch = { ...grum(), hope: 2, uses: { 'pool:sub:slayer': 1, 'session:x': 1 } };
+    const next = newSession(ch);
+    expect(next.hope).toBe(3);
+    expect(next.uses).toEqual({});
+  });
+
+  it('a long rest refills Strategic Approach to your Knowledge (minimum 1)', () => {
+    const ch = { ...grum2(), uses: { 'tokens:card:bone-strategic-approach': 0 } };
+    const n = Math.max(1, derive(ch).traits.knowledge);
+    expect(rest(ch, 'long', []).character.uses['tokens:card:bone-strategic-approach']).toBe(n);
   });
 });

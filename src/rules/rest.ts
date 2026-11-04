@@ -4,6 +4,56 @@ import { rules } from '../data';
 import { derive, hasAncestryFeature } from './derive';
 import { defaultRng, roll, type Rng } from './dice';
 import type { Character } from './model';
+import { controlsFor, type TokenSource } from './mechanics';
+import { inEffect } from './inEffect';
+
+/** How many tokens a card's "place a number of tokens equal to …" gives, or null when it's counted by hand. */
+export function tokenCount(ch: Character, source: TokenSource): number | null {
+  const d = derive(ch);
+  if ('fixed' in source) return source.fixed;
+  if ('trait' in source) {
+    const v = source.trait === 'spellcast' ? (d.spellcast ?? 0) : d.traits[source.trait];
+    return Math.max(source.min ?? 0, v);
+  }
+  if ('stat' in source) return source.stat === 'tier' ? d.tier : source.stat === 'proficiency' ? d.proficiency : ch.level;
+  return null;
+}
+
+/**
+ * Card tokens at a rest: "When you take a (long) rest, clear all unspent tokens",
+ * then "After a long rest, place a number of tokens equal to …" refills them.
+ */
+function restTokens(ch: Character, kind: RestKind): Character {
+  const uses = { ...ch.uses };
+  for (const e of inEffect(ch)) {
+    const t = e.text.replace(/\*\*/g, '');
+    const key = `tokens:${e.key}`;
+    const clears = kind === 'long' ? /When you take a (long )?rest, clear all unspent tokens/i.test(t) : /When you take a rest, clear all unspent tokens/i.test(t);
+    if (clears) uses[key] = 0;
+    if (kind === 'long' && /After a long rest, place/i.test(t)) {
+      const tok = controlsFor(e.text).find((c) => c.kind === 'tokens');
+      const n = tok && tok.kind === 'tokens' ? tokenCount(ch, tok.source) : null;
+      if (n !== null) uses[key] = n;
+    }
+  }
+  return { ...ch, uses };
+}
+
+/**
+ * Start a new session: per-session and per-scene uses refresh, and pooled dice
+ * clear ("At the end of each session, clear any unspent Slayer Dice … and gain a
+ * Hope per die cleared").
+ */
+export function newSession(ch: Character): Character {
+  let hope = ch.hope;
+  for (const e of inEffect(ch)) {
+    const pool = controlsFor(e.text).find((c) => c.kind === 'dicePool');
+    const n = ch.uses[`pool:${e.key}`] ?? 0;
+    if (pool && pool.kind === 'dicePool' && pool.hopeAtSessionEnd) hope += n;
+  }
+  const uses = Object.fromEntries(Object.entries(ch.uses).filter(([k]) => !k.startsWith('session:') && !k.startsWith('scene:') && !k.startsWith('pool:')));
+  return { ...ch, hope: Math.min(derive(ch).hopeSlots, hope), uses };
+}
 
 export type RestKind = 'short' | 'long';
 
@@ -94,5 +144,6 @@ export function rest(
   // Avoid Death: "They return to consciousness when … the party finishes a long rest."
   if (kind === 'long' && c.death === 'unconscious') c.death = undefined;
   if (c.active?.length) c = endActiveOnRest(c, kind);
+  c = restTokens(c, kind);
   return { character: c, log };
 }

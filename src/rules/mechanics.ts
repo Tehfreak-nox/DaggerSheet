@@ -37,6 +37,8 @@ export type ArmEffect =
   | { damageBonus: number }
   | { damageStat: TraitId; times: number }
   | { proficiency: number }
+  /** "use a d20 as your damage die". */
+  | { damageDie: number }
   | { doubleDamage: true };
 
 export type Control =
@@ -49,7 +51,9 @@ export type Control =
   /** Rule 1: pay and roll in one tap. */
   | { kind: 'pay'; cost: Cost; then: RollControl | DiceControl | DamageControl | AttackControl; label: string; once?: UseScope }
   /** Rule 3: armed for the next roll (paid now, refunded if disarmed). */
-  | { kind: 'arm'; cost?: Cost; effect: ArmEffect; max?: number; persist?: boolean; label: string; once?: UseScope }
+  | { kind: 'arm'; cost?: Cost; effect: ArmEffect; max?: number; persist?: boolean; label: string; once?: UseScope;
+    /** Paid with tokens from the card ("spend one token to choose one of the following options"). */
+    tokenCost?: number }
   /** Rule 4: choose an amount; pay that much (Hope, Stress or tokens) and roll that many dice. */
   | { kind: 'scaled'; unit: 'hope' | 'stress' | 'tokens' | 'count'; min: number; max?: number; per?: { sides: number; bonus: number; damage: boolean; type: 'magic' | 'physical' | null; toDamageRoll?: boolean }; flat?: number; toRoll?: boolean; label: string; once?: UseScope }
   /** Choose one bonus for the roll (Teleport). */
@@ -62,7 +66,13 @@ export type Control =
    * A die kept on the sheet that counts up from 1 (Unstoppable Die, Wild Surge,
    * Zone of Protection). `addsTo`: its value is added to your damage or action rolls.
    */
-  | { kind: 'dieCounter'; sides: number; upgrade?: { level: number; sides: number }; addsTo?: 'damage' | 'action'; label: string };
+  | { kind: 'dieCounter'; sides: number; upgrade?: { level: number; sides: number }; addsTo?: 'damage' | 'action'; label: string }
+  /**
+   * A pool of dice you collect (Slayer Dice): gained instead of a Hope on a roll
+   * with Hope, up to your Proficiency; armed into an attack or damage roll; at the
+   * end of the session unspent dice clear and give a Hope each.
+   */
+  | { kind: 'dicePool'; name: string; sides: number; max: 'proficiency'; hopeAtSessionEnd: boolean; label: string };
 
 export type TokenSource =
   | { fixed: number }
@@ -262,7 +272,9 @@ export function controlsFor(rawText: string): Control[] {
     const stat = (m[3] === 'Proficiency' ? 'proficiency' : TRAITS[m[3].toLowerCase()]) as TraitId | 'proficiency';
     return { kind: 'arm', cost, effect: { rollStat: stat }, label: `+${m[3]} to the roll · ${costLabel(cost)}` };
   });
-  armAt(/\b(spend|mark) (a|an) (?:Hope|Stress) to gain advantage on (?:a|an|the) (?:roll|attack)/, (m) => {
+  armAt(/\bmark a Stress to use a d(\d+) as your damage die/, (m) => (
+    { kind: 'arm', cost: { stress: 1 }, effect: { damageDie: Number(m[1]) }, label: `d${m[1]} damage die · 1 Stress` }));
+  armAt(/\b(spend|mark) (a|an) (?:Hope|Stress) to gain advantage on (?:a|an|the) (?:[\w ]*?roll|attack)/, (m) => {
     const cost = costOf(m[1], m[2]);
     return { kind: 'arm', cost, effect: { advantage: true }, label: `Advantage · ${costLabel(cost)}` };
   });
@@ -305,6 +317,14 @@ export function controlsFor(rawText: string): Control[] {
     add(m.index! + 1, { kind: 'arm', cost: { hope: 1 }, effect: { damageBonus: Number(m[2]) }, label: `+${m[2]} damage · 1 Hope` });
     return { kind: 'arm', cost: { hope: 1 }, effect: { roll: Number(m[1]) }, label: `+${m[1]} to the roll · 1 Hope` };
   });
+  // A pool of dice (Slayer Dice).
+  const dicePool = /\bpool of dice called ([\w ]+?)\. On a roll with Hope, you can place an? d(\d+) on this card instead of gaining a Hope[^.]*\. You can store a number of [\w ]+? equal to your Proficiency/i.exec(text);
+  if (dicePool) {
+    add(dicePool.index, { kind: 'dicePool', name: dicePool[1], sides: Number(dicePool[2]), max: 'proficiency', hopeAtSessionEnd: /gain a Hope per die cleared/i.test(text), label: dicePool[1] });
+    take(dicePool.index, text.length);
+  }
+  // "Spend one token to choose one of the following options": advantage is one of them.
+  armAt(/◦ You make the attack with advantage/, () => ({ kind: 'arm', effect: { advantage: true }, label: 'Advantage on the attack' }));
   armAt(/\badd a d(\d+) to (?:your|the) damage roll/, (m) => (
     { kind: 'arm', effect: { damageDice: { count: 1, sides: Number(m[1]) } }, label: `+d${m[1]} to damage` }));
   armAt(/\b(spend|mark) (\d+|a|an) (Hope|Stress) to charge [^.]*\.\s*When you next successfully attack with a weapon, double the result of your damage roll/, (m) => {
@@ -455,6 +475,13 @@ export function controlsFor(rawText: string): Control[] {
   }
   for (const r of rolls) if (!paid.has(r.at)) add(r.at, r.c);
   for (const d of dice) if (!paid.has(d.at)) add(d.at, d.c);
+
+  // Options bought with a token: each arm among them uses one.
+  const tokenChoice = /\bspend (?:one|a) token to choose one of the following options/i.exec(text);
+  if (tokenChoice) {
+    const end = text.indexOf('\n\n', tokenChoice.index);
+    for (const f of found) if (f.c.kind === 'arm' && f.at > tokenChoice.index && (end < 0 || f.at < end)) f.c.tokenCost = 1;
+  }
 
   // "Once per rest, spend 3 Hope to …": paying uses up the feature for the rest.
   for (const f of found) {

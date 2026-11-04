@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { attackNow } from '../app/attack';
 import {
-  actionRoll, armAmount, armedFor, canPay, damage, dice, dieKey, pay, toggleArm, toggleHopeDie, usePlay,
+  actionRoll, armAmount, armedFor, canPay, damage, dice, dieKey, pay, toggleArm, toggleHopeDie, togglePoolArm, usePlay,
 } from '../app/play';
 import { updateCharacter } from '../app/store';
 import { toast } from '../app/toast';
@@ -71,6 +71,13 @@ function upgraded(ch: Character, featureKey: string, c: Control): Control {
   return c;
 }
 
+/** Tap controls for a piece of equipment's feature (Hatchet's Follow-Up, Hammer of Wrath's Devastating). */
+export function EquipmentControls({ ch, item, feature }: { ch: Character; item: string; feature: { name: string; text: string } }) {
+  // Versatile has its own toggle; a weapon's attack is its Hit button.
+  if (/can also be used with these statistics/i.test(feature.text)) return null;
+  return <Controls ch={ch} featureKey={`gear:${item}`} name={feature.name} text={feature.text} skip={['attack']} />;
+}
+
 function Controls({ ch, featureKey, name, text, skip }: { ch: Character; featureKey: string; name: string; text: string; skip: Control['kind'][] }) {
   const controls = controlsFor(text).filter((c) => !skip.includes(c.kind)).map((c) => upgraded(ch, featureKey, c));
   const uses = controls.filter((c): c is Extract<Control, { kind: 'uses' }> => c.kind === 'uses');
@@ -80,7 +87,8 @@ function Controls({ ch, featureKey, name, text, skip }: { ch: Character; feature
   const activeDef = ACTIVE[featureKey];
   const activator = activeDef ? controls.find((c) => c.kind === 'hope' || c.kind === 'stress' || c.kind === 'pay') : undefined;
   const counter = controls.find((c): c is Extract<Control, { kind: 'dieCounter' }> => c.kind === 'dieCounter');
-  const actions = controls.filter((c) => c.kind !== 'uses' && c.kind !== 'tokens' && c.kind !== 'dieCounter' && c !== activator
+  const pool = controls.find((c): c is Extract<Control, { kind: 'dicePool' }> => c.kind === 'dicePool');
+  const actions = controls.filter((c) => c.kind !== 'uses' && c.kind !== 'tokens' && c.kind !== 'dieCounter' && c.kind !== 'dicePool' && c !== activator
     && !(c.kind === 'hopeDie' && uses.length));
   const tokenKey = `tokens:${featureKey}`;
   return (
@@ -89,6 +97,7 @@ function Controls({ ch, featureKey, name, text, skip }: { ch: Character; feature
         use={activator && 'once' in activator && activator.once ? `${activator.once}:${featureKey}` : undefined} />}
       {uses.map((u, i) => <UseBoxes key={u.label} ch={ch} k={`${u.scope}:${featureKey}`} max={u.max} label={u.label} arm={i === 0 && hopeDie ? { sides: hopeDie.sides, source: name } : undefined} />)}
       {tokens && <Tokens ch={ch} k={tokenKey} source={tokens.source} label={tokens.label} />}
+      {pool && <DicePool ch={ch} c={pool} poolKey={`pool:${featureKey}`} />}
       {counter && <DieCounter ch={ch} c={counter} name={name} featureKey={featureKey}
         use={uses[0] && !activator ? { key: `${uses[0].scope}:${featureKey}`, max: uses[0].max } : undefined} />}
       {actions.length > 0 && (
@@ -175,7 +184,7 @@ function ControlButton({ ch, c, name, featureKey, tokenKey, use }: { ch: Charact
     case 'pay':
       return <PayButton ch={ch} c={c} name={name} spent={spent} done={done} />;
     case 'arm':
-      return <ArmButton ch={ch} c={c} k={`${featureKey}:${c.label}`} spent={spent} done={done} />;
+      return <ArmButton ch={ch} c={c} k={`${featureKey}:${c.label}`} spent={spent} done={done} tokenKey={tokenKey} />;
     case 'scaled':
       return <Scaled ch={ch} c={c} name={name} featureKey={featureKey} tokenKey={tokenKey} spent={spent} done={done} />;
     case 'choice':
@@ -240,18 +249,21 @@ function PayButton({ ch, c, name, spent, done }: { ch: Character; c: Extract<Con
 }
 
 /** Armed for the next roll or damage roll; tap again to disarm (and refund). */
-function ArmButton({ ch, c, k, spent, done }: { ch: Character; c: Extract<Control, { kind: 'arm' }>; k: string; spent?: boolean; done?: () => void }) {
+function ArmButton({ ch, c, k, spent, done, tokenKey }: { ch: Character; c: Extract<Control, { kind: 'arm' }>; k: string; spent?: boolean; done?: () => void; tokenKey: string }) {
   const armed = usePlay((s) => s.armed[ch.id]) ?? armedFor(ch.id);
   const have = armed.arms.find((x) => x.key === k);
   const more = have && c.max && have.count < c.max;
+  // Options bought with a card token (Strategic Approach): one token each.
+  const noTokens = !!c.tokenCost && (ch.uses[tokenKey] ?? 0) < c.tokenCost;
   return (
-    <button className={`s-mini ${have ? 'solid' : ''}`} aria-pressed={!!have} disabled={!have && (!canPay(ch, c.cost) || spent)}
+    <button className={`s-mini ${have ? 'solid' : ''}`} aria-pressed={!!have} disabled={!have && (!canPay(ch, c.cost) || spent || noTokens)}
       onClick={() => {
-        toggleArm(ch.id, { key: k, label: c.label, effect: c.effect, cost: c.cost, max: c.max, persist: c.persist });
+        toggleArm(ch.id, { key: k, label: c.label, effect: c.effect, cost: c.cost, max: c.max, persist: c.persist,
+          tokens: c.tokenCost ? { key: tokenKey, n: c.tokenCost } : undefined });
         if (!have) done?.();
         else if (c.once) updateCharacter(ch.id, (x) => ({ ...x, uses: { ...x.uses, [`${c.once}:${k.split(':').slice(0, -1).join(':')}`]: 0 } }));
       }}>
-      {have ? `${c.label.split(' · ')[0]}${have.count > 1 ? ` ×${have.count}` : ''} · ${more ? 'tap to add' : c.persist ? 'on' : 'armed'}` : c.label}
+      {have ? `${c.label.split(' · ')[0]}${have.count > 1 ? ` ×${have.count}` : ''} · ${more ? 'tap to add' : c.persist ? 'on' : 'armed'}` : `${c.label}${c.tokenCost ? ' · 1 token' : ''}`}
     </button>
   );
 }
@@ -308,6 +320,26 @@ function Choice({ ch, c, k, name }: { ch: Character; c: Extract<Control, { kind:
         );
       })}
     </span>
+  );
+}
+
+/** Pooled dice (Slayer Dice): how many you hold, and Arm to roll them into your next attack or damage roll. */
+function DicePool({ ch, c, poolKey }: { ch: Character; c: Extract<Control, { kind: 'dicePool' }>; poolKey: string }) {
+  const armed = usePlay((s) => s.armed[ch.id]) ?? armedFor(ch.id);
+  const arm = armed.arms.find((x) => x.key === `pool:${poolKey}`);
+  const max = derive(ch).proficiency;
+  const have = ch.uses[poolKey] ?? 0;
+  const shown = arm ? arm.refundTo?.n ?? 0 : have;
+  return (
+    <div className="die-counter">
+      <div className={`s-die sm d${c.sides}`} role="img" aria-label={`${shown} ${c.name}`}><span>{shown}</span></div>
+      <span style={{ flex: 1, fontSize: 14, lineHeight: 1.35 }}>
+        <b>{c.name} {shown}/{max}</b>
+        <br /><span className="s-muted">{arm ? `Armed: ${shown}d${c.sides} on your next attack or damage roll.` : have ? 'Gain more on a roll with Hope.' : 'On a roll with Hope, take one instead of the Hope.'}</span>
+      </span>
+      <button className={`s-mini ${arm ? 'solid' : ''}`} aria-pressed={!!arm} disabled={!arm && !have}
+        onClick={() => togglePoolArm(ch.id, poolKey, c.name, c.sides)}>{arm ? 'Armed' : 'Arm'}</button>
+    </div>
   );
 }
 
