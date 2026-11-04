@@ -7,6 +7,8 @@ installable on your phone's home screen.
 
 **Open it: https://tehfreak-nox.github.io/DaggerSheet.app/**
 
+What's done and what's next: [ROADMAP.md](ROADMAP.md).
+
 ## Using it
 
 - No account needed. Characters are saved in your browser on that device.
